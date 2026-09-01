@@ -23,7 +23,11 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="zh-CN" className={`${sans.variable} ${serif.variable} h-full antialiased`}>
+    <html
+      lang="zh-CN"
+      className={`${sans.variable} ${serif.variable} h-full antialiased`}
+      suppressHydrationWarning
+    >
       <body className="min-h-full font-sans">
         <Providers>
           <PhoneShell>{children}</PhoneShell>

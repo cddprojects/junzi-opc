@@ -18,8 +18,11 @@ export default function MinePage() {
   return (
     <div className="bg-[#f7f7f7]">
       <div className="flex items-center gap-3 bg-[#4a4a4a] px-4 py-5 text-white">
-        <div className="flex size-14 items-center justify-center rounded-full bg-[#8a8a8a]">
-          <span className="text-2xl">👤</span>
+        <div className="flex size-14 items-center justify-center rounded-full bg-[#7d7d7d]">
+          <svg viewBox="0 0 48 48" className="size-8 text-[#d8d8d8]" aria-hidden>
+            <circle cx="24" cy="18" r="8" fill="currentColor" />
+            <path d="M8 40c2-10 8-14 16-14s14 4 16 14" fill="currentColor" />
+          </svg>
         </div>
         <div className="min-w-0 flex-1">
           <p className="truncate text-[16px] font-medium">{demoUser.name}</p>

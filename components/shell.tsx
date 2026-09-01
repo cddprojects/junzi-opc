@@ -39,14 +39,14 @@ export function PhoneShell({ children }: { children: React.ReactNode }) {
 function MiniHeader() {
   const pathname = usePathname();
   const router = useRouter();
-  const isHome = pathname === "/";
+  const isTabPage = pathname === "/" || pathname === "/categories" || pathname === "/mine";
   const title = pageTitle(pathname);
 
   return (
     <header className="sticky top-0 z-30 bg-white/96 backdrop-blur">
       <div className="flex h-11 items-center px-2">
         <div className="flex w-16 items-center">
-          {!isHome && (
+          {!isTabPage && (
             <button
               type="button"
               onClick={() => router.back()}
