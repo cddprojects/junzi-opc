@@ -9,11 +9,17 @@ import {
   introVideo,
   products as seedProducts,
   qihangDetail,
-  shizhanDetail,
   type CatalogVideo,
   type Poster,
   type Product,
 } from "@/lib/data";
+import {
+  computeCourseDetail,
+  ensureProductDetail,
+  outlineFromLessons,
+  qihangCourseDetail,
+  shizhanCourseDetail,
+} from "@/lib/course";
 
 export type AppStore = {
   version: number;
@@ -25,35 +31,28 @@ export type AppStore = {
 const DATA_DIR = path.join(process.cwd(), "data");
 const STORE_PATH = path.join(DATA_DIR, "store.json");
 export const UPLOAD_DIR = path.join(DATA_DIR, "uploads");
+const STORE_VERSION = 3;
+
+function seedProduct(product: Product): Product {
+  if (product.slug === "qihang") {
+    const detail = qihangCourseDetail();
+    return { ...product, description: detail.body, outline: outlineFromLessons(detail.lessons), detail };
+  }
+  if (product.slug === "shizhan") {
+    const detail = shizhanCourseDetail();
+    return { ...product, description: detail.body, outline: outlineFromLessons(detail.lessons), detail };
+  }
+  if (product.slug === "compute") {
+    const detail = computeCourseDetail();
+    return { ...product, description: detail.body, detail };
+  }
+  return ensureProductDetail(product);
+}
 
 function seedStore(): AppStore {
   return {
-    version: 1,
-    products: seedProducts.map((product) => {
-      if (product.slug === "qihang") {
-        return {
-          ...product,
-          description: qihangDetail.opcDef,
-          outline: qihangDetail.lessons
-            .map((lesson) => `第${lesson.index}节 ${lesson.title}`)
-            .join("\n"),
-        };
-      }
-      if (product.slug === "shizhan") {
-        return {
-          ...product,
-          description: product.subtitle,
-          outline: shizhanDetail.lessons
-            .map((lesson) => `第${lesson.index}节 ${lesson.title}`)
-            .join("\n"),
-        };
-      }
-      return {
-        ...product,
-        description: product.subtitle,
-        outline: "用于君子小雅AI工具小程序的算力补充。",
-      };
-    }),
+    version: STORE_VERSION,
+    products: seedProducts.map(seedProduct),
     posters: banners.map((banner, index) => ({
       id: banner.id,
       title: banner.title,
@@ -97,6 +96,33 @@ function ensureDirs() {
   if (!existsSync(UPLOAD_DIR)) mkdirSync(UPLOAD_DIR, { recursive: true });
 }
 
+function migrateStore(parsed: AppStore): AppStore {
+  const products = (parsed.products ?? []).map((product) => {
+    const next = ensureProductDetail(product);
+    if (
+      (parsed.version ?? 0) < 3 &&
+      next.slug === "qihang" &&
+      (!next.detail?.extraSections || next.detail.extraSections.length === 0)
+    ) {
+      const seeded = qihangCourseDetail();
+      return {
+        ...next,
+        detail: {
+          ...next.detail!,
+          extraSections: seeded.extraSections,
+        },
+      };
+    }
+    return next;
+  });
+  return {
+    version: STORE_VERSION,
+    products,
+    posters: parsed.posters ?? [],
+    videos: parsed.videos ?? [],
+  };
+}
+
 export function readStore(): AppStore {
   ensureDirs();
   if (!existsSync(STORE_PATH)) {
@@ -105,23 +131,26 @@ export function readStore(): AppStore {
     return seeded;
   }
   const parsed = JSON.parse(readFileSync(STORE_PATH, "utf8")) as AppStore;
-  return {
-    version: 1,
-    products: parsed.products ?? [],
-    posters: parsed.posters ?? [],
-    videos: parsed.videos ?? [],
-  };
+  const migrated = migrateStore(parsed);
+  if (parsed.version !== STORE_VERSION || parsed.products?.some((item) => !item.detail)) {
+    writeFileSync(STORE_PATH, JSON.stringify(migrated, null, 2), "utf8");
+  }
+  return migrated;
 }
 
 export function writeStore(store: AppStore) {
   ensureDirs();
-  writeFileSync(STORE_PATH, JSON.stringify(store, null, 2), "utf8");
+  writeFileSync(
+    STORE_PATH,
+    JSON.stringify({ ...store, version: STORE_VERSION, products: store.products.map(ensureProductDetail) }, null, 2),
+    "utf8",
+  );
 }
 
 export function getCatalog() {
   const store = readStore();
   const products = store.products.map((product) => ({
-    ...product,
+    ...ensureProductDetail(product),
     href: product.href || `/product/${product.slug}`,
     shortTitle: product.shortTitle || product.title,
   }));
@@ -142,9 +171,14 @@ export function searchStoreProducts(query: string) {
   const { products } = getCatalog();
   if (!q) return products;
   return products.filter((item) =>
-    [item.title, item.shortTitle, item.subtitle ?? "", item.description ?? ""].some((field) =>
-      field.toLowerCase().includes(q),
-    ),
+    [
+      item.title,
+      item.shortTitle,
+      item.subtitle ?? "",
+      item.description ?? "",
+      item.detail?.body ?? "",
+      item.detail?.lecturer ?? "",
+    ].some((field) => field.toLowerCase().includes(q)),
   );
 }
 

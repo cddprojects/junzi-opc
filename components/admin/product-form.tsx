@@ -2,8 +2,10 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { COVER_THEMES, type Product, type ProductCategoryId } from "@/lib/data";
+import { COVER_THEMES, type CourseDetail, type Product, type ProductCategoryId } from "@/lib/data";
+import { emptyCourseDetail, outlineFromLessons } from "@/lib/course";
 import { UploadField } from "@/components/admin/upload-field";
+import { CourseDetailFields } from "@/components/admin/course-detail-fields";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -12,6 +14,7 @@ export function ProductForm({ product }: { product?: Product }) {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [coverImage, setCoverImage] = useState(product?.coverImage || "");
+  const [detail, setDetail] = useState<CourseDetail>(product?.detail ?? emptyCourseDetail());
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -29,9 +32,10 @@ export function ProductForm({ product }: { product?: Product }) {
       cover: String(form.get("cover") || "qihang") as Product["cover"],
       subtitle: String(form.get("subtitle") || ""),
       giftNote: String(form.get("giftNote") || ""),
-      description: String(form.get("description") || ""),
-      outline: String(form.get("outline") || ""),
+      description: detail.body || "",
+      outline: outlineFromLessons(detail.lessons),
       coverImage,
+      detail,
     };
     const url = product ? `/api/admin/products/${product.slug}` : "/api/admin/products";
     const res = await fetch(url, {
@@ -57,7 +61,8 @@ export function ProductForm({ product }: { product?: Product }) {
   }
 
   return (
-    <form onSubmit={onSubmit} className="max-w-2xl space-y-4 rounded-xl bg-white p-5">
+    <form onSubmit={onSubmit} className="max-w-3xl space-y-4 rounded-xl bg-white p-5">
+      <h2 className="font-serif text-[20px]">基本信息</h2>
       <label className="block text-[13px]">
         标题
         <Input name="title" required defaultValue={product?.title} className="mt-1 h-9" />
@@ -130,7 +135,7 @@ export function ProductForm({ product }: { product?: Product }) {
         value={coverImage}
         onChange={setCoverImage}
         accept="image/*"
-        hint="不上传则使用占位封面风格"
+        hint="列表页与未上传片头时使用"
       />
       <label className="block text-[13px]">
         副标题
@@ -140,24 +145,9 @@ export function ProductForm({ product }: { product?: Product }) {
         赠送说明
         <Input name="giftNote" defaultValue={product?.giftNote} className="mt-1 h-9" />
       </label>
-      <label className="block text-[13px]">
-        介绍
-        <textarea
-          name="description"
-          defaultValue={product?.description}
-          rows={5}
-          className="mt-1 w-full rounded-md border border-input px-3 py-2"
-        />
-      </label>
-      <label className="block text-[13px]">
-        大纲（每行一节）
-        <textarea
-          name="outline"
-          defaultValue={product?.outline}
-          rows={8}
-          className="mt-1 w-full rounded-md border border-input px-3 py-2"
-        />
-      </label>
+
+      <CourseDetailFields value={detail} onChange={setDetail} />
+
       {error && <p className="text-[13px] text-[#fa3534]">{error}</p>}
       <div className="flex gap-3">
         <Button type="submit" disabled={busy} className="bg-[#8a5a20] text-white hover:bg-[#6f4818]">

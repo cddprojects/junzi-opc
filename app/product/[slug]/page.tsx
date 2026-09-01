@@ -1,7 +1,5 @@
 import { notFound } from "next/navigation";
-import { QihangDetail } from "@/components/qihang-detail";
-import { SimpleProductDetail } from "@/components/simple-product";
-import { GenericProductDetail } from "@/components/generic-product";
+import { CourseDetailView } from "@/components/course-detail";
 import { getCatalog, getStoreProduct } from "@/lib/store";
 
 export const dynamic = "force-dynamic";
@@ -18,11 +16,5 @@ export default async function ProductPage({
     (item) => item.placement === "product-hero" && item.productSlug === slug,
   );
 
-  if (product.slug === "qihang") {
-    return <QihangDetail product={product} video={video} />;
-  }
-  if (product.slug === "shizhan" || product.slug === "compute") {
-    return <SimpleProductDetail product={product} video={video} />;
-  }
-  return <GenericProductDetail product={product} video={video} />;
+  return <CourseDetailView product={product} video={video} />;
 }

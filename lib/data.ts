@@ -25,6 +25,7 @@ export type Product = {
   description?: string;
   outline?: string;
   coverImage?: string;
+  detail?: CourseDetail;
 };
 
 export type PosterPlacement = "home-carousel" | "home-banner";
@@ -77,6 +78,54 @@ export type LiveSession = {
   index: number;
   title: string;
   items: string[];
+};
+
+export const LESSON_ICONS = [
+  "play",
+  "person",
+  "list",
+  "people",
+  "target",
+  "box",
+  "pyramid",
+  "check",
+] as const;
+
+export type LessonIcon = (typeof LESSON_ICONS)[number];
+
+export type CourseSection = {
+  title: string;
+  body?: string;
+  items?: string[];
+};
+
+export type CourseDetail = {
+  lecturer?: string;
+  heroOverlay?: string;
+  heroSub?: string;
+  heroKicker?: string;
+  duration?: string;
+  introVideoUrl?: string;
+  introPoster?: string;
+  valueLine?: string;
+  body?: string;
+  pillars: { title: string; desc: string }[];
+  statsLine?: string;
+  stats: { value: string; label: string }[];
+  lessonsTitle?: string;
+  lessonsTag?: string;
+  lessons: Lesson[];
+  flow: string[];
+  lives: LiveSession[];
+  liveNote?: string;
+  outcomesTitle?: string;
+  outcomes: { title: string }[];
+  audiencesTitle?: string;
+  audiences: { title: string }[];
+  disclaimer: string[];
+  joinLine?: string;
+  joinSub?: string;
+  extraSections: CourseSection[];
 };
 
 export const brand = {

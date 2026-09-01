@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { assertAdmin } from "@/lib/auth";
 import { getCatalog, readStore, slugify, writeStore } from "@/lib/store";
+import { ensureProductDetail, outlineFromLessons } from "@/lib/course";
 import type { Product, ProductCategoryId } from "@/lib/data";
 
 function revalidatePublic() {
@@ -32,7 +33,7 @@ export async function POST(request: Request) {
   if (store.products.some((item) => item.slug === slug)) {
     return NextResponse.json({ error: "该 slug 已存在" }, { status: 400 });
   }
-  const product: Product = {
+  const product = ensureProductDetail({
     slug,
     title: body.title.trim(),
     shortTitle: (body.shortTitle || body.title).trim(),
@@ -44,10 +45,11 @@ export async function POST(request: Request) {
     href: `/product/${slug}`,
     subtitle: body.subtitle,
     giftNote: body.giftNote,
-    description: body.description,
-    outline: body.outline,
+    description: body.description || body.detail?.body,
+    outline: body.outline || outlineFromLessons(body.detail?.lessons || []),
     coverImage: body.coverImage,
-  };
+    detail: body.detail,
+  });
   store.products.push(product);
   writeStore(store);
   revalidatePublic();

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { assertAdmin } from "@/lib/auth";
 import { readStore, writeStore } from "@/lib/store";
+import { ensureProductDetail, outlineFromLessons } from "@/lib/course";
 import type { Product } from "@/lib/data";
 
 export async function PUT(
@@ -23,7 +24,7 @@ export async function PUT(
       body.originalPrice === undefined
         ? current.originalPrice
         : Number(body.originalPrice) || undefined;
-    store.products[index] = {
+    store.products[index] = ensureProductDetail({
       ...current,
       ...body,
       slug: current.slug,
@@ -31,7 +32,10 @@ export async function PUT(
       price: Number(body.price ?? current.price),
       originalPrice: original,
       sales: Number(body.sales ?? current.sales),
-    };
+      description: body.description || body.detail?.body || current.description,
+      outline: body.outline || outlineFromLessons(body.detail?.lessons || current.detail?.lessons || []),
+      detail: body.detail ?? current.detail,
+    });
   writeStore(store);
   revalidatePath("/", "layout");
   return NextResponse.json(store.products[index]);
