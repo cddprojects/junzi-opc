@@ -31,7 +31,7 @@ export type AppStore = {
 const DATA_DIR = path.join(process.cwd(), "data");
 const STORE_PATH = path.join(DATA_DIR, "store.json");
 export const UPLOAD_DIR = path.join(DATA_DIR, "uploads");
-const STORE_VERSION = 3;
+const STORE_VERSION = 4;
 
 function seedProduct(product: Product): Product {
   if (product.slug === "qihang") {
@@ -100,7 +100,7 @@ function migrateStore(parsed: AppStore): AppStore {
   const products = (parsed.products ?? []).map((product) => {
     const next = ensureProductDetail(product);
     if (
-      (parsed.version ?? 0) < 3 &&
+      (parsed.version ?? 0) < 4 &&
       next.slug === "qihang" &&
       (!next.detail?.extraSections || next.detail.extraSections.length === 0)
     ) {
