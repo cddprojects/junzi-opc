@@ -15,7 +15,7 @@ export function NoticeBar({ href, text }: { href: string; text: string }) {
   return (
     <Link
       href={href}
-      className="flex items-center gap-2 bg-[#f3f3f3] px-3 py-2 text-[12px] text-[#555]"
+      className="flex items-center gap-2 bg-[#f3f3f3] px-3 py-2 text-[12px] text-[#555] md:rounded-md md:px-4"
     >
       <Megaphone className="size-3.5 shrink-0 text-[#888]" />
       <span className="min-w-0 flex-1 truncate">{text}</span>
@@ -36,7 +36,7 @@ export function SearchBox({
   action?: string;
 }) {
   return (
-    <form action={action} className="px-3 py-2">
+    <form action={action} className="px-3 py-2 md:px-0">
       <div className="relative">
         <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-[#bbb]" />
         <Input
@@ -65,7 +65,13 @@ export function ProductRow({
   return (
     <div className="flex gap-3 bg-white px-3 py-3">
       <Link href={product.href} className="block w-[88px] shrink-0 overflow-hidden rounded-md">
-        <CoverArt theme={product.cover} compact showPrice />
+        <CoverArt
+          theme={product.cover}
+          image={product.coverImage}
+          compact
+          showPrice
+          priceLabel={`¥${product.price}`}
+        />
       </Link>
       <div className="min-w-0 flex-1">
         <Link href={product.href} className="block text-[15px] leading-6 font-medium">
@@ -85,7 +91,7 @@ export function ProductRow({
           </div>
           <button
             type="button"
-            onClick={() => addToCart(product.slug)}
+            onClick={() => addToCart(product)}
             className="flex size-7 items-center justify-center rounded-full bg-[#fa3534] text-white"
             aria-label="加入购物车"
           >
@@ -127,13 +133,13 @@ export function CategoryIcons({
   items: readonly { id: string; label: string; href: string }[];
 }) {
   return (
-    <div className="grid grid-cols-5 bg-white px-1 py-3">
+    <div className="grid grid-cols-5 bg-white px-1 py-3 md:rounded-xl md:px-6 md:py-6">
       {items.map((item) => (
         <Link key={item.id} href={item.href} className="flex flex-col items-center gap-1.5">
-          <span className="flex size-12 items-center justify-center overflow-hidden rounded-full bg-[#f4efe6]">
+          <span className="flex size-12 items-center justify-center overflow-hidden rounded-full bg-[#f4efe6] md:size-16">
             <CategoryGlyph id={item.id} />
           </span>
-          <span className="text-[11px] text-[#444]">{item.label}</span>
+          <span className="text-[11px] text-[#444] md:text-sm">{item.label}</span>
         </Link>
       ))}
     </div>
@@ -185,27 +191,69 @@ function CategoryGlyph({ id }: { id: string }) {
   );
 }
 
+export function ProductCard({ product }: { product: Product }) {
+  const { addToCart } = useDemoStore();
+  return (
+    <div className="overflow-hidden rounded-xl bg-white shadow-sm">
+      <Link href={product.href}>
+        <CoverArt
+          theme={product.cover}
+          image={product.coverImage}
+          showPrice
+          priceLabel={`¥${product.price}`}
+        />
+      </Link>
+      <div className="p-4">
+        <Link href={product.href} className="block text-[16px] leading-6 font-medium">
+          {product.title}
+        </Link>
+        {product.subtitle && <p className="mt-1 line-clamp-2 text-[13px] text-[#777]">{product.subtitle}</p>}
+        <div className="mt-4 flex items-end justify-between">
+          <div>
+            <p className="text-[20px] font-semibold text-[#fa3534]">{formatYen(product.price)}</p>
+            {product.originalPrice ? (
+              <p className="text-[12px] text-[#999] line-through">原价: {formatYen(product.originalPrice)}</p>
+            ) : null}
+            <p className="mt-1 text-[12px] text-[#999]">销量: {product.sales}</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => addToCart(product)}
+            className="flex size-8 items-center justify-center rounded-full bg-[#fa3534] text-white"
+            aria-label="加入购物车"
+          >
+            <Plus className="size-4" />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function HomeCarousel({
   slides,
 }: {
-  slides: { id: string; href: string; theme: CoverTheme; title: string }[];
+  slides: { id: string; href: string; theme?: CoverTheme; title: string; image?: string }[];
 }) {
   const router = useRouter();
   const [index, setIndex] = React.useState(0);
+  const safeSlides = slides.length ? slides : [];
 
   React.useEffect(() => {
+    if (safeSlides.length < 2) return;
     const timer = window.setInterval(() => {
-      setIndex((current) => (current + 1) % slides.length);
+      setIndex((current) => (current + 1) % safeSlides.length);
     }, 4200);
     return () => window.clearInterval(timer);
-  }, [slides.length]);
+  }, [safeSlides.length]);
 
-  const slide = slides[index];
+  const slide = safeSlides[index];
+  if (!slide) return null;
 
   return (
-    <div className="relative mx-3 overflow-hidden rounded-md">
+    <div className="relative mx-3 overflow-hidden rounded-md md:mx-0 md:rounded-2xl">
       <button type="button" className="block w-full text-left" onClick={() => router.push(slide.href)}>
-        <CoverArt theme={slide.theme} className="aspect-[16/9]" />
+        <CoverArt theme={slide.theme} image={slide.image} className="aspect-[16/9] md:aspect-[21/8]" />
       </button>
       <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-1.5">
         {slides.map((item, i) => (
@@ -226,7 +274,7 @@ export function HomeCarousel({
 }
 
 export function SectionTitle({ children }: { children: React.ReactNode }) {
-  return <h2 className="px-3 pt-4 pb-2 text-[16px] font-semibold">{children}</h2>;
+  return <h2 className="px-3 pt-4 pb-2 text-[16px] font-semibold md:px-0 md:pt-8 md:text-[22px]">{children}</h2>;
 }
 
 export function EmptyHint({ children }: { children: React.ReactNode }) {

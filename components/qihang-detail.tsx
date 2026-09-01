@@ -16,9 +16,10 @@ import {
 } from "lucide-react";
 import { QihangHeroCover } from "@/components/covers";
 import { BuyBar } from "@/components/buy-bar";
+import { VideoBlock } from "@/components/video-block";
 import { useDemoStore } from "@/components/demo-store";
 import { qihangDetail } from "@/lib/data";
-import type { Product } from "@/lib/data";
+import type { CatalogVideo, Product } from "@/lib/data";
 import { formatPrice } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -33,14 +34,16 @@ const lessonIcons = {
   check: CheckSquare,
 };
 
-export function QihangDetail({ product }: { product: Product }) {
-  const { toggleFavorite, favorites } = useDemoStore();
+export function QihangDetail({ product, video }: { product: Product; video?: CatalogVideo }) {
+  const { toggleFavorite, favorites, openPay } = useDemoStore();
   const favored = favorites.includes(product.slug);
 
   return (
-    <div className="bg-[#f7f4ee] pb-4">
-      <QihangHeroCover />
-      <div className="bg-white px-3 pt-3 pb-4">
+    <div className="bg-[#f7f4ee] pb-4 md:bg-transparent">
+      <div className="md:overflow-hidden md:rounded-2xl">
+        {video?.videoUrl || video?.poster ? <VideoBlock video={video} /> : <QihangHeroCover />}
+      </div>
+      <div className="bg-white px-3 pt-3 pb-4 md:mt-4 md:rounded-2xl md:px-6">
         <div className="flex items-end justify-between">
           <div className="flex items-baseline gap-2">
             <span className="text-[24px] font-semibold text-[#fa3534]">¥{formatPrice(product.price)}</span>
@@ -68,14 +71,21 @@ export function QihangDetail({ product }: { product: Product }) {
           </div>
         </div>
         <div className="mt-3 flex items-center gap-2 text-[12px]">
-          <span className="rounded-full bg-[#fa3534] px-2 py-0.5 text-white">赠送</span>
+          {product.giftNote && <span className="rounded-full bg-[#fa3534] px-2 py-0.5 text-white">赠送</span>}
           <span className="text-[#555]">{product.giftNote}</span>
         </div>
+        <button
+          type="button"
+          onClick={openPay}
+          className="mt-5 hidden h-11 w-full rounded-md bg-[#fa3534] text-white md:block md:max-w-xs"
+        >
+          立即购买
+        </button>
       </div>
 
       <p className="py-3 text-center text-[12px] text-[#999]">—— 商品详情 ——</p>
 
-      <section className="px-4 pb-6 text-[#2b261c]">
+      <section className="px-4 pb-6 text-[#2b261c] md:px-0">
         <p className="text-center text-[15px]">{qihangDetail.valueLine}</p>
         <div className="mt-4 grid grid-cols-3 gap-2 text-center">
           {qihangDetail.pillars.map((pillar) => (
@@ -195,7 +205,9 @@ export function QihangDetail({ product }: { product: Product }) {
           <p className="mt-5 text-[11px] text-[#d4b56a]">以君子之道修身 以小雅之智成事</p>
         </div>
       </section>
-      <BuyBar />
+      <div className="md:hidden">
+        <BuyBar />
+      </div>
     </div>
   );
 }

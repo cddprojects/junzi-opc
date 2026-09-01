@@ -7,7 +7,7 @@ export default function MemberPage() {
   const { openPay } = useDemoStore();
 
   return (
-    <div className="bg-[#f7f7f7] pb-6">
+    <div className="bg-[#f7f7f7] pb-6 md:overflow-hidden md:rounded-2xl">
       <div className="bg-[#2c2c2c] px-3 pt-4 pb-5">
         <div className="rounded-xl bg-[linear-gradient(135deg,#f0d48a,#d7b25a)] px-4 py-5 text-[#3a2c10]">
           <div className="flex items-start justify-between">

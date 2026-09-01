@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Noto_Sans_SC, Noto_Serif_SC } from "next/font/google";
 import { Providers } from "@/components/providers";
-import { PhoneShell } from "@/components/shell";
+import { AppShell } from "@/components/shell";
 import "./globals.css";
 
 const sans = Noto_Sans_SC({
@@ -30,7 +30,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="min-h-full font-sans">
         <Providers>
-          <PhoneShell>{children}</PhoneShell>
+          <AppShell>{children}</AppShell>
         </Providers>
       </body>
     </html>

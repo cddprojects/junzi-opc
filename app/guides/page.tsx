@@ -4,7 +4,7 @@ import { guides } from "@/lib/data";
 
 export default function GuidesPage() {
   return (
-    <div className="bg-white">
+    <div className="bg-white md:overflow-hidden md:rounded-2xl">
       <p className="px-3 py-2 text-[13px] text-[#666]">君子小雅OPC小程序</p>
       {guides.map((guide) => (
         <Link key={guide.slug} href={guide.href} className="block border-t border-[#f0f0f0]">

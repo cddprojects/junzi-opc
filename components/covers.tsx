@@ -19,16 +19,20 @@ function PriceTag({ children }: { children: React.ReactNode }) {
 
 export function CoverArt({
   theme,
+  image,
   className,
   compact,
   showVideoBadge,
   showPrice,
+  priceLabel,
 }: {
-  theme: CoverTheme;
+  theme?: CoverTheme;
+  image?: string;
   className?: string;
   compact?: boolean;
   showVideoBadge?: boolean;
   showPrice?: boolean;
+  priceLabel?: string;
 }) {
   return (
     <div
@@ -38,16 +42,25 @@ export function CoverArt({
         className,
       )}
     >
-      {theme === "qihang" && <QihangArt compact={compact} />}
-      {theme === "shizhan" && <ShizhanArt compact={compact} />}
-      {theme === "compute" && <ComputeArt />}
-      {theme === "growth" && <GrowthArt compact={compact} />}
-      {theme === "guide" && <GuideArt title="君子小雅OPC研习社小程序 操作指南一 (必看)" />}
-      {theme === "guide-ai" && <GuideArt title="君子小雅AI工具小程序 操作指南二 (必看)" />}
-      {theme === "live-qihang" && <LiveQihangArt />}
-      {theme === "live-shizhan" && <LiveShizhanArt />}
-      {showPrice && theme === "qihang" && <PriceTag>¥9.9</PriceTag>}
-      {showPrice && theme === "shizhan" && <PriceTag>¥699</PriceTag>}
+      {image ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={image} alt="" className="absolute inset-0 size-full object-cover" />
+      ) : (
+        <>
+          {theme === "qihang" && <QihangArt compact={compact} />}
+          {theme === "shizhan" && <ShizhanArt compact={compact} />}
+          {theme === "compute" && <ComputeArt />}
+          {theme === "growth" && <GrowthArt compact={compact} />}
+          {theme === "guide" && <GuideArt title="君子小雅OPC研习社小程序 操作指南一 (必看)" />}
+          {theme === "guide-ai" && <GuideArt title="君子小雅AI工具小程序 操作指南二 (必看)" />}
+          {theme === "live-qihang" && <LiveQihangArt />}
+          {theme === "live-shizhan" && <LiveShizhanArt />}
+          {!theme && <div className="absolute inset-0 bg-[#efe6d6]" />}
+        </>
+      )}
+      {showPrice && (priceLabel || theme === "qihang" || theme === "shizhan") && (
+        <PriceTag>{priceLabel || (theme === "shizhan" ? "¥699" : "¥9.9")}</PriceTag>
+      )}
       {showVideoBadge && <VideoBadge />}
     </div>
   );

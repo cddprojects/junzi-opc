@@ -9,7 +9,7 @@ export function BuyBar() {
   const count = cartCount(cart);
 
   return (
-    <div className="fixed bottom-0 left-1/2 z-40 flex h-[58px] w-full max-w-[430px] -translate-x-1/2 items-center border-t border-black/6 bg-white pr-2 pl-1">
+    <div className="fixed bottom-0 left-0 z-40 flex h-[58px] w-full items-center border-t border-black/6 bg-white pr-2 pl-1 md:left-1/2 md:max-w-6xl md:-translate-x-1/2 md:rounded-t-xl md:shadow-lg">
       <Link href="/" className="flex w-12 flex-col items-center gap-0.5 text-[10px] text-[#666]">
         <Home className="size-5" />
         首页

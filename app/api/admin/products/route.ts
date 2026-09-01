@@ -1,0 +1,55 @@
+import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
+import { assertAdmin } from "@/lib/auth";
+import { getCatalog, readStore, slugify, writeStore } from "@/lib/store";
+import type { Product, ProductCategoryId } from "@/lib/data";
+
+function revalidatePublic() {
+  revalidatePath("/", "layout");
+}
+
+export async function GET() {
+  try {
+    await assertAdmin();
+  } catch {
+    return NextResponse.json({ error: "未登录" }, { status: 401 });
+  }
+  return NextResponse.json(getCatalog().products);
+}
+
+export async function POST(request: Request) {
+  try {
+    await assertAdmin();
+  } catch {
+    return NextResponse.json({ error: "未登录" }, { status: 401 });
+  }
+  const body = (await request.json()) as Partial<Product>;
+  if (!body.title?.trim()) {
+    return NextResponse.json({ error: "请填写标题" }, { status: 400 });
+  }
+  const store = readStore();
+  const slug = slugify(body.slug || body.title);
+  if (store.products.some((item) => item.slug === slug)) {
+    return NextResponse.json({ error: "该 slug 已存在" }, { status: 400 });
+  }
+  const product: Product = {
+    slug,
+    title: body.title.trim(),
+    shortTitle: (body.shortTitle || body.title).trim(),
+    price: Number(body.price || 0),
+    originalPrice: body.originalPrice ? Number(body.originalPrice) : undefined,
+    sales: Number(body.sales || 0),
+    categoryId: (body.categoryId as ProductCategoryId) || "opc",
+    cover: body.cover || "qihang",
+    href: `/product/${slug}`,
+    subtitle: body.subtitle,
+    giftNote: body.giftNote,
+    description: body.description,
+    outline: body.outline,
+    coverImage: body.coverImage,
+  };
+  store.products.push(product);
+  writeStore(store);
+  revalidatePublic();
+  return NextResponse.json(product);
+}

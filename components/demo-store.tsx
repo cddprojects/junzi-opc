@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { toast } from "sonner";
-import { getProduct } from "@/lib/data";
+import type { Product } from "@/lib/data";
 import {
   Dialog,
   DialogContent,
@@ -13,13 +13,13 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 
-type CartItem = { slug: string; qty: number };
+export type CartItem = { slug: string; qty: number; product: Product };
 
 type Store = {
   cart: CartItem[];
   favorites: string[];
   payOpen: boolean;
-  addToCart: (slug: string) => void;
+  addToCart: (product: Product) => void;
   removeFromCart: (slug: string) => void;
   toggleFavorite: (slug: string) => void;
   openPay: () => void;
@@ -33,37 +33,28 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
   const [favorites, setFavorites] = React.useState<string[]>([]);
   const [payOpen, setPayOpen] = React.useState(false);
 
-  const persistCart = (next: CartItem[]) => {
-    setCart(next);
-  };
-
-  const persistFav = (next: string[]) => {
-    setFavorites(next);
-  };
-
   const value = React.useMemo<Store>(
     () => ({
       cart,
       favorites,
       payOpen,
-      addToCart: (slug) => {
-        const product = getProduct(slug);
-        const existing = cart.find((item) => item.slug === slug);
-        persistCart(
+      addToCart: (product) => {
+        const existing = cart.find((item) => item.slug === product.slug);
+        setCart(
           existing
             ? cart.map((item) =>
-                item.slug === slug ? { ...item, qty: item.qty + 1 } : item,
+                item.slug === product.slug ? { ...item, qty: item.qty + 1 } : item,
               )
-            : [...cart, { slug, qty: 1 }],
+            : [...cart, { slug: product.slug, qty: 1, product }],
         );
-        toast.success(product ? `已加入购物车：${product.shortTitle}` : "已加入购物车");
+        toast.success(`已加入购物车：${product.shortTitle || product.title}`);
       },
-      removeFromCart: (slug) => persistCart(cart.filter((item) => item.slug !== slug)),
+      removeFromCart: (slug) => setCart(cart.filter((item) => item.slug !== slug)),
       toggleFavorite: (slug) => {
         const next = favorites.includes(slug)
           ? favorites.filter((id) => id !== slug)
           : [...favorites, slug];
-        persistFav(next);
+        setFavorites(next);
         toast(next.includes(slug) ? "已收藏" : "已取消收藏");
       },
       openPay: () => setPayOpen(true),

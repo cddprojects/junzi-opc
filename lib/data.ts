@@ -22,7 +22,49 @@ export type Product = {
   href: string;
   subtitle?: string;
   giftNote?: string;
+  description?: string;
+  outline?: string;
+  coverImage?: string;
 };
+
+export type PosterPlacement = "home-carousel" | "home-banner";
+
+export type Poster = {
+  id: string;
+  title: string;
+  href: string;
+  sort: number;
+  placement: PosterPlacement;
+  image?: string;
+  subtitle?: string;
+  kicker?: string;
+  priceLabel?: string;
+  theme?: CoverTheme;
+};
+
+export type VideoPlacement = "home-intro" | "home-case" | "product-hero" | "library";
+
+export type CatalogVideo = {
+  id: string;
+  title: string;
+  poster?: string;
+  videoUrl?: string;
+  duration?: string;
+  productSlug?: string;
+  overlay?: string;
+  placement: VideoPlacement;
+};
+
+export const COVER_THEMES: CoverTheme[] = [
+  "qihang",
+  "shizhan",
+  "compute",
+  "growth",
+  "guide",
+  "guide-ai",
+  "live-qihang",
+  "live-shizhan",
+];
 
 export type Lesson = {
   index: number;

@@ -1,5 +1,9 @@
 import { ComingSoonPoster } from "@/components/covers";
 
 export default function EventsPage() {
-  return <ComingSoonPoster title="活动报名" />;
+  return (
+    <div className="md:overflow-hidden md:rounded-2xl">
+      <ComingSoonPoster title="活动报名" />
+    </div>
+  );
 }

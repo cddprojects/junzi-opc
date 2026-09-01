@@ -3,20 +3,35 @@
 import { Share2, Star } from "lucide-react";
 import { CoverArt } from "@/components/covers";
 import { BuyBar } from "@/components/buy-bar";
+import { VideoBlock } from "@/components/video-block";
 import { useDemoStore } from "@/components/demo-store";
 import { formatPrice } from "@/lib/format";
 import { shizhanDetail } from "@/lib/data";
-import type { Product } from "@/lib/data";
+import type { CatalogVideo, Product } from "@/lib/data";
 import { cn } from "@/lib/utils";
 
-export function SimpleProductDetail({ product }: { product: Product }) {
-  const { toggleFavorite, favorites } = useDemoStore();
+export function SimpleProductDetail({
+  product,
+  video,
+}: {
+  product: Product;
+  video?: CatalogVideo;
+}) {
+  const { toggleFavorite, favorites, openPay } = useDemoStore();
   const favored = favorites.includes(product.slug);
 
   return (
-    <div className="bg-[#f7f7f7] pb-4">
-      <CoverArt theme={product.cover} className="rounded-none" />
-      <div className="bg-white px-3 pt-3 pb-4">
+    <div className="bg-[#f7f7f7] pb-4 md:bg-transparent">
+      {video?.videoUrl || video?.poster ? (
+        <VideoBlock video={video} />
+      ) : (
+        <CoverArt
+          theme={product.cover}
+          image={product.coverImage}
+          className="rounded-none md:rounded-2xl"
+        />
+      )}
+      <div className="bg-white px-3 pt-3 pb-4 md:mt-4 md:rounded-2xl md:px-6">
         <div className="flex items-end justify-between">
           <span className="text-[24px] font-semibold text-[#fa3534]">¥{formatPrice(product.price)}</span>
           <span className="text-[12px] text-[#999]">已售 {product.sales} 件</span>
@@ -42,12 +57,30 @@ export function SimpleProductDetail({ product }: { product: Product }) {
           </div>
         </div>
         {product.subtitle && <p className="mt-2 text-[13px] text-[#666]">{product.subtitle}</p>}
+        {product.description && (
+          <p className="mt-3 text-[13px] leading-6 text-[#555] whitespace-pre-wrap">{product.description}</p>
+        )}
+        <button
+          type="button"
+          onClick={openPay}
+          className="mt-5 hidden h-11 rounded-md bg-[#fa3534] px-8 text-white md:inline-flex md:items-center"
+        >
+          立即购买
+        </button>
       </div>
 
       <p className="py-3 text-center text-[12px] text-[#999]">—— 商品详情 ——</p>
 
-      {product.slug === "shizhan" ? <ShizhanBody /> : <ComputeBody />}
-      <BuyBar />
+      {product.outline && product.slug !== "shizhan" && product.slug !== "compute" ? (
+        <section className="mx-3 rounded-md bg-white px-3 py-4 md:mx-0">
+          <h2 className="text-[15px] font-semibold">课程大纲</h2>
+          <p className="mt-2 text-[13px] leading-6 whitespace-pre-wrap">{product.outline}</p>
+        </section>
+      ) : null}
+      {product.slug === "shizhan" ? <ShizhanBody /> : product.slug === "compute" ? <ComputeBody /> : null}
+      <div className="md:hidden">
+        <BuyBar />
+      </div>
     </div>
   );
 }

@@ -4,32 +4,22 @@ import Link from "next/link";
 import { CoverArt } from "@/components/covers";
 import { useDemoStore } from "@/components/demo-store";
 import { EmptyHint } from "@/components/catalog";
-import { getProduct } from "@/lib/data";
 import { formatYen } from "@/lib/format";
 
 export default function CartPage() {
   const { cart, removeFromCart, openPay } = useDemoStore();
-  const rows = cart
-    .map((item) => {
-      const product = getProduct(item.slug);
-      return product ? { ...item, product } : null;
-    })
-    .filter((row): row is NonNullable<typeof row> => row !== null);
-
-  const total = rows.reduce((sum, row) => sum + row.product.price * row.qty, 0);
+  const total = cart.reduce((sum, row) => sum + row.product.price * row.qty, 0);
 
   return (
-    <div className="bg-[#f7f7f7] min-h-[60vh]">
-      {rows.length === 0 ? (
-        <EmptyHint>
-          购物车是空的。可在课程卡片上点击红色 + 加入（演示，不会结算）。
-        </EmptyHint>
+    <div className="min-h-[60vh] bg-[#f7f7f7] md:rounded-2xl md:bg-white">
+      {cart.length === 0 ? (
+        <EmptyHint>购物车是空的。可在课程卡片上点击红色 + 加入（演示，不会结算）。</EmptyHint>
       ) : (
-        <div className="bg-white">
-          {rows.map((row) => (
-            <div key={row.slug} className="flex gap-3 border-b border-[#f3f3f3] px-3 py-3">
+        <div>
+          {cart.map((row) => (
+            <div key={row.slug} className="flex gap-3 border-b border-[#f3f3f3] px-3 py-3 md:px-6">
               <Link href={row.product.href} className="w-20 overflow-hidden rounded-md">
-                <CoverArt theme={row.product.cover} compact />
+                <CoverArt theme={row.product.cover} image={row.product.coverImage} compact />
               </Link>
               <div className="min-w-0 flex-1">
                 <Link href={row.product.href} className="block text-[14px] font-medium">
@@ -45,7 +35,7 @@ export default function CartPage() {
               </div>
             </div>
           ))}
-          <div className="flex items-center justify-between px-3 py-3">
+          <div className="flex items-center justify-between px-3 py-3 md:px-6">
             <p className="text-[14px]">
               合计 <span className="text-[18px] text-[#fa3534]">{formatYen(total)}</span>
             </p>
