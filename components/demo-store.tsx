@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
 import { toast } from "sonner";
 import type { Product } from "@/lib/data";
 import type { CheckoutItem, Order } from "@/lib/account";
@@ -35,13 +36,30 @@ const StoreContext = React.createContext<Store | null>(null);
 
 export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
   const { user, loading, refresh } = useAuth();
+  const pathname = usePathname();
+  const router = useRouter();
   const [cart, setCart] = React.useState<CartItem[]>([]);
   const [favorites, setFavorites] = React.useState<string[]>([]);
-  const [open, setOpen] = React.useState(false);
+  const [openedOn, setOpenedOn] = React.useState<string | null>(null);
   const [items, setItems] = React.useState<CheckoutItem[]>([]);
   const [busy, setBusy] = React.useState(false);
   const [error, setError] = React.useState("");
   const [result, setResult] = React.useState<PayResult[] | null>(null);
+
+  const visible = Boolean(openedOn && openedOn === pathname);
+
+  const closePay = React.useCallback(() => {
+    setOpenedOn(null);
+    setResult(null);
+    setError("");
+    setBusy(false);
+  }, []);
+
+  function goAuth(mode: "login" | "register") {
+    const next = pathname === "/" ? "/cart" : pathname;
+    closePay();
+    router.push(`/${mode}?next=${encodeURIComponent(next)}`);
+  }
 
   const value = React.useMemo<Store>(
     () => ({
@@ -71,10 +89,10 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
         setItems(nextItems);
         setResult(null);
         setError("");
-        setOpen(true);
+        setOpenedOn(pathname);
       },
     }),
-    [cart, favorites],
+    [cart, favorites, pathname],
   );
 
   async function confirmPay() {
@@ -104,89 +122,108 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
   return (
     <StoreContext.Provider value={value}>
       {children}
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-[360px]">
-          {result ? (
-            <>
-              <DialogHeader>
-                <DialogTitle>购买成功</DialogTitle>
-                <DialogDescription>
-                  演示结算未发起真实扣款。请保存下列加密课程码，之后可在「学习订单」或「验证课程码」查看。
-                </DialogDescription>
-              </DialogHeader>
-              <div className="space-y-3">
-                {result.map((order) => (
-                  <div key={order.id} className="rounded-lg bg-[#faf6ee] px-3 py-3">
-                    <p className="text-[13px]">{order.productTitle}</p>
-                    <CopyCode
-                      code={order.verifyCode}
-                      className="mt-1 block w-full text-left font-mono text-[13px] font-medium text-[#8a5a20]"
-                    />
-                  </div>
-                ))}
-              </div>
-              <DialogFooter className="flex-col gap-2 sm:flex-col">
-                <Link href="/orders" className="w-full rounded-md bg-[#8a5a20] py-2 text-center text-[13px] text-white">
-                  查看我的订单
-                </Link>
-                <Link href="/verify" className="w-full rounded-md bg-[#f3ead8] py-2 text-center text-[13px] text-[#8a5a20]">
-                  验证课程码
-                </Link>
-                <Button variant="ghost" onClick={() => setOpen(false)}>
-                  关闭
-                </Button>
-              </DialogFooter>
-            </>
-          ) : (
-            <>
-              <DialogHeader>
-                <DialogTitle>{!loading && !user ? "请先登录" : "确认演示购买"}</DialogTitle>
-                <DialogDescription>
-                  {!loading && !user
-                    ? "浏览无需登录。购买课程、查看「我的学习」需要先注册或登录。"
-                    : "本站不接入微信支付或第三方收款，确认后只生成订单和加密课程码，不会扣款。"}
-                </DialogDescription>
-              </DialogHeader>
-              {items.length > 0 && (
-                <ul className="space-y-1 text-[13px] text-[#555]">
-                  {items.map((item) => (
-                    <li key={item.slug}>
-                      {item.title} × {item.qty || 1}
-                    </li>
+      {visible ? (
+        <Dialog
+          key={pathname}
+          open
+          disablePointerDismissal={false}
+          onOpenChange={(next) => {
+            if (!next) closePay();
+          }}
+        >
+          <DialogContent className="max-w-[360px]">
+            {result ? (
+              <>
+                <DialogHeader>
+                  <DialogTitle>购买成功</DialogTitle>
+                  <DialogDescription>
+                    演示结算未发起真实扣款。请保存下列加密课程码，之后可在「学习订单」或「验证课程码」查看。
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-3">
+                  {result.map((order) => (
+                    <div key={order.id} className="rounded-lg bg-[#faf6ee] px-3 py-3">
+                      <p className="text-[13px]">{order.productTitle}</p>
+                      <CopyCode
+                        code={order.verifyCode}
+                        className="mt-1 block w-full text-left font-mono text-[13px] font-medium text-[#8a5a20]"
+                      />
+                    </div>
                   ))}
-                </ul>
-              )}
-              {error && <p className="text-[13px] text-[#fa3534]">{error}</p>}
-              <DialogFooter>
-                {!loading && !user ? (
-                  <div className="flex w-full flex-col gap-2">
-                    <Link
-                      href={`/login?next=${encodeURIComponent(typeof window !== "undefined" ? window.location.pathname : "/mine")}`}
-                      className="w-full rounded-md bg-[#8a5a20] py-2 text-center text-[13px] text-white"
-                    >
-                      去登录
-                    </Link>
-                    <Link
-                      href={`/register?next=${encodeURIComponent(typeof window !== "undefined" ? window.location.pathname : "/mine")}`}
-                      className="w-full rounded-md bg-[#f3ead8] py-2 text-center text-[13px] text-[#8a5a20]"
-                    >
-                      注册账号
-                    </Link>
-                  </div>
-                ) : (
-                  <Button
-                    className="w-full bg-[#fa3534] text-white hover:bg-[#e12f2e]"
-                    disabled={busy || loading}
-                    onClick={confirmPay}
+                </div>
+                <DialogFooter className="flex-col gap-2 sm:flex-col">
+                  <Link
+                    href="/orders"
+                    onClick={closePay}
+                    className="w-full rounded-md bg-[#8a5a20] py-2 text-center text-[13px] text-white"
                   >
-                    {busy ? "生成课程码…" : "确认购买（演示）"}
+                    查看我的订单
+                  </Link>
+                  <Link
+                    href="/verify"
+                    onClick={closePay}
+                    className="w-full rounded-md bg-[#f3ead8] py-2 text-center text-[13px] text-[#8a5a20]"
+                  >
+                    验证课程码
+                  </Link>
+                  <Button variant="ghost" onClick={closePay}>
+                    关闭
                   </Button>
+                </DialogFooter>
+              </>
+            ) : (
+              <>
+                <DialogHeader>
+                  <DialogTitle>{!loading && !user ? "请先登录" : "确认演示购买"}</DialogTitle>
+                  <DialogDescription>
+                    {!loading && !user
+                      ? "浏览无需登录。购买课程、查看「我的学习」需要先注册或登录。"
+                      : "本站不接入微信支付或第三方收款，确认后只生成订单和加密课程码，不会扣款。"}
+                  </DialogDescription>
+                </DialogHeader>
+                {items.length > 0 && (
+                  <ul className="space-y-1 text-[13px] text-[#555]">
+                    {items.map((item) => (
+                      <li key={item.slug}>
+                        {item.title} × {item.qty || 1}
+                      </li>
+                    ))}
+                  </ul>
                 )}
-              </DialogFooter>
-            </>
-          )}
-        </DialogContent>
-      </Dialog>
+                {error && <p className="text-[13px] text-[#fa3534]">{error}</p>}
+                <DialogFooter>
+                  {!loading && !user ? (
+                    <div className="flex w-full flex-col gap-2">
+                      <button
+                        type="button"
+                        onClick={() => goAuth("login")}
+                        className="w-full rounded-md bg-[#8a5a20] py-2 text-center text-[13px] text-white"
+                      >
+                        去登录
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => goAuth("register")}
+                        className="w-full rounded-md bg-[#f3ead8] py-2 text-center text-[13px] text-[#8a5a20]"
+                      >
+                        注册账号
+                      </button>
+                    </div>
+                  ) : (
+                    <Button
+                      className="w-full bg-[#fa3534] text-white hover:bg-[#e12f2e]"
+                      disabled={busy || loading}
+                      onClick={confirmPay}
+                    >
+                      {busy ? "生成课程码…" : "确认购买（演示）"}
+                    </Button>
+                  )}
+                </DialogFooter>
+              </>
+            )}
+          </DialogContent>
+        </Dialog>
+      ) : null}
     </StoreContext.Provider>
   );
 }
