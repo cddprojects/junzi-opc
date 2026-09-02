@@ -10,7 +10,7 @@ import {
   SectionTitle,
 } from "@/components/catalog";
 import { VideoBlock } from "@/components/video-block";
-import { brand, caseStudy, homeCategories, introVideo } from "@/lib/data";
+import { brand, caseStudy, homeCategories, introVideo, membership } from "@/lib/data";
 import { getCatalog } from "@/lib/store";
 
 export const dynamic = "force-dynamic";
@@ -31,13 +31,24 @@ export default function HomePage() {
         <SearchBox placeholder="搜索" center />
       </div>
       <HomeCarousel
-        slides={carousel.map((item) => ({
-          id: item.id,
-          href: item.href,
-          theme: item.theme,
-          title: item.title,
-          image: item.image,
-        }))}
+        slides={carousel.map((item) => {
+          const product = products.find((row) => row.href === item.href || `/product/${row.slug}` === item.href);
+          const fromLabel = Number(String(item.priceLabel || "").replace(/[^\d.]/g, ""));
+          return {
+            id: item.id,
+            href: item.href,
+            theme: item.theme,
+            title: item.title,
+            image: item.image,
+            priceCny:
+              product?.price ??
+              (item.href === "/member"
+                ? membership.campPrice
+                : Number.isFinite(fromLabel) && fromLabel > 0
+                  ? fromLabel
+                  : undefined),
+          };
+        })}
       />
       <CategoryIcons items={homeCategories} />
       <div className="px-3 pt-2 md:px-0">

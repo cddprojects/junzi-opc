@@ -240,7 +240,7 @@ export function ProductCard({ product }: { product: Product }) {
 export function HomeCarousel({
   slides,
 }: {
-  slides: { id: string; href: string; theme?: CoverTheme; title: string; image?: string }[];
+  slides: { id: string; href: string; theme?: CoverTheme; title: string; image?: string; priceCny?: number }[];
 }) {
   const router = useRouter();
   const [index, setIndex] = React.useState(0);
@@ -260,7 +260,12 @@ export function HomeCarousel({
   return (
     <div className="relative mx-3 overflow-hidden rounded-md md:mx-0 md:rounded-2xl">
       <button type="button" className="block w-full text-left" onClick={() => router.push(slide.href)}>
-        <CoverArt theme={slide.theme} image={slide.image} className="aspect-[16/9] md:aspect-[21/8]" />
+        <CoverArt
+          theme={slide.theme}
+          image={slide.image}
+          priceCny={slide.priceCny}
+          className="aspect-[16/9] md:aspect-[21/8]"
+        />
       </button>
       <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-1.5">
         {slides.map((item, i) => (

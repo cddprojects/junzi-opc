@@ -1,5 +1,15 @@
+"use client";
+
 import { cn } from "@/lib/utils";
 import type { CoverTheme } from "@/lib/data";
+import { membership } from "@/lib/data";
+import { useCurrency } from "@/components/currency-provider";
+
+const THEME_PRICE_CNY: Partial<Record<CoverTheme, number>> = {
+  qihang: 9.9,
+  shizhan: 699,
+  growth: membership.campPrice,
+};
 
 function VideoBadge() {
   return (
@@ -25,6 +35,7 @@ export function CoverArt({
   showVideoBadge,
   showPrice,
   priceLabel,
+  priceCny,
 }: {
   theme?: CoverTheme;
   image?: string;
@@ -33,7 +44,11 @@ export function CoverArt({
   showVideoBadge?: boolean;
   showPrice?: boolean;
   priceLabel?: string;
+  priceCny?: number;
 }) {
+  const { format } = useCurrency();
+  const resolvedCny = priceCny ?? (theme ? THEME_PRICE_CNY[theme] : undefined);
+  const resolvedPrice = priceLabel || (resolvedCny != null ? format(resolvedCny) : undefined);
   return (
     <div
       className={cn(
@@ -47,10 +62,10 @@ export function CoverArt({
         <img src={image} alt="" className="absolute inset-0 size-full object-cover" />
       ) : (
         <>
-          {theme === "qihang" && <QihangArt compact={compact} />}
-          {theme === "shizhan" && <ShizhanArt compact={compact} />}
+          {theme === "qihang" && <QihangArt compact={compact} priceLabel={resolvedPrice} />}
+          {theme === "shizhan" && <ShizhanArt compact={compact} priceLabel={resolvedPrice} />}
           {theme === "compute" && <ComputeArt />}
-          {theme === "growth" && <GrowthArt compact={compact} />}
+          {theme === "growth" && <GrowthArt compact={compact} priceLabel={resolvedPrice} />}
           {theme === "guide" && <GuideArt title="君子小雅OPC研习社小程序 操作指南一 (必看)" />}
           {theme === "guide-ai" && <GuideArt title="君子小雅AI工具小程序 操作指南二 (必看)" />}
           {theme === "live-qihang" && <LiveQihangArt />}
@@ -58,9 +73,7 @@ export function CoverArt({
           {!theme && <div className="absolute inset-0 bg-[#efe6d6]" />}
         </>
       )}
-      {showPrice && (priceLabel || theme === "qihang" || theme === "shizhan") && (
-        <PriceTag>{priceLabel || (theme === "shizhan" ? "¥699" : "¥9.9")}</PriceTag>
-      )}
+      {showPrice && resolvedPrice && <PriceTag>{resolvedPrice}</PriceTag>}
       {showVideoBadge && <VideoBadge />}
     </div>
   );
@@ -82,7 +95,7 @@ function DeskScene() {
   );
 }
 
-function QihangArt({ compact }: { compact?: boolean }) {
+function QihangArt({ compact, priceLabel }: { compact?: boolean; priceLabel?: string }) {
   return (
     <>
       <DeskScene />
@@ -100,14 +113,14 @@ function QihangArt({ compact }: { compact?: boolean }) {
           </>
         )}
         <p className={cn("mt-auto font-serif text-[28px] leading-none text-[#b8863b]", compact && "text-lg")}>
-          ¥9.9
+          {priceLabel || "¥9.9"}
         </p>
       </div>
     </>
   );
 }
 
-function ShizhanArt({ compact }: { compact?: boolean }) {
+function ShizhanArt({ compact, priceLabel }: { compact?: boolean; priceLabel?: string }) {
   return (
     <>
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,#3c4558,transparent_42%),linear-gradient(160deg,#16181f,#2a3140)]" />
@@ -121,7 +134,9 @@ function ShizhanArt({ compact }: { compact?: boolean }) {
         <p className={cn("text-[10px] text-white/70", compact && "text-[8px]")}>君子小雅OPC</p>
         <h3 className={cn("font-serif text-[22px] leading-none", compact && "text-[15px]")}>OPC 实战营</h3>
         {!compact && <p className="mt-1 text-[11px] text-white/80">把个人能力，变成一套经营系统</p>}
-        <p className={cn("mt-2 font-serif text-[26px] text-[#e4c37a]", compact && "text-base")}>¥699</p>
+        <p className={cn("mt-2 font-serif text-[26px] text-[#e4c37a]", compact && "text-base")}>
+          {priceLabel || "¥699"}
+        </p>
       </div>
     </>
   );
@@ -145,7 +160,7 @@ function ComputeArt() {
   );
 }
 
-function GrowthArt({ compact }: { compact?: boolean }) {
+function GrowthArt({ compact, priceLabel }: { compact?: boolean; priceLabel?: string }) {
   return (
     <>
       <div className="absolute inset-0 bg-[linear-gradient(180deg,#1c1c1c,#2a261c_40%,#111)]" />
@@ -159,7 +174,7 @@ function GrowthArt({ compact }: { compact?: boolean }) {
           <p className="mt-1 text-[11px] text-white/85">一个人经营，也可以有一群人同行</p>
         )}
         <p className={cn("mt-auto font-serif text-[26px] text-[#e8c56b]", compact && "text-lg")}>
-          ¥2980
+          {priceLabel || "¥2980"}
         </p>
       </div>
     </>
