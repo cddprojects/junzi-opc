@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { listAllOrders, listCustomers } from "@/lib/user-store";
-import { formatYen } from "@/lib/format";
+import { formatMoneyAmount, type Currency } from "@/lib/currency";
 import { AdminVerifyForm } from "@/components/admin/verify-form";
 
 export const dynamic = "force-dynamic";
@@ -30,10 +30,10 @@ export default function AdminOrdersPage() {
             <ul className="mt-3 space-y-2 text-[13px]">
               {users.map((user) => (
                 <li key={user.id} className="flex justify-between gap-3 border-b border-[#f3eee4] py-2 last:border-0">
-                  <span>
+                  <Link href={`/admin/users/${user.id}`}>
                     {user.name}
                     <span className="ml-2 text-[#888]">{user.account}</span>
-                  </span>
+                  </Link>
                   <span className="text-[#888]">{user.orderCount} 单</span>
                 </li>
               ))}
@@ -50,7 +50,8 @@ export default function AdminOrdersPage() {
                 <li key={order.id} className="border-b border-[#f3eee4] pb-3 last:border-0">
                   <p className="font-medium">{order.productTitle}</p>
                   <p className="mt-1 text-[#666]">
-                    {order.userName} · {order.userAccount} · {formatYen(order.price)}
+                    {order.userName} · {order.userAccount} ·{" "}
+                    {formatMoneyAmount(order.price, (order.currency as Currency) || "CNY")}
                   </p>
                   <p className="mt-1 font-mono text-[12px] text-[#8a5a20]">{order.verifyCode}</p>
                 </li>

@@ -2,6 +2,7 @@
 
 import { memberCheckoutItem, useDemoStore } from "@/components/demo-store";
 import { useAuth } from "@/components/auth-provider";
+import { Money } from "@/components/money";
 import { membership } from "@/lib/data";
 
 export default function MemberPage() {
@@ -36,9 +37,12 @@ export default function MemberPage() {
 
       <div className="mx-3 mt-3 flex items-center justify-between rounded-md border border-[#e8d7b0] bg-[#f8f1de] px-3 py-3">
         <span className="text-[14px]">{membership.title}</span>
-        <span className="text-[#8a5a20]">
+        <span className="text-right text-[#8a5a20]">
           <span className="text-[20px] font-semibold">{membership.priceLabel}</span>
           <span className="ml-0.5 text-[12px]">{membership.currency}</span>
+          <p className="mt-0.5 text-[12px] text-[#8a5a20]/80">
+            演示结算 <Money cny={membership.campPrice} />
+          </p>
         </span>
       </div>
 

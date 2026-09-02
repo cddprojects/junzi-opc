@@ -10,6 +10,8 @@ const LINKS = [
   { href: "/admin/posters", label: "海报 / 轮播" },
   { href: "/admin/videos", label: "视频" },
   { href: "/admin/orders", label: "订单 / 课程码" },
+  { href: "/admin/users", label: "学员账号" },
+  { href: "/admin/currency", label: "货币 / 汇率" },
 ];
 
 export function AdminShell({ children }: { children: React.ReactNode }) {

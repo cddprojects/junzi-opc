@@ -3,6 +3,8 @@ import { membership, type Product } from "@/lib/data";
 export const USER_COOKIE = "opc_user_session";
 export const SESSION_DAYS = 14;
 
+export type CustomerStatus = "active" | "disabled";
+
 export type Customer = {
   id: string;
   name: string;
@@ -12,6 +14,7 @@ export type Customer = {
   passwordHash: string;
   createdAt: string;
   memberUntil?: string;
+  status?: CustomerStatus;
 };
 
 export type PublicCustomer = {
@@ -21,6 +24,7 @@ export type PublicCustomer = {
   phone?: string;
   memberUntil?: string;
   memberActive: boolean;
+  status: CustomerStatus;
 };
 
 export type UserSession = {
@@ -38,6 +42,8 @@ export type Order = {
   qty: number;
   createdAt: string;
   verifyCode: string;
+  currency?: string;
+  priceCny?: number;
 };
 
 export type CheckoutItem = {
@@ -72,6 +78,7 @@ export function publicCustomer(user: Customer): PublicCustomer {
     phone: user.phone,
     memberUntil: user.memberUntil,
     memberActive: isMemberActive(user),
+    status: user.status === "disabled" ? "disabled" : "active",
   };
 }
 

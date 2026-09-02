@@ -8,6 +8,8 @@ import type { Product } from "@/lib/data";
 import type { CheckoutItem, Order } from "@/lib/account";
 import { memberCheckoutItem, productToCheckout } from "@/lib/account";
 import { useAuth } from "@/components/auth-provider";
+import { useCurrency } from "@/components/currency-provider";
+import { Money } from "@/components/money";
 import { CopyCode } from "@/components/copy-code";
 import {
   Dialog,
@@ -36,6 +38,7 @@ const StoreContext = React.createContext<Store | null>(null);
 
 export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
   const { user, loading, refresh } = useAuth();
+  const { currency } = useCurrency();
   const pathname = usePathname();
   const router = useRouter();
   const [cart, setCart] = React.useState<CartItem[]>([]);
@@ -106,7 +109,7 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
     const res = await fetch("/api/orders/checkout", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ items }),
+      body: JSON.stringify({ items, currency }),
     });
     const data = (await res.json()) as { error?: string; orders?: PayResult[] };
     setBusy(false);
@@ -184,8 +187,11 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
                 {items.length > 0 && (
                   <ul className="space-y-1 text-[13px] text-[#555]">
                     {items.map((item) => (
-                      <li key={item.slug}>
-                        {item.title} × {item.qty || 1}
+                      <li key={item.slug} className="flex items-center justify-between gap-2">
+                        <span>
+                          {item.title} × {item.qty || 1}
+                        </span>
+                        <Money cny={item.price * (item.qty || 1)} />
                       </li>
                     ))}
                   </ul>

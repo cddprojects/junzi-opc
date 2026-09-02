@@ -8,7 +8,8 @@ import { Input } from "@/components/ui/input";
 import { CoverArt } from "@/components/covers";
 import { useDemoStore } from "@/components/demo-store";
 import { cn } from "@/lib/utils";
-import { formatPrice, formatYen } from "@/lib/format";
+import { Money } from "@/components/money";
+import { useCurrency } from "@/components/currency-provider";
 import type { CoverTheme, Product } from "@/lib/data";
 
 export function NoticeBar({ href, text }: { href: string; text: string }) {
@@ -61,6 +62,7 @@ export function ProductRow({
   showOriginal?: boolean;
 }) {
   const { addToCart } = useDemoStore();
+  const { format } = useCurrency();
 
   return (
     <div className="flex gap-3 bg-white px-3 py-3">
@@ -70,7 +72,7 @@ export function ProductRow({
           image={product.coverImage}
           compact
           showPrice
-          priceLabel={`¥${product.price}`}
+          priceLabel={format(product.price)}
         />
       </Link>
       <div className="min-w-0 flex-1">
@@ -80,11 +82,11 @@ export function ProductRow({
         <div className="mt-5 flex items-end justify-between">
           <div>
             <p className="text-[18px] leading-none font-semibold text-[#fa3534]">
-              {formatYen(product.price)}
+              <Money cny={product.price} />
             </p>
             {showOriginal && product.originalPrice ? (
               <p className="mt-1 text-[11px] text-[#999] line-through">
-                原价: {formatYen(product.originalPrice)}
+                原价: <Money cny={product.originalPrice} />
               </p>
             ) : null}
             <p className="mt-1 text-[11px] text-[#999]">销量: {product.sales}</p>
@@ -193,6 +195,7 @@ function CategoryGlyph({ id }: { id: string }) {
 
 export function ProductCard({ product }: { product: Product }) {
   const { addToCart } = useDemoStore();
+  const { format } = useCurrency();
   return (
     <div className="overflow-hidden rounded-xl bg-white shadow-sm">
       <Link href={product.href}>
@@ -200,7 +203,7 @@ export function ProductCard({ product }: { product: Product }) {
           theme={product.cover}
           image={product.coverImage}
           showPrice
-          priceLabel={`¥${product.price}`}
+          priceLabel={format(product.price)}
         />
       </Link>
       <div className="p-4">
@@ -210,9 +213,13 @@ export function ProductCard({ product }: { product: Product }) {
         {product.subtitle && <p className="mt-1 line-clamp-2 text-[13px] text-[#777]">{product.subtitle}</p>}
         <div className="mt-4 flex items-end justify-between">
           <div>
-            <p className="text-[20px] font-semibold text-[#fa3534]">{formatYen(product.price)}</p>
+            <p className="text-[20px] font-semibold text-[#fa3534]">
+              <Money cny={product.price} />
+            </p>
             {product.originalPrice ? (
-              <p className="text-[12px] text-[#999] line-through">原价: {formatYen(product.originalPrice)}</p>
+              <p className="text-[12px] text-[#999] line-through">
+                原价: <Money cny={product.originalPrice} />
+              </p>
             ) : null}
             <p className="mt-1 text-[12px] text-[#999]">销量: {product.sales}</p>
           </div>
@@ -292,9 +299,13 @@ export function PlusPrice({
 }) {
   return (
     <div>
-      <p className="text-[20px] font-semibold text-[#fa3534]">¥{formatPrice(price)}</p>
+      <p className="text-[20px] font-semibold text-[#fa3534]">
+        <Money cny={price} />
+      </p>
       {originalPrice ? (
-        <p className="text-[12px] text-[#999] line-through">¥{formatPrice(originalPrice)}</p>
+        <p className="text-[12px] text-[#999] line-through">
+          <Money cny={originalPrice} />
+        </p>
       ) : null}
       {sales != null ? <p className="text-[12px] text-[#999]">已售 {sales} 件</p> : null}
     </div>

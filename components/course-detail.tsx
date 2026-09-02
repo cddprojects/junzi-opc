@@ -20,7 +20,7 @@ import { VideoBlock } from "@/components/video-block";
 import { useDemoStore } from "@/components/demo-store";
 import { emptyCourseDetail } from "@/lib/course";
 import type { CatalogVideo, CourseDetail, LessonIcon, Product } from "@/lib/data";
-import { formatPrice } from "@/lib/format";
+import { Money } from "@/components/money";
 import { cn } from "@/lib/utils";
 
 const lessonIcons: Record<LessonIcon, typeof Play> = {
@@ -74,9 +74,13 @@ export function CourseDetailView({
         <div className="bg-white px-3 pt-3 pb-4 md:rounded-2xl md:px-6 md:py-5">
           <div className="flex items-end justify-between">
             <div className="flex items-baseline gap-2">
-              <span className="text-[24px] font-semibold text-[#fa3534]">¥{formatPrice(product.price)}</span>
+              <span className="text-[24px] font-semibold text-[#fa3534]">
+                <Money cny={product.price} />
+              </span>
               {product.originalPrice ? (
-                <span className="text-[13px] text-[#999] line-through">¥{formatPrice(product.originalPrice)}</span>
+                <span className="text-[13px] text-[#999] line-through">
+                  <Money cny={product.originalPrice} />
+                </span>
               ) : null}
             </div>
             <span className="text-[12px] text-[#999]">已售 {product.sales} 件</span>

@@ -17,8 +17,9 @@ export default function AdminHomePage() {
           { href: "/admin/products", label: "商品 / 课程", count: products.length },
           { href: "/admin/posters", label: "海报 / 轮播", count: posters.length },
           { href: "/admin/videos", label: "视频", count: videos.length },
-          { href: "/admin/orders", label: "前台用户", count: users.length },
+          { href: "/admin/users", label: "学员账号", count: users.length },
           { href: "/admin/orders", label: "订单 / 课程码", count: orders.length },
+          { href: "/admin/currency", label: "货币 / 汇率", count: 4 },
         ].map((card) => (
           <Link key={card.label} href={card.href} className="rounded-xl bg-white p-5">
             <p className="text-[13px] text-[#888]">{card.label}</p>

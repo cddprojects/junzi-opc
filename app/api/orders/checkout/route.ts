@@ -6,15 +6,20 @@ import { checkoutOrders } from "@/lib/user-store";
 export async function POST(request: Request) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "请先登录" }, { status: 401 });
-  const body = (await request.json().catch(() => null)) as { items?: CheckoutItem[] } | null;
+  const body = (await request.json().catch(() => null)) as {
+    items?: CheckoutItem[];
+    currency?: string;
+  } | null;
   try {
-    const orders = checkoutOrders(user.id, body?.items || []);
+    const orders = checkoutOrders(user.id, body?.items || [], body?.currency);
     return NextResponse.json({
       orders: orders.map((order) => ({
         id: order.id,
         productSlug: order.productSlug,
         productTitle: order.productTitle,
         price: order.price,
+        priceCny: order.priceCny,
+        currency: order.currency,
         qty: order.qty,
         verifyCode: order.verifyCode,
         createdAt: order.createdAt,

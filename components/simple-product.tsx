@@ -5,7 +5,7 @@ import { CoverArt } from "@/components/covers";
 import { BuyBar } from "@/components/buy-bar";
 import { VideoBlock } from "@/components/video-block";
 import { useDemoStore } from "@/components/demo-store";
-import { formatPrice } from "@/lib/format";
+import { Money } from "@/components/money";
 import { shizhanDetail } from "@/lib/data";
 import type { CatalogVideo, Product } from "@/lib/data";
 import { cn } from "@/lib/utils";
@@ -33,11 +33,15 @@ export function SimpleProductDetail({
       )}
       <div className="bg-white px-3 pt-3 pb-4 md:mt-4 md:rounded-2xl md:px-6">
         <div className="flex items-end justify-between">
-          <span className="text-[24px] font-semibold text-[#fa3534]">¥{formatPrice(product.price)}</span>
+          <span className="text-[24px] font-semibold text-[#fa3534]">
+            <Money cny={product.price} />
+          </span>
           <span className="text-[12px] text-[#999]">已售 {product.sales} 件</span>
         </div>
         {product.originalPrice ? (
-          <p className="mt-1 text-[13px] text-[#999] line-through">¥{formatPrice(product.originalPrice)}</p>
+          <p className="mt-1 text-[13px] text-[#999] line-through">
+            <Money cny={product.originalPrice} />
+          </p>
         ) : null}
         <div className="mt-3 flex items-start justify-between gap-3">
           <h1 className="text-[18px] leading-7 font-semibold">{product.title}</h1>

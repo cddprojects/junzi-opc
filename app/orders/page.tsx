@@ -3,7 +3,7 @@ import { getCurrentUser } from "@/lib/user-auth";
 import { ordersForUser } from "@/lib/user-store";
 import { LoginPrompt } from "@/components/login-prompt";
 import { CopyCode } from "@/components/copy-code";
-import { formatYen } from "@/lib/format";
+import { Money } from "@/components/money";
 
 export const dynamic = "force-dynamic";
 
@@ -41,7 +41,12 @@ export default async function OrdersPage() {
                     {order.productTitle}
                   </Link>
                   <p className="mt-1 text-[12px] text-[#888]">
-                    {new Date(order.createdAt).toLocaleString("zh-CN")} · {formatYen(order.price)} × {order.qty}
+                    {new Date(order.createdAt).toLocaleString("zh-CN")} ·{" "}
+                    <Money
+                      cny={order.priceCny ?? order.price}
+                      recorded={{ amount: order.price, currency: order.currency }}
+                    />{" "}
+                    × {order.qty}
                   </p>
                 </div>
               </div>

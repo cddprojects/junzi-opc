@@ -4,7 +4,7 @@ import Link from "next/link";
 import { CoverArt } from "@/components/covers";
 import { useDemoStore } from "@/components/demo-store";
 import { EmptyHint } from "@/components/catalog";
-import { formatYen } from "@/lib/format";
+import { Money } from "@/components/money";
 
 export default function CartPage() {
   const { cart, removeFromCart, openPay } = useDemoStore();
@@ -25,7 +25,9 @@ export default function CartPage() {
                 <Link href={row.product.href} className="block text-[14px] font-medium">
                   {row.product.title}
                 </Link>
-                <p className="mt-2 text-[15px] text-[#fa3534]">{formatYen(row.product.price)}</p>
+                <p className="mt-2 text-[15px] text-[#fa3534]">
+                  <Money cny={row.product.price} />
+                </p>
                 <div className="mt-2 flex items-center justify-between text-[12px] text-[#888]">
                   <span>数量 {row.qty}</span>
                   <button type="button" onClick={() => removeFromCart(row.slug)}>
@@ -37,7 +39,10 @@ export default function CartPage() {
           ))}
           <div className="flex items-center justify-between px-3 py-3 md:px-6">
             <p className="text-[14px]">
-              合计 <span className="text-[18px] text-[#fa3534]">{formatYen(total)}</span>
+              合计{" "}
+              <span className="text-[18px] text-[#fa3534]">
+                <Money cny={total} />
+              </span>
             </p>
             <button
               type="button"

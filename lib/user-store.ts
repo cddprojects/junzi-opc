@@ -22,7 +22,8 @@ import {
   makeVerifyCode,
   newId,
 } from "@/lib/security";
-import { getStoreProduct, readStore, writeStore } from "@/lib/store";
+import { getSettings, getStoreProduct, readStore, writeStore } from "@/lib/store";
+import { fromCny, parseCurrency } from "@/lib/currency";
 
 export function verifySecret() {
   return process.env.VERIFY_SECRET || readStore().verifySecret;
@@ -75,6 +76,7 @@ export function registerCustomer(input: {
     passwordSalt: salt,
     passwordHash: hash,
     createdAt: new Date().toISOString(),
+    status: "active",
   };
   store.users.push(user);
   const session = createSessionRecord(user.id);
@@ -87,6 +89,9 @@ export function loginCustomer(account: string, password: string) {
   const user = findCustomerByAccount(account);
   if (!user || !checkPassword(password, user.passwordSalt, user.passwordHash)) {
     throw new Error("账号或密码不正确");
+  }
+  if (user.status === "disabled") {
+    throw new Error("账号已被停用");
   }
   const store = readStore();
   const session = createSessionRecord(user.id);
@@ -110,7 +115,8 @@ export function customerFromToken(token?: string | null): PublicCustomer | null 
   const session = store.sessions.find((item) => item.token === token);
   if (!session || Date.parse(session.expiresAt) <= Date.now()) return null;
   const user = store.users.find((item) => item.id === session.userId);
-  return user ? publicCustomer(user) : null;
+  if (!user || user.status === "disabled") return null;
+  return publicCustomer(user);
 }
 
 export function revokeSession(token?: string | null) {
@@ -166,25 +172,32 @@ function resolveCheckoutItem(item: CheckoutItem) {
   return { slug: product.slug, title: product.title, price: product.price };
 }
 
-export function checkoutOrders(userId: string, items: CheckoutItem[]) {
+export function checkoutOrders(userId: string, items: CheckoutItem[], currencyInput?: string) {
   if (!items.length) throw new Error("没有可结算的商品");
   const store = readStore();
   const user = store.users.find((item) => item.id === userId);
   if (!user) throw new Error("请先登录");
+  if (user.status === "disabled") throw new Error("账号已被停用");
   const secret = process.env.VERIFY_SECRET || store.verifySecret || generateVerifySecret();
   if (!store.verifySecret) store.verifySecret = secret;
+  const settings = getSettings();
+  const currency = parseCurrency(currencyInput, settings.defaultCurrency);
 
   const created: Order[] = [];
   for (const raw of items) {
     const item = resolveCheckoutItem(raw);
     const qty = Math.max(1, Number(raw.qty || 1));
     const orderId = newId("ord");
+    const priceCny = item.price;
+    const price = fromCny(priceCny, currency, settings.fx);
     const order: Order = {
       id: orderId,
       userId,
       productSlug: item.slug,
       productTitle: item.title,
-      price: item.price,
+      price,
+      priceCny,
+      currency,
       qty,
       createdAt: new Date().toISOString(),
       verifyCode: makeVerifyCode(secret, {
@@ -250,14 +263,97 @@ export function listAllOrders() {
     });
 }
 
-export function listCustomers() {
+export function listCustomers(query = "") {
   const store = readStore();
-  return store.users.map((user) => ({
+  const q = query.trim().toLowerCase();
+  return store.users
+    .filter((user) => {
+      if (!q) return true;
+      return [user.name, user.email ?? "", user.phone ?? "", user.id]
+        .some((field) => field.toLowerCase().includes(q));
+    })
+    .map((user) => ({
+      ...publicCustomer(user),
+      account: maskAccount(user),
+      email: user.email,
+      phone: user.phone,
+      orderCount: store.orders.filter((order) => order.userId === user.id).length,
+      createdAt: user.createdAt,
+    }))
+    .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
+}
+
+export function getCustomerAdmin(userId: string) {
+  const store = readStore();
+  const user = store.users.find((item) => item.id === userId);
+  if (!user) return null;
+  return {
     ...publicCustomer(user),
-    account: maskAccount(user),
-    orderCount: store.orders.filter((order) => order.userId === user.id).length,
+    email: user.email,
+    phone: user.phone,
     createdAt: user.createdAt,
-  }));
+    orders: ordersForUser(userId),
+  };
+}
+
+export function setCustomerStatus(userId: string, status: "active" | "disabled") {
+  const store = readStore();
+  const user = store.users.find((item) => item.id === userId);
+  if (!user) throw new Error("用户不存在");
+  user.status = status;
+  if (status === "disabled") {
+    store.sessions = store.sessions.filter((session) => session.userId !== userId);
+  }
+  writeStore(store);
+  return publicCustomer(user);
+}
+
+export function resetCustomerPassword(userId: string, password: string) {
+  if (password.length < 6) throw new Error("密码至少 6 位");
+  const store = readStore();
+  const user = store.users.find((item) => item.id === userId);
+  if (!user) throw new Error("用户不存在");
+  const { salt, hash } = hashPassword(password);
+  user.passwordSalt = salt;
+  user.passwordHash = hash;
+  store.sessions = store.sessions.filter((session) => session.userId !== userId);
+  writeStore(store);
+  return { ok: true };
+}
+
+export function setCustomerMembership(userId: string, memberUntil?: string | null) {
+  const store = readStore();
+  const user = store.users.find((item) => item.id === userId);
+  if (!user) throw new Error("用户不存在");
+  user.memberUntil = memberUntil || undefined;
+  writeStore(store);
+  return publicCustomer(user);
+}
+
+export function grantCourse(userId: string, productSlug: string, currencyInput?: string) {
+  const item =
+    productSlug === membership.slug
+      ? { slug: membership.slug, title: membership.title, price: membership.campPrice, qty: 1 }
+      : (() => {
+          const product = getStoreProduct(productSlug);
+          if (!product) throw new Error("课程不存在");
+          return { slug: product.slug, title: product.title, price: product.price, qty: 1 };
+        })();
+  return checkoutOrders(userId, [item], currencyInput);
+}
+
+export function revokeOrder(userId: string, orderId: string) {
+  const store = readStore();
+  const order = store.orders.find((item) => item.id === orderId && item.userId === userId);
+  if (!order) throw new Error("订单不存在");
+  store.orders = store.orders.filter((item) => item.id !== orderId);
+  if (order.productSlug === membership.slug) {
+    const user = store.users.find((item) => item.id === userId);
+    const stillMember = store.orders.some((item) => item.userId === userId && item.productSlug === membership.slug);
+    if (user && !stillMember) user.memberUntil = undefined;
+  }
+  writeStore(store);
+  return { ok: true };
 }
 
 export { maskAccount };

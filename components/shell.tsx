@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { brand } from "@/lib/data";
 import { cartCount, useDemoStore } from "@/components/demo-store";
 import { useAuth } from "@/components/auth-provider";
+import { CurrencySwitcher } from "@/components/currency-switcher";
 
 const TABS = [
   { href: "/", label: "首页", icon: Home },
@@ -108,6 +109,7 @@ function DesktopHeader() {
             className="h-9 w-full rounded-full bg-[#f3efe6] pr-3 pl-9 text-[13px] outline-none"
           />
         </form>
+        <CurrencySwitcher />
         <Link href="/cart" className="relative text-[#444]">
           <ShoppingCart className="size-5" />
           {count > 0 && (
@@ -128,6 +130,7 @@ function DesktopFooter() {
       <p className="font-serif text-[16px] text-[#3a2c10]">{brand.mottoWay}</p>
       <p className="mt-2">演示结算不扣款 · 购买后发放加密课程码</p>
       <div className="mt-3 flex items-center justify-center gap-4">
+        <CurrencySwitcher />
         <Link href="/verify" className="text-[#b8863b]">
           验证课程码
         </Link>
@@ -174,6 +177,7 @@ function MobileHeader() {
             </span>
           )}
         </Link>
+        <CurrencySwitcher compact />
         <AccountLink compact />
       </div>
     </header>

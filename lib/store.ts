@@ -22,6 +22,7 @@ import {
 } from "@/lib/course";
 import { type Customer, type Order, type UserSession } from "@/lib/account";
 import { generateVerifySecret } from "@/lib/security";
+import { DEFAULT_SETTINGS, normalizeSettings, type StoreSettings } from "@/lib/currency";
 
 export type AppStore = {
   version: number;
@@ -32,12 +33,13 @@ export type AppStore = {
   sessions: UserSession[];
   orders: Order[];
   verifySecret: string;
+  settings: StoreSettings;
 };
 
 const DATA_DIR = path.join(process.cwd(), "data");
 const STORE_PATH = path.join(DATA_DIR, "store.json");
 export const UPLOAD_DIR = path.join(DATA_DIR, "uploads");
-const STORE_VERSION = 5;
+const STORE_VERSION = 6;
 
 function seedProduct(product: Product): Product {
   if (product.slug === "qihang") {
@@ -98,6 +100,7 @@ function seedStore(): AppStore {
     sessions: [],
     orders: [],
     verifySecret: generateVerifySecret(),
+    settings: { ...DEFAULT_SETTINGS, fx: { ...DEFAULT_SETTINGS.fx } },
   };
 }
 
@@ -126,15 +129,20 @@ function migrateStore(parsed: AppStore): AppStore {
     return next;
   });
   const now = Date.now();
+  const users = (parsed.users ?? []).map((user) => ({
+    ...user,
+    status: (user.status === "disabled" ? "disabled" : "active") as Customer["status"],
+  }));
   return {
     version: STORE_VERSION,
     products,
     posters: parsed.posters ?? [],
     videos: parsed.videos ?? [],
-    users: parsed.users ?? [],
+    users,
     sessions: (parsed.sessions ?? []).filter((session) => Date.parse(session.expiresAt) > now),
     orders: parsed.orders ?? [],
     verifySecret: parsed.verifySecret || generateVerifySecret(),
+    settings: normalizeSettings(parsed.settings),
   };
 }
 
@@ -166,6 +174,7 @@ export function writeStore(store: AppStore) {
         sessions: store.sessions ?? [],
         orders: store.orders ?? [],
         verifySecret: store.verifySecret || generateVerifySecret(),
+        settings: normalizeSettings(store.settings),
       },
       null,
       2,
@@ -186,7 +195,19 @@ export function getCatalog() {
     products,
     posters: [...store.posters].sort((a, b) => a.sort - b.sort),
     videos: store.videos,
+    settings: normalizeSettings(store.settings),
   };
+}
+
+export function getSettings() {
+  return normalizeSettings(readStore().settings);
+}
+
+export function updateSettings(patch: Partial<StoreSettings>) {
+  const store = readStore();
+  store.settings = normalizeSettings({ ...store.settings, ...patch, fx: { ...store.settings?.fx, ...patch.fx } });
+  writeStore(store);
+  return store.settings;
 }
 
 export function getStoreProduct(slug: string) {

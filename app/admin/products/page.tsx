@@ -19,7 +19,7 @@ export default function AdminProductsPage() {
           <thead className="border-b bg-[#faf6ee] text-[#777]">
             <tr>
               <th className="px-4 py-3">标题</th>
-              <th className="px-4 py-3">价格</th>
+              <th className="px-4 py-3">价格（人民币）</th>
               <th className="px-4 py-3">销量</th>
               <th className="px-4 py-3">分类</th>
               <th className="px-4 py-3"></th>

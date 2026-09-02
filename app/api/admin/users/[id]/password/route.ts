@@ -1,0 +1,19 @@
+import { NextResponse } from "next/server";
+import { assertAdmin } from "@/lib/auth";
+import { resetCustomerPassword } from "@/lib/user-store";
+
+export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    await assertAdmin();
+  } catch {
+    return NextResponse.json({ error: "未登录" }, { status: 401 });
+  }
+  const { id } = await params;
+  const body = (await request.json().catch(() => null)) as { password?: string } | null;
+  try {
+    resetCustomerPassword(id, body?.password || "");
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    return NextResponse.json({ error: error instanceof Error ? error.message : "重置失败" }, { status: 400 });
+  }
+}

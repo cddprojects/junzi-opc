@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { COVER_THEMES, type CourseDetail, type Product, type ProductCategoryId } from "@/lib/data";
 import { emptyCourseDetail, outlineFromLessons } from "@/lib/course";
@@ -8,6 +8,8 @@ import { UploadField } from "@/components/admin/upload-field";
 import { CourseDetailFields } from "@/components/admin/course-detail-fields";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { CURRENCY_CODES, CURRENCY_META, DEFAULT_SETTINGS, fromCny, toCny, type Currency } from "@/lib/currency";
+import type { StoreSettings } from "@/lib/currency";
 
 export function ProductForm({ product }: { product?: Product }) {
   const router = useRouter();
@@ -15,6 +17,30 @@ export function ProductForm({ product }: { product?: Product }) {
   const [busy, setBusy] = useState(false);
   const [coverImage, setCoverImage] = useState(product?.coverImage || "");
   const [detail, setDetail] = useState<CourseDetail>(product?.detail ?? emptyCourseDetail());
+  const [settings, setSettings] = useState<StoreSettings>(DEFAULT_SETTINGS);
+  const [entryCurrency, setEntryCurrency] = useState<Currency>("CNY");
+  const [priceInput, setPriceInput] = useState(String(product?.price ?? 0));
+  const [originalInput, setOriginalInput] = useState(product?.originalPrice != null ? String(product.originalPrice) : "");
+
+  useEffect(() => {
+    fetch("/api/admin/settings")
+      .then((res) => res.json())
+      .then((data: StoreSettings) => {
+        if (data?.fx) setSettings(data);
+      })
+      .catch(() => undefined);
+  }, []);
+
+  function switchEntryCurrency(next: Currency) {
+    const price = Number(priceInput);
+    const original = originalInput === "" ? undefined : Number(originalInput);
+    const cny = Number.isFinite(price) ? toCny(price, entryCurrency, settings.fx) : 0;
+    const originalCny =
+      original != null && Number.isFinite(original) ? toCny(original, entryCurrency, settings.fx) : undefined;
+    setEntryCurrency(next);
+    setPriceInput(String(fromCny(cny, next, settings.fx)));
+    setOriginalInput(originalCny == null ? "" : String(fromCny(originalCny, next, settings.fx)));
+  }
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -25,8 +51,8 @@ export function ProductForm({ product }: { product?: Product }) {
       title: String(form.get("title") || ""),
       shortTitle: String(form.get("shortTitle") || ""),
       slug: String(form.get("slug") || ""),
-      price: Number(form.get("price") || 0),
-      originalPrice: form.get("originalPrice") ? Number(form.get("originalPrice")) : undefined,
+      price: toCny(Number(priceInput || 0), entryCurrency, settings.fx),
+      originalPrice: originalInput === "" ? undefined : toCny(Number(originalInput), entryCurrency, settings.fx),
       sales: Number(form.get("sales") || 0),
       categoryId: String(form.get("categoryId") || "opc") as ProductCategoryId,
       cover: String(form.get("cover") || "qihang") as Product["cover"],
@@ -83,18 +109,38 @@ export function ProductForm({ product }: { product?: Product }) {
           />
         </label>
       </div>
-      <div className="grid gap-3 md:grid-cols-3">
+      <div className="grid gap-3 md:grid-cols-4">
+        <label className="block text-[13px]">
+          录入货币
+          <select
+            value={entryCurrency}
+            onChange={(event) => switchEntryCurrency(event.target.value as Currency)}
+            className="mt-1 h-9 w-full rounded-md border border-input bg-white px-2"
+          >
+            {CURRENCY_CODES.map((code) => (
+              <option key={code} value={code}>
+                {CURRENCY_META[code].label}
+              </option>
+            ))}
+          </select>
+        </label>
         <label className="block text-[13px]">
           价格
-          <Input name="price" type="number" step="0.01" defaultValue={product?.price ?? 0} className="mt-1 h-9" />
+          <Input
+            type="number"
+            step="0.01"
+            value={priceInput}
+            onChange={(event) => setPriceInput(event.target.value)}
+            className="mt-1 h-9"
+          />
         </label>
         <label className="block text-[13px]">
           原价
           <Input
-            name="originalPrice"
             type="number"
             step="0.01"
-            defaultValue={product?.originalPrice ?? ""}
+            value={originalInput}
+            onChange={(event) => setOriginalInput(event.target.value)}
             className="mt-1 h-9"
           />
         </label>
@@ -103,6 +149,10 @@ export function ProductForm({ product }: { product?: Product }) {
           <Input name="sales" type="number" defaultValue={product?.sales ?? 0} className="mt-1 h-9" />
         </label>
       </div>
+      <p className="text-[12px] text-[#888]">
+        商品以人民币入库。当前将按后台汇率折算为 ¥
+        {toCny(Number(priceInput || 0), entryCurrency, settings.fx).toFixed(2)}。
+      </p>
       <div className="grid gap-3 md:grid-cols-2">
         <label className="block text-[13px]">
           分类
