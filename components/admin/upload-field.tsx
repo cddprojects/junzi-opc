@@ -53,14 +53,37 @@ export function UploadField({
     setError("");
     const form = new FormData();
     form.append("file", file);
-    const res = await fetch("/api/admin/upload", { method: "POST", body: form });
-    const data = (await res.json()) as { url?: string; error?: string };
-    setBusy(false);
-    if (!res.ok || !data.url) {
-      setError(data.error || "上传失败");
-      return;
+    try {
+      const res = await fetch("/api/admin/upload", {
+        method: "POST",
+        body: form,
+        credentials: "same-origin",
+      });
+      const text = await res.text();
+      let data: { url?: string; error?: string } = {};
+      try {
+        data = text ? (JSON.parse(text) as { url?: string; error?: string }) : {};
+      } catch {
+        data = {};
+      }
+      setBusy(false);
+      if (res.status === 401) {
+        setError(data.error || "请重新登录后台");
+        return;
+      }
+      if (res.status === 413) {
+        setError(data.error || "文件太大，请换较小的视频后重试");
+        return;
+      }
+      if (!res.ok || !data.url) {
+        setError(data.error || "上传失败，请稍后重试");
+        return;
+      }
+      onChange(data.url);
+    } catch {
+      setBusy(false);
+      setError("上传失败，请检查网络后重试");
     }
-    onChange(data.url);
   }
 
   function openPicker() {
