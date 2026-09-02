@@ -136,11 +136,6 @@ export const brand = {
   notice: "启航营录播课已经更新完毕，正在更新启航营直播",
 };
 
-export const demoUser = {
-  name: "用户4koizfiV",
-  phone: "+60178614632",
-};
-
 export const homeCategories = [
   { id: "recorded", label: "线上录播课", href: "/courses/recorded" },
   { id: "live", label: "线上直播课", href: "/courses/live" },
@@ -502,7 +497,7 @@ export const mineBlocks = {
   ],
   services: [
     { label: "我的学习", href: "/learning" },
-    { label: "帮助中心", href: "/help" },
+    { label: "验证课程码", href: "/verify" },
     { label: "修改资料", href: "/profile" },
     { label: "关于我们", href: "/about" },
     { label: "用户反馈", href: "/feedback" },
@@ -531,7 +526,7 @@ export const placeholderPages: Record<
   },
   profile: {
     title: "修改资料",
-    body: "演示资料不可保存。当前展示为示例登录态：用户4koizfiV。",
+    body: "登录后可在「修改资料」中更新昵称、邮箱或手机号。",
   },
   about: {
     title: "关于我们",

@@ -6,6 +6,7 @@ import { Bookmark, ChevronLeft, Home, Search, ShoppingCart, UserRound } from "lu
 import { cn } from "@/lib/utils";
 import { brand } from "@/lib/data";
 import { cartCount, useDemoStore } from "@/components/demo-store";
+import { useAuth } from "@/components/auth-provider";
 
 const TABS = [
   { href: "/", label: "首页", icon: Home },
@@ -36,7 +37,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const isProduct = pathname.startsWith("/product/");
 
   return (
-    <div className="min-h-dvh bg-[#efe8d8] text-[#222] md:bg-[#f4f0e6]">
+    <div className="min-h-dvh bg-[#f4f0e6] text-[#222]">
       <DesktopHeader />
       <div className="md:hidden">
         <MobileHeader />
@@ -52,6 +53,25 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <DesktopFooter />
       {isProduct ? null : <TabBar />}
     </div>
+  );
+}
+
+function AccountLink({ compact }: { compact?: boolean }) {
+  const { user, loading } = useAuth();
+  if (loading) {
+    return <span className="text-[13px] text-[#888]">{compact ? "…" : "…"}</span>;
+  }
+  if (user) {
+    return (
+      <Link href="/mine" className={cn("truncate text-[#444] hover:text-[#b8863b]", compact ? "max-w-16 text-[12px]" : "max-w-28 text-[14px]")}>
+        {user.name}
+      </Link>
+    );
+  }
+  return (
+    <Link href="/login" className={cn("text-[#444] hover:text-[#b8863b]", compact ? "text-[12px]" : "text-[14px]")}>
+      登录
+    </Link>
   );
 }
 
@@ -96,9 +116,7 @@ function DesktopHeader() {
             </span>
           )}
         </Link>
-        <Link href="/mine" className="text-[14px] text-[#444] hover:text-[#b8863b]">
-          我的
-        </Link>
+        <AccountLink />
       </div>
     </header>
   );
@@ -108,10 +126,15 @@ function DesktopFooter() {
   return (
     <footer className="hidden border-t border-[#e6dcc8] bg-[#fffdf8] py-8 text-center text-[13px] text-[#7a6a50] md:block">
       <p className="font-serif text-[16px] text-[#3a2c10]">{brand.mottoWay}</p>
-      <p className="mt-2">演示站不支持支付 · 一人公司研习社公开浏览</p>
-      <Link href="/admin" className="mt-3 inline-block text-[#b8863b]">
-        管理后台
-      </Link>
+      <p className="mt-2">演示结算不扣款 · 购买后发放加密课程码</p>
+      <div className="mt-3 flex items-center justify-center gap-4">
+        <Link href="/verify" className="text-[#b8863b]">
+          验证课程码
+        </Link>
+        <Link href="/admin" className="text-[#b8863b]">
+          管理后台
+        </Link>
+      </div>
     </footer>
   );
 }
@@ -119,33 +142,39 @@ function DesktopFooter() {
 function MobileHeader() {
   const pathname = usePathname();
   const router = useRouter();
-  const isTabPage = pathname === "/" || pathname === "/categories" || pathname === "/mine";
+  const { cart } = useDemoStore();
+  const count = cartCount(cart);
+  const isHome = pathname === "/";
   const title = pageTitle(pathname);
 
   return (
-    <header className="sticky top-0 z-30 bg-white/96 backdrop-blur">
-      <div className="flex h-11 items-center px-2">
-        <div className="flex w-16 items-center">
-          {!isTabPage && (
-            <button
-              type="button"
-              onClick={() => router.back()}
-              className="flex size-8 items-center justify-center text-[#333]"
-              aria-label="返回"
-            >
-              <ChevronLeft className="size-6" />
-            </button>
-          )}
-        </div>
-        <h1 className="flex-1 truncate text-center text-[16px] font-medium">{title}</h1>
-        <div className="flex w-16 justify-end pr-1">
-          <div className="flex overflow-hidden rounded-full border border-black/10 bg-black/4">
-            <span className="flex h-7 w-8 items-center justify-center text-[15px] text-[#333]">···</span>
-            <span className="flex h-7 w-8 items-center justify-center border-l border-black/10 text-[13px] text-[#333]">
-              ○
+    <header className="sticky top-0 z-30 border-b border-[#ece4d4] bg-[#fffdf8]/96 backdrop-blur">
+      <div className="flex h-12 items-center gap-2 px-3">
+        {!isHome && (
+          <button
+            type="button"
+            onClick={() => router.back()}
+            className="flex size-8 shrink-0 items-center justify-center text-[#333]"
+            aria-label="返回"
+          >
+            <ChevronLeft className="size-6" />
+          </button>
+        )}
+        <Link href="/" className="min-w-0 flex-1 truncate font-serif text-[17px] text-[#3a2c10]">
+          {isHome ? brand.name : title}
+        </Link>
+        <Link href="/search" className="text-[#444]" aria-label="搜索">
+          <Search className="size-5" />
+        </Link>
+        <Link href="/cart" className="relative text-[#444]" aria-label="购物车">
+          <ShoppingCart className="size-5" />
+          {count > 0 && (
+            <span className="absolute -top-1.5 -right-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#fa3534] px-1 text-[10px] text-white">
+              {count}
             </span>
-          </div>
-        </div>
+          )}
+        </Link>
+        <AccountLink compact />
       </div>
     </header>
   );
@@ -156,15 +185,15 @@ function pageTitle(pathname: string) {
     "/": brand.name,
     "/categories": "商品分类",
     "/mine": "我的",
-    "/courses/recorded": "君子小雅OPC录播课",
-    "/courses/live": "君子小雅OPC直播课",
+    "/courses/recorded": "录播课",
+    "/courses/live": "直播课",
     "/workshop": "线下工作坊",
     "/member": "会员中心",
     "/events": "活动报名",
-    "/guides": "操作指南 (必看)",
+    "/guides": "操作指南",
     "/guides/opc": "操作指南一",
     "/guides/ai": "操作指南二",
-    "/tools": "AI工具小程序",
+    "/tools": "AI工具",
     "/search": "搜索",
     "/cart": "购物车",
     "/orders": "学习订单",
@@ -175,13 +204,11 @@ function pageTitle(pathname: string) {
     "/about": "关于我们",
     "/feedback": "用户反馈",
     "/service": "客服",
-    "/product/qihang": "君子小雅OPC启航营",
-    "/product/shizhan": "君子小雅OPC实战营",
-    "/product/compute": "算力加餐包",
+    "/login": "登录",
+    "/register": "注册",
+    "/verify": "验证课程码",
   };
-  if (pathname.startsWith("/product/")) {
-    return map[pathname] ?? "课程详情";
-  }
+  if (pathname.startsWith("/product/")) return "课程详情";
   return map[pathname] ?? brand.name;
 }
 
@@ -189,7 +216,7 @@ export function TabBar() {
   const pathname = usePathname();
 
   return (
-    <nav className="fixed bottom-0 left-0 z-40 flex h-[52px] w-full border-t border-black/6 bg-white md:hidden">
+    <nav className="fixed bottom-0 left-0 z-40 flex h-[52px] w-full border-t border-[#ece4d4] bg-[#fffdf8] md:hidden">
       {TABS.map((tab) => {
         const active = isTabActive(pathname, tab.href);
         const Icon = tab.icon;
@@ -199,10 +226,10 @@ export function TabBar() {
             href={tab.href}
             className={cn(
               "flex flex-1 flex-col items-center justify-center gap-0.5 text-[11px]",
-              active ? "text-[#07c160]" : "text-[#888]",
+              active ? "text-[#8a5a20]" : "text-[#888]",
             )}
           >
-            <Icon className={cn("size-[22px]", active && "fill-[#07c160]")} strokeWidth={active ? 2.2 : 1.7} />
+            <Icon className={cn("size-[22px]", active && "fill-[#8a5a20]")} strokeWidth={active ? 2.2 : 1.7} />
             {tab.label}
           </Link>
         );

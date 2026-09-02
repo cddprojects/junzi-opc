@@ -1,10 +1,13 @@
 "use client";
 
-import { useDemoStore } from "@/components/demo-store";
+import { memberCheckoutItem, useDemoStore } from "@/components/demo-store";
+import { useAuth } from "@/components/auth-provider";
 import { membership } from "@/lib/data";
 
 export default function MemberPage() {
   const { openPay } = useDemoStore();
+  const { user } = useAuth();
+  const buy = () => openPay(memberCheckoutItem());
 
   return (
     <div className="bg-[#f7f7f7] pb-6 md:overflow-hidden md:rounded-2xl">
@@ -15,13 +18,17 @@ export default function MemberPage() {
             <span className="text-[11px] text-[#6a5420]">专属特权</span>
           </div>
           <div className="mt-8 flex items-center justify-between">
-            <p className="text-[13px]">{membership.status}</p>
+            <p className="text-[13px]">
+              {user?.memberActive
+                ? `已开通至 ${new Date(user.memberUntil || "").toLocaleDateString("zh-CN")}`
+                : "未开通"}
+            </p>
             <button
               type="button"
-              onClick={openPay}
+              onClick={buy}
               className="rounded-full bg-[#f4c27a] px-3 py-1 text-[12px] text-[#5a3f16]"
             >
-              开通记录
+              {user?.memberActive ? "续期" : "开通"}
             </button>
           </div>
         </div>
@@ -53,7 +60,7 @@ export default function MemberPage() {
           </p>
           <button
             type="button"
-            onClick={openPay}
+            onClick={buy}
             className="mt-5 w-full rounded-md bg-[#3a3a3a] py-2.5 text-[15px]"
           >
             立即购买

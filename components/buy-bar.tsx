@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { Headset, Home, ShoppingCart } from "lucide-react";
+import type { Product } from "@/lib/data";
 import { useDemoStore, cartCount } from "@/components/demo-store";
 
-export function BuyBar() {
+export function BuyBar({ product }: { product?: Product }) {
   const { openPay, cart } = useDemoStore();
   const count = cartCount(cart);
 
@@ -29,7 +30,7 @@ export function BuyBar() {
       </Link>
       <button
         type="button"
-        onClick={openPay}
+        onClick={() => openPay(product)}
         className="ml-1 h-10 flex-1 rounded-md bg-[#fa3534] text-[15px] font-medium text-white"
       >
         立即购买

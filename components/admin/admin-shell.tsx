@@ -9,6 +9,7 @@ const LINKS = [
   { href: "/admin/products", label: "商品 / 课程" },
   { href: "/admin/posters", label: "海报 / 轮播" },
   { href: "/admin/videos", label: "视频" },
+  { href: "/admin/orders", label: "订单 / 课程码" },
 ];
 
 export function AdminShell({ children }: { children: React.ReactNode }) {

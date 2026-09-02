@@ -13,7 +13,7 @@ export default function CartPage() {
   return (
     <div className="min-h-[60vh] bg-[#f7f7f7] md:rounded-2xl md:bg-white">
       {cart.length === 0 ? (
-        <EmptyHint>购物车是空的。可在课程卡片上点击红色 + 加入（演示，不会结算）。</EmptyHint>
+        <EmptyHint>购物车是空的。可在课程卡片上点击红色 + 加入，登录后演示结算并获得课程码。</EmptyHint>
       ) : (
         <div>
           {cart.map((row) => (
@@ -41,7 +41,7 @@ export default function CartPage() {
             </p>
             <button
               type="button"
-              onClick={openPay}
+              onClick={() => openPay()}
               className="rounded-md bg-[#fa3534] px-4 py-2 text-[14px] text-white"
             >
               去结算

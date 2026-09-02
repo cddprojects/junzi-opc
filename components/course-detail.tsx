@@ -108,7 +108,7 @@ export function CourseDetailView({
           )}
           <button
             type="button"
-            onClick={openPay}
+            onClick={() => openPay(product)}
             className="mt-5 hidden h-11 w-full rounded-md bg-[#fa3534] text-white md:block"
           >
             立即购买
@@ -291,7 +291,7 @@ export function CourseDetailView({
         )}
       </section>
       <div className="md:hidden">
-        <BuyBar />
+        <BuyBar product={product} />
       </div>
     </div>
   );

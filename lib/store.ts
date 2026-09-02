@@ -20,18 +20,24 @@ import {
   qihangCourseDetail,
   shizhanCourseDetail,
 } from "@/lib/course";
+import { type Customer, type Order, type UserSession } from "@/lib/account";
+import { generateVerifySecret } from "@/lib/security";
 
 export type AppStore = {
   version: number;
   products: Product[];
   posters: Poster[];
   videos: CatalogVideo[];
+  users: Customer[];
+  sessions: UserSession[];
+  orders: Order[];
+  verifySecret: string;
 };
 
 const DATA_DIR = path.join(process.cwd(), "data");
 const STORE_PATH = path.join(DATA_DIR, "store.json");
 export const UPLOAD_DIR = path.join(DATA_DIR, "uploads");
-const STORE_VERSION = 4;
+const STORE_VERSION = 5;
 
 function seedProduct(product: Product): Product {
   if (product.slug === "qihang") {
@@ -88,6 +94,10 @@ function seedStore(): AppStore {
         placement: "product-hero",
       },
     ],
+    users: [],
+    sessions: [],
+    orders: [],
+    verifySecret: generateVerifySecret(),
   };
 }
 
@@ -115,11 +125,16 @@ function migrateStore(parsed: AppStore): AppStore {
     }
     return next;
   });
+  const now = Date.now();
   return {
     version: STORE_VERSION,
     products,
     posters: parsed.posters ?? [],
     videos: parsed.videos ?? [],
+    users: parsed.users ?? [],
+    sessions: (parsed.sessions ?? []).filter((session) => Date.parse(session.expiresAt) > now),
+    orders: parsed.orders ?? [],
+    verifySecret: parsed.verifySecret || generateVerifySecret(),
   };
 }
 
@@ -142,7 +157,19 @@ export function writeStore(store: AppStore) {
   ensureDirs();
   writeFileSync(
     STORE_PATH,
-    JSON.stringify({ ...store, version: STORE_VERSION, products: store.products.map(ensureProductDetail) }, null, 2),
+    JSON.stringify(
+      {
+        ...store,
+        version: STORE_VERSION,
+        products: store.products.map(ensureProductDetail),
+        users: store.users ?? [],
+        sessions: store.sessions ?? [],
+        orders: store.orders ?? [],
+        verifySecret: store.verifySecret || generateVerifySecret(),
+      },
+      null,
+      2,
+    ),
     "utf8",
   );
 }

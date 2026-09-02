@@ -62,7 +62,7 @@ export function SimpleProductDetail({
         )}
         <button
           type="button"
-          onClick={openPay}
+          onClick={() => openPay(product)}
           className="mt-5 hidden h-11 rounded-md bg-[#fa3534] px-8 text-white md:inline-flex md:items-center"
         >
           立即购买

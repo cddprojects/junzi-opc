@@ -76,7 +76,7 @@ export function QihangDetail({ product, video }: { product: Product; video?: Cat
         </div>
         <button
           type="button"
-          onClick={openPay}
+          onClick={() => openPay(product)}
           className="mt-5 hidden h-11 w-full rounded-md bg-[#fa3534] text-white md:block md:max-w-xs"
         >
           立即购买

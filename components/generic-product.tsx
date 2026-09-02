@@ -53,7 +53,7 @@ export function GenericProductDetail({
           {product.subtitle && <p className="mt-2 text-[13px] text-[#666]">{product.subtitle}</p>}
           <button
             type="button"
-            onClick={openPay}
+            onClick={() => openPay(product)}
             className="mt-6 hidden h-11 w-full rounded-md bg-[#fa3534] text-[15px] text-white md:block"
           >
             立即购买
