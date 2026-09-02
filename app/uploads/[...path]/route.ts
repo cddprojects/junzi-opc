@@ -21,7 +21,7 @@ export async function GET(
 ) {
   const { path: segments } = await params;
   const file = path.normalize(segments.join("/"));
-  if (file.includes("..")) {
+  if (file.includes("..") || file.startsWith(".") || file.includes("/.")) {
     return NextResponse.json({ error: "无效路径" }, { status: 400 });
   }
   const full = path.join(UPLOAD_DIR, file);

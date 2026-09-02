@@ -103,7 +103,7 @@ export function VideoForm({ video, products }: { video?: CatalogVideo; products:
         value={videoUrl}
         onChange={setVideoUrl}
         accept="video/*"
-        hint="可上传 mp4/webm，或粘贴外部视频 URL。演示站不复制原小程序视频。"
+        hint="可上传 mp4/webm/mov，或粘贴外部视频 URL。文件名含空格也可以。演示站不复制原小程序视频。"
       />
       {error && <p className="text-[13px] text-[#fa3534]">{error}</p>}
       <div className="flex gap-3">
