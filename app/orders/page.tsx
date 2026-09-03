@@ -76,9 +76,9 @@ export default async function OrdersPage({
                   href={`/orders/${order.id}`}
                   className="block rounded-xl bg-white px-3 py-3 shadow-[0_1px_6px_rgba(0,0,0,0.04)] md:px-4 md:py-4"
                 >
-                  <div className="flex items-center justify-between text-[12px] text-[#888]">
-                    <span>{formatOrderTime(order.createdAt)}</span>
-                    <span>{orderStatusLabel()}</span>
+                  <div className="flex items-center justify-between border-b border-[#f3f3f3] pb-2 text-[12px]">
+                    <span className="text-[#888]">{formatOrderTime(order.createdAt)}</span>
+                    <span className="text-[#333]">{orderStatusLabel()}</span>
                   </div>
                   <div className="mt-3 flex gap-3">
                     <div className="w-[72px] shrink-0 overflow-hidden rounded-md">

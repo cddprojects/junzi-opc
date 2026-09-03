@@ -45,7 +45,6 @@ export default async function OrderDetailPage({
           <Row label="下单时间" value={paidAt} />
           <Row label="支付方式" value="演示支付" />
           <Row label="支付时间" value={paidAt} />
-          <p className="mt-2 text-[12px] text-[#999]">数字课程，无需物流</p>
         </section>
 
         <section className="mt-3 rounded-xl bg-white px-4 py-4 text-[13px]">
@@ -99,7 +98,7 @@ export default async function OrderDetailPage({
         <div className="mt-6 flex justify-end pb-4">
           <Link
             href="/service"
-            className="rounded-full border border-[#eadfca] bg-white px-5 py-2 text-[14px] text-[#555]"
+            className="rounded-md border border-[#333] bg-white px-5 py-2 text-[14px] text-[#333]"
           >
             联系客服
           </Link>
