@@ -390,7 +390,7 @@ export const en: Record<MessageKey, string> = {
   navMine: "Account",
   navRecorded: "Recorded",
   navLive: "Live",
-  navMember: "Membership",
+  navMember: "Members",
   navGuides: "Guides",
   searchCourses: "Search courses",
   search: "Search",
