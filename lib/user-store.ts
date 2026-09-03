@@ -230,6 +230,10 @@ export function ordersForUser(userId: string) {
     .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
 }
 
+export function orderForUser(userId: string, orderId: string) {
+  return readStore().orders.find((order) => order.id === orderId && order.userId === userId);
+}
+
 export function lookupVerifyCode(code: string) {
   const normalized = normalizeCode(code);
   if (normalized.length < 8) return null;

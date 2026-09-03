@@ -68,7 +68,8 @@ npm start
 | `/categories` | 商品分类 |
 | `/mine` | 我的（登录后显示本账号） |
 | `/login` `/register` | 登录 / 注册 |
-| `/orders` | 学习订单与课程码 |
+| `/orders` | 订单列表（学习订单） |
+| `/orders/[id]` | 订单详情与卡密（加密课程码） |
 | `/learning` | 我的学习 |
 | `/verify` | 验证课程码 |
 | `/product/[slug]` | 课程详情 |

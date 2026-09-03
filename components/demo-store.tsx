@@ -140,7 +140,7 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
                 <DialogHeader>
                   <DialogTitle>购买成功</DialogTitle>
                   <DialogDescription>
-                    演示结算未发起真实扣款。请保存下列加密课程码，之后可在「学习订单」或「验证课程码」查看。
+                    演示结算未发起真实扣款。请保存卡密（加密课程码），之后可在订单详情或「验证课程码」查看。
                   </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-3">
@@ -156,11 +156,11 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
                 </div>
                 <DialogFooter className="flex-col gap-2 sm:flex-col">
                   <Link
-                    href="/orders"
+                    href={result[0] ? `/orders/${result[0].id}` : "/orders"}
                     onClick={closePay}
                     className="w-full rounded-md bg-[#8a5a20] py-2 text-center text-[13px] text-white"
                   >
-                    查看我的订单
+                    查看订单与卡密
                   </Link>
                   <Link
                     href="/verify"
