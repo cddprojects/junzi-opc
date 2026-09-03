@@ -1,7 +1,8 @@
 import { SimplePlaceholder } from "@/components/simple-page";
-import { placeholderPages } from "@/lib/data";
+import { getRequestLocale } from "@/lib/i18n-server";
+import { t } from "@/lib/messages";
 
-export default function AgentPage() {
-  const page = placeholderPages.agent;
-  return <SimplePlaceholder title={page.title} body={page.body} />;
+export default async function AgentPage() {
+  const locale = await getRequestLocale();
+  return <SimplePlaceholder title={t(locale, "agentTitle")} body={t(locale, "agentBody")} />;
 }

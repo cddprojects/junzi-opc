@@ -5,6 +5,7 @@ import { emptyCourseDetail } from "@/lib/course";
 import { UploadField } from "@/components/admin/upload-field";
 import { Input } from "@/components/ui/input";
 import { StringListEditor, moveItem } from "@/components/admin/list-editor";
+import { EnInput } from "@/components/admin/en-field";
 
 export function CourseDetailFields({
   value,
@@ -45,6 +46,11 @@ export function CourseDetailFields({
         片头角标
         <Input value={detail.heroKicker || ""} onChange={(e) => set({ heroKicker: e.target.value })} className="mt-1 h-9" />
       </label>
+      <div className="grid gap-3 md:grid-cols-3">
+        <EnInput label="片头叠字" value={detail.heroOverlayEn || ""} onChange={(heroOverlayEn) => set({ heroOverlayEn })} />
+        <EnInput label="片头副标" value={detail.heroSubEn || ""} onChange={(heroSubEn) => set({ heroSubEn })} />
+        <EnInput label="片头角标" value={detail.heroKickerEn || ""} onChange={(heroKickerEn) => set({ heroKickerEn })} />
+      </div>
       <UploadField
         label="片头封面 / 海报"
         value={detail.introPoster || ""}
@@ -62,6 +68,7 @@ export function CourseDetailFields({
         价值主张
         <Input value={detail.valueLine || ""} onChange={(e) => set({ valueLine: e.target.value })} className="mt-1 h-9" />
       </label>
+      <EnInput label="价值主张" value={detail.valueLineEn || ""} onChange={(valueLineEn) => set({ valueLineEn })} />
       <label className="block text-[13px]">
         课程介绍正文
         <textarea
@@ -71,6 +78,12 @@ export function CourseDetailFields({
           className="mt-1 w-full rounded-md border border-input px-3 py-2"
         />
       </label>
+      <EnInput
+        label="课程介绍正文"
+        multiline
+        value={detail.bodyEn || ""}
+        onChange={(bodyEn) => set({ bodyEn })}
+      />
 
       <PairList
         title="三大支柱"
@@ -137,6 +150,16 @@ export function CourseDetailFields({
                   }}
                   className="h-8 min-w-[180px] flex-1 rounded border border-input px-2 text-[13px]"
                   placeholder="课时标题"
+                />
+                <input
+                  value={lesson.titleEn || ""}
+                  onChange={(event) => {
+                    const lessons = [...detail.lessons];
+                    lessons[index] = { ...lesson, titleEn: event.target.value, index: index + 1 };
+                    set({ lessons: reindexLessons(lessons) });
+                  }}
+                  className="h-8 min-w-[160px] flex-1 rounded border border-input px-2 text-[13px]"
+                  placeholder="English title"
                 />
                 <input
                   value={lesson.duration || ""}
@@ -239,6 +262,16 @@ export function CourseDetailFields({
                     set({ lives });
                   }}
                   placeholder={`直播第${index + 1}场标题`}
+                  className="h-8 flex-1 rounded border border-input px-2 text-[13px]"
+                />
+                <input
+                  value={live.titleEn || ""}
+                  onChange={(event) => {
+                    const lives = [...detail.lives];
+                    lives[index] = { ...live, titleEn: event.target.value, index: index + 1 };
+                    set({ lives });
+                  }}
+                  placeholder="English title"
                   className="h-8 flex-1 rounded border border-input px-2 text-[13px]"
                 />
                 <button type="button" className="text-[12px]" onClick={() => set({ lives: reindexLives(moveItem(detail.lives, index, -1)) })}>

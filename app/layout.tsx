@@ -4,6 +4,7 @@ import { Noto_Sans_SC, Noto_Serif_SC } from "next/font/google";
 import { Providers } from "@/components/providers";
 import { AppShell } from "@/components/shell";
 import { CURRENCY_COOKIE, parseCurrency } from "@/lib/currency";
+import { htmlLang, LOCALE_COOKIE, parseLocale } from "@/lib/i18n";
 import { getSettings } from "@/lib/store";
 import "./globals.css";
 
@@ -26,15 +27,21 @@ export const metadata: Metadata = {
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
   const settings = getSettings();
-  const cookie = (await cookies()).get(CURRENCY_COOKIE)?.value;
+  const jar = await cookies();
+  const locale = parseLocale(jar.get(LOCALE_COOKIE)?.value);
+  const cookie = jar.get(CURRENCY_COOKIE)?.value;
   return (
     <html
-      lang="zh-CN"
+      lang={htmlLang(locale)}
       className={`${sans.variable} ${serif.variable} h-full antialiased`}
       suppressHydrationWarning
     >
       <body className="min-h-full font-sans">
-        <Providers currency={parseCurrency(cookie, settings.defaultCurrency)} settings={settings}>
+        <Providers
+          locale={locale}
+          currency={parseCurrency(cookie, settings.defaultCurrency)}
+          settings={settings}
+        >
           <AppShell>{children}</AppShell>
         </Providers>
       </body>

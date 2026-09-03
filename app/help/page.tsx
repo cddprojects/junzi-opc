@@ -1,13 +1,14 @@
 import { SimplePlaceholder } from "@/components/simple-page";
-import { placeholderPages } from "@/lib/data";
+import { getRequestLocale } from "@/lib/i18n-server";
+import { t } from "@/lib/messages";
 
-export default function HelpPage() {
-  const page = placeholderPages.help;
+export default async function HelpPage() {
+  const locale = await getRequestLocale();
   return (
     <SimplePlaceholder
-      title={page.title}
-      body={page.body}
-      actions={[{ href: "/guides", label: "打开操作指南" }]}
+      title={t(locale, "helpTitle")}
+      body={t(locale, "helpBody")}
+      actions={[{ href: "/guides", label: t(locale, "helpAction") }]}
     />
   );
 }

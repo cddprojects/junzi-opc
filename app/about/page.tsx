@@ -1,13 +1,16 @@
 import { SimplePlaceholder } from "@/components/simple-page";
-import { brand, placeholderPages } from "@/lib/data";
+import { brand } from "@/lib/data";
+import { getRequestLocale } from "@/lib/i18n-server";
+import { localized } from "@/lib/i18n";
+import { t } from "@/lib/messages";
 
-export default function AboutPage() {
-  const page = placeholderPages.about;
+export default async function AboutPage() {
+  const locale = await getRequestLocale();
   return (
     <SimplePlaceholder
-      title={page.title}
-      body={`${page.body} ${brand.mottoWay}。`}
-      actions={[{ href: "/", label: "回到首页" }]}
+      title={t(locale, "aboutTitle")}
+      body={`${t(locale, "aboutBody")} ${localized(locale, brand.mottoWay, brand.mottoWayEn)}.`}
+      actions={[{ href: "/", label: t(locale, "backHome") }]}
     />
   );
 }

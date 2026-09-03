@@ -49,6 +49,7 @@ export type Order = {
 export type CheckoutItem = {
   slug: string;
   title: string;
+  titleEn?: string;
   price: number;
   qty?: number;
 };
@@ -124,11 +125,12 @@ export function memberCheckoutItem(): CheckoutItem {
   return {
     slug: membership.slug,
     title: membership.title,
+    titleEn: membership.titleEn,
     price: membership.campPrice,
     qty: 1,
   };
 }
 
-export function productToCheckout(product: Pick<Product, "slug" | "title" | "price">): CheckoutItem {
-  return { slug: product.slug, title: product.title, price: product.price, qty: 1 };
+export function productToCheckout(product: Pick<Product, "slug" | "title" | "titleEn" | "price">): CheckoutItem {
+  return { slug: product.slug, title: product.title, titleEn: product.titleEn, price: product.price, qty: 1 };
 }

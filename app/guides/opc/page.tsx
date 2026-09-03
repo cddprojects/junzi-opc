@@ -1,13 +1,16 @@
 import { SimplePlaceholder } from "@/components/simple-page";
+import { getRequestLocale } from "@/lib/i18n-server";
+import { t } from "@/lib/messages";
 
-export default function GuideOpcPage() {
+export default async function GuideOpcPage() {
+  const locale = await getRequestLocale();
   return (
     <SimplePlaceholder
-      title="操作指南一（必看）· 更新中"
-      body="本页对应「君子小雅OPC研习社小程序 操作指南一」。演示站使用图文占位，不提供原视频文件。建议先从首页熟悉录播课、分类与「我的」三个入口。"
+      title={t(locale, "guideOpcTitle")}
+      body={t(locale, "guideOpcBody")}
       actions={[
-        { href: "/", label: "返回首页" },
-        { href: "/courses/recorded", label: "查看录播课" },
+        { href: "/", label: t(locale, "backToHome") },
+        { href: "/courses/recorded", label: t(locale, "viewRecorded") },
       ]}
     />
   );

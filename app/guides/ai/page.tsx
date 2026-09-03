@@ -1,13 +1,16 @@
 import { SimplePlaceholder } from "@/components/simple-page";
+import { getRequestLocale } from "@/lib/i18n-server";
+import { t } from "@/lib/messages";
 
-export default function GuideAiPage() {
+export default async function GuideAiPage() {
+  const locale = await getRequestLocale();
   return (
     <SimplePlaceholder
-      title="操作指南二（必看）· 未更新"
-      body="本页对应「君子小雅AI工具小程序 操作指南二」。内容尚未更新，这里仅保留入口，方便对照原小程序信息架构。"
+      title={t(locale, "guideAiTitle")}
+      body={t(locale, "guideAiBody")}
       actions={[
-        { href: "/tools", label: "打开 AI 工具占位页" },
-        { href: "/guides", label: "返回指南列表" },
+        { href: "/tools", label: t(locale, "toolsTitle") },
+        { href: "/guides", label: t(locale, "pageGuides") },
       ]}
     />
   );

@@ -2,15 +2,17 @@
 
 import { CURRENCY_CODES, CURRENCY_META } from "@/lib/currency";
 import { useCurrency } from "@/components/currency-provider";
+import { useT } from "@/components/locale-provider";
 import { cn } from "@/lib/utils";
 
 export function CurrencySwitcher({ compact }: { compact?: boolean }) {
   const { currency, setCurrency } = useCurrency();
+  const t = useT();
   return (
     <label className={cn("inline-flex items-center gap-1 text-[#444]", compact ? "text-[12px]" : "text-[13px]")}>
-      {!compact && <span className="text-[#888]">货币</span>}
+      {!compact && <span className="text-[#888]">{t("currency")}</span>}
       <select
-        aria-label="选择货币"
+        aria-label={t("chooseCurrency")}
         value={currency}
         onChange={(event) => setCurrency(event.target.value as typeof currency)}
         className={cn(

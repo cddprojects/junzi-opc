@@ -6,9 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/components/auth-provider";
 import { LoginPrompt } from "@/components/login-prompt";
+import { useLocale } from "@/components/locale-provider";
+import { translateApiError } from "@/lib/messages";
 
 export default function ProfilePage() {
   const { user, loading, refresh } = useAuth();
+  const { locale, t } = useLocale();
   const router = useRouter();
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -19,10 +22,10 @@ export default function ProfilePage() {
   }, [loading, user]);
 
   if (loading) {
-    return <p className="px-4 py-10 text-center text-[14px] text-[#888]">加载中…</p>;
+    return <p className="px-4 py-10 text-center text-[14px] text-[#888]">{t("loading")}</p>;
   }
   if (!user) {
-    return <LoginPrompt title="修改资料" body="登录后才能修改自己的昵称、邮箱或手机号。" next="/profile" />;
+    return <LoginPrompt title={t("profileTitle")} body={t("profileLoginBody")} next="/profile" />;
   }
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -43,7 +46,7 @@ export default function ProfilePage() {
     const data = (await res.json()) as { error?: string };
     setBusy(false);
     if (!res.ok) {
-      setError(data.error || "保存失败");
+      setError(translateApiError(locale, data.error, "saveFailed"));
       return;
     }
     await refresh();
@@ -54,23 +57,23 @@ export default function ProfilePage() {
   return (
     <form onSubmit={onSubmit} className="mx-auto max-w-md space-y-4 px-4 py-6 md:px-0">
       <div className="rounded-2xl bg-white p-5">
-        <h1 className="font-serif text-[22px]">修改资料</h1>
+        <h1 className="font-serif text-[22px]">{t("profileTitle")}</h1>
         <label className="mt-4 block text-[13px]">
-          昵称
+          {t("authName")}
           <Input name="name" required defaultValue={user.name} className="mt-1 h-10" />
         </label>
         <label className="mt-3 block text-[13px]">
-          邮箱
+          {t("profileEmail")}
           <Input name="email" defaultValue={user.email || ""} className="mt-1 h-10" />
         </label>
         <label className="mt-3 block text-[13px]">
-          手机
+          {t("profilePhone")}
           <Input name="phone" defaultValue={user.phone || ""} className="mt-1 h-10" />
         </label>
         {error && <p className="mt-3 text-[13px] text-[#fa3534]">{error}</p>}
-        {saved && <p className="mt-3 text-[13px] text-[#2f7d4a]">已保存</p>}
+        {saved && <p className="mt-3 text-[13px] text-[#2f7d4a]">{t("saved")}</p>}
         <Button type="submit" disabled={busy} className="mt-4 h-10 w-full bg-[#8a5a20] text-white hover:bg-[#6f4818]">
-          {busy ? "保存中…" : "保存"}
+          {busy ? t("saving") : t("save")}
         </Button>
       </div>
     </form>

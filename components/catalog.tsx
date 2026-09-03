@@ -10,6 +10,9 @@ import { useDemoStore } from "@/components/demo-store";
 import { cn } from "@/lib/utils";
 import { Money } from "@/components/money";
 import { useCurrency } from "@/components/currency-provider";
+import { useLocale } from "@/components/locale-provider";
+import { localized } from "@/lib/i18n";
+import { locProductSubtitle, locProductTitle } from "@/lib/localize";
 import type { CoverTheme, Product } from "@/lib/data";
 
 export function NoticeBar({ href, text }: { href: string; text: string }) {
@@ -63,6 +66,7 @@ export function ProductRow({
 }) {
   const { addToCart } = useDemoStore();
   const { format } = useCurrency();
+  const { locale, t } = useLocale();
 
   return (
     <div className="flex gap-3 bg-white px-3 py-3">
@@ -77,7 +81,7 @@ export function ProductRow({
       </Link>
       <div className="min-w-0 flex-1">
         <Link href={product.href} className="block text-[15px] leading-6 font-medium">
-          {product.title}
+          {locProductTitle(product, locale)}
         </Link>
         <div className="mt-5 flex items-end justify-between">
           <div>
@@ -86,16 +90,16 @@ export function ProductRow({
             </p>
             {showOriginal && product.originalPrice ? (
               <p className="mt-1 text-[11px] text-[#999] line-through">
-                原价: <Money cny={product.originalPrice} />
+                {t("originalPrice")} <Money cny={product.originalPrice} />
               </p>
             ) : null}
-            <p className="mt-1 text-[11px] text-[#999]">销量: {product.sales}</p>
+            <p className="mt-1 text-[11px] text-[#999]">{t("salesCount", { n: product.sales })}</p>
           </div>
           <button
             type="button"
             onClick={() => addToCart(product)}
             className="flex size-7 items-center justify-center rounded-full bg-[#fa3534] text-white"
-            aria-label="加入购物车"
+            aria-label={t("addToCart")}
           >
             <Plus className="size-4" />
           </button>
@@ -123,17 +127,23 @@ export function CourseListCard({
       <CoverArt theme={cover} showVideoBadge />
       <div className="px-3 py-2.5">
         <h3 className="text-[15px] leading-6 font-medium">{title}</h3>
-        <p className="mt-1 text-[12px] text-[#999]">{learners}人学习</p>
+        <CourseLearners count={learners} />
       </div>
     </Link>
   );
 }
 
+function CourseLearners({ count }: { count: number }) {
+  const { t } = useLocale();
+  return <p className="mt-1 text-[12px] text-[#999]">{t("learnersCount", { n: count })}</p>;
+}
+
 export function CategoryIcons({
   items,
 }: {
-  items: readonly { id: string; label: string; href: string }[];
+  items: readonly { id: string; label: string; labelEn?: string; href: string }[];
 }) {
+  const { locale } = useLocale();
   return (
     <div className="grid grid-cols-5 bg-white px-1 py-3 md:rounded-xl md:px-6 md:py-6">
       {items.map((item) => (
@@ -141,7 +151,7 @@ export function CategoryIcons({
           <span className="flex size-12 items-center justify-center overflow-hidden rounded-full bg-[#f4efe6] md:size-16">
             <CategoryGlyph id={item.id} />
           </span>
-          <span className="text-[11px] text-[#444] md:text-sm">{item.label}</span>
+          <span className="text-[11px] text-[#444] md:text-sm">{localized(locale, item.label, item.labelEn)}</span>
         </Link>
       ))}
     </div>
@@ -196,6 +206,8 @@ function CategoryGlyph({ id }: { id: string }) {
 export function ProductCard({ product }: { product: Product }) {
   const { addToCart } = useDemoStore();
   const { format } = useCurrency();
+  const { locale, t } = useLocale();
+  const subtitle = locProductSubtitle(product, locale);
   return (
     <div className="overflow-hidden rounded-xl bg-white shadow-sm">
       <Link href={product.href}>
@@ -208,9 +220,9 @@ export function ProductCard({ product }: { product: Product }) {
       </Link>
       <div className="p-4">
         <Link href={product.href} className="block text-[16px] leading-6 font-medium">
-          {product.title}
+          {locProductTitle(product, locale)}
         </Link>
-        {product.subtitle && <p className="mt-1 line-clamp-2 text-[13px] text-[#777]">{product.subtitle}</p>}
+        {subtitle && <p className="mt-1 line-clamp-2 text-[13px] text-[#777]">{subtitle}</p>}
         <div className="mt-4 flex items-end justify-between">
           <div>
             <p className="text-[20px] font-semibold text-[#fa3534]">
@@ -218,16 +230,16 @@ export function ProductCard({ product }: { product: Product }) {
             </p>
             {product.originalPrice ? (
               <p className="text-[12px] text-[#999] line-through">
-                原价: <Money cny={product.originalPrice} />
+                {t("originalPrice")} <Money cny={product.originalPrice} />
               </p>
             ) : null}
-            <p className="mt-1 text-[12px] text-[#999]">销量: {product.sales}</p>
+            <p className="mt-1 text-[12px] text-[#999]">{t("salesCount", { n: product.sales })}</p>
           </div>
           <button
             type="button"
             onClick={() => addToCart(product)}
             className="flex size-8 items-center justify-center rounded-full bg-[#fa3534] text-white"
-            aria-label="加入购物车"
+            aria-label={t("addToCart")}
           >
             <Plus className="size-4" />
           </button>
@@ -237,6 +249,11 @@ export function ProductCard({ product }: { product: Product }) {
   );
 }
 
+function useSlideLabel() {
+  const { t } = useLocale();
+  return (n: number) => t("carouselSlide", { n });
+}
+
 export function HomeCarousel({
   slides,
 }: {
@@ -244,6 +261,7 @@ export function HomeCarousel({
 }) {
   const router = useRouter();
   const [index, setIndex] = React.useState(0);
+  const slideLabel = useSlideLabel();
   const safeSlides = slides.length ? slides : [];
 
   React.useEffect(() => {
@@ -272,7 +290,7 @@ export function HomeCarousel({
           <button
             key={item.id}
             type="button"
-            aria-label={`轮播 ${i + 1}`}
+            aria-label={slideLabel(i + 1)}
             onClick={() => setIndex(i)}
             className={cn(
               "h-1.5 rounded-full transition-all",
@@ -312,7 +330,12 @@ export function PlusPrice({
           <Money cny={originalPrice} />
         </p>
       ) : null}
-      {sales != null ? <p className="text-[12px] text-[#999]">已售 {sales} 件</p> : null}
+      {sales != null ? <SoldLine sales={sales} /> : null}
     </div>
   );
+}
+
+function SoldLine({ sales }: { sales: number }) {
+  const { t } = useLocale();
+  return <p className="text-[12px] text-[#999]">{t("soldCount", { n: sales })}</p>;
 }

@@ -5,16 +5,23 @@ import { ordersForUser } from "@/lib/user-store";
 import { getStoreProduct } from "@/lib/store";
 import { CoverArt } from "@/components/covers";
 import { Money } from "@/components/money";
-import {
-  filterOrders,
-  formatOrderTime,
-  orderStatusLabel,
-  parseOrderTab,
-  ORDER_TABS,
-} from "@/lib/orders-ui";
+import { filterOrders, formatOrderTime, parseOrderTab, ORDER_TABS } from "@/lib/orders-ui";
 import { cn } from "@/lib/utils";
+import { getRequestLocale } from "@/lib/i18n-server";
+import { t } from "@/lib/messages";
+import { locProductTitle } from "@/lib/localize";
+import type { MessageKey } from "@/lib/messages";
 
 export const dynamic = "force-dynamic";
+
+const TAB_KEYS: Record<(typeof ORDER_TABS)[number]["id"], MessageKey> = {
+  all: "orderAll",
+  unpaid: "orderUnpaid",
+  unshipped: "orderUnshipped",
+  unreceived: "orderUnreceived",
+  done: "orderDone",
+  aftersale: "orderAftersale",
+};
 
 export default async function OrdersPage({
   searchParams,
@@ -23,6 +30,7 @@ export default async function OrdersPage({
 }) {
   const user = await getCurrentUser();
   if (!user) redirect("/login?next=/orders");
+  const locale = await getRequestLocale();
 
   const { tab: tabParam } = await searchParams;
   const tab = parseOrderTab(tabParam);
@@ -32,7 +40,7 @@ export default async function OrdersPage({
   return (
     <div className="px-3 py-4 md:px-0 md:py-2">
       <div className="mx-auto max-w-2xl">
-        <h1 className="text-center text-[17px] font-medium md:text-left md:font-serif md:text-[24px]">订单列表</h1>
+        <h1 className="text-center text-[17px] font-medium md:text-left md:font-serif md:text-[24px]">{t(locale, "ordersList")}</h1>
 
         <nav className="-mx-1 mt-3 flex gap-1 overflow-x-auto px-1 text-[13px] md:mt-5 md:gap-4">
           {ORDER_TABS.map((item) => {
@@ -47,7 +55,7 @@ export default async function OrdersPage({
                   active ? "border-b-2 border-[#e08a2c] font-medium text-[#e08a2c]" : "text-[#888]",
                 )}
               >
-                {item.label}
+                {t(locale, TAB_KEYS[item.id])}
               </Link>
             );
           })}
@@ -57,13 +65,13 @@ export default async function OrdersPage({
           <div className="mt-6 rounded-xl bg-white px-4 py-10 text-center text-[14px] text-[#888]">
             {all.length === 0 ? (
               <>
-                <p>还没有订单。</p>
+                <p>{t(locale, "orderEmpty")}</p>
                 <Link href="/categories" className="mt-3 inline-block text-[#8a5a20]">
-                  去选课
+                  {t(locale, "orderGoShop")}
                 </Link>
               </>
             ) : (
-              <p>该状态下暂无订单。数字课程演示购买后会出现在「已完成」。</p>
+              <p>{t(locale, "orderEmptyTab")}</p>
             )}
           </div>
         ) : (
@@ -78,7 +86,7 @@ export default async function OrdersPage({
                 >
                   <div className="flex items-center justify-between border-b border-[#f3f3f3] pb-2 text-[12px]">
                     <span className="text-[#888]">{formatOrderTime(order.createdAt)}</span>
-                    <span className="text-[#333]">{orderStatusLabel()}</span>
+                    <span className="text-[#333]">{t(locale, "orderDone")}</span>
                   </div>
                   <div className="mt-3 flex gap-3">
                     <div className="w-[72px] shrink-0 overflow-hidden rounded-md">
@@ -89,7 +97,9 @@ export default async function OrdersPage({
                       />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="text-[15px] leading-6 font-medium">{order.productTitle}</p>
+                      <p className="text-[15px] leading-6 font-medium">
+                        {product ? locProductTitle(product, locale) : order.productTitle}
+                      </p>
                       <div className="mt-2 flex items-end justify-between">
                         <Money
                           className="text-[15px] text-[#fa3534]"
@@ -101,7 +111,7 @@ export default async function OrdersPage({
                     </div>
                   </div>
                   <p className="mt-3 text-right text-[13px] text-[#555]">
-                    实付款{" "}
+                    {t(locale, "orderPaid")}{" "}
                     <Money
                       className="text-[16px] font-semibold text-[#fa3534]"
                       cny={(order.priceCny ?? order.price) * order.qty}
@@ -111,7 +121,7 @@ export default async function OrdersPage({
                 </Link>
               );
             })}
-            <p className="py-4 text-center text-[12px] text-[#bbb]">没有更多了</p>
+            <p className="py-4 text-center text-[12px] text-[#bbb]">{t(locale, "moreNone")}</p>
           </div>
         )}
       </div>

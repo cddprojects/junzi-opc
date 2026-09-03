@@ -20,6 +20,10 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { useLocale } from "@/components/locale-provider";
+import { locProductShort } from "@/lib/localize";
+import { localized } from "@/lib/i18n";
+import { translateApiError } from "@/lib/messages";
 
 export type CartItem = { slug: string; qty: number; product: Product };
 
@@ -39,6 +43,7 @@ const StoreContext = React.createContext<Store | null>(null);
 export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
   const { user, loading, refresh } = useAuth();
   const { currency } = useCurrency();
+  const { locale, t } = useLocale();
   const pathname = usePathname();
   const router = useRouter();
   const [cart, setCart] = React.useState<CartItem[]>([]);
@@ -77,7 +82,7 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
               )
             : [...cart, { slug: product.slug, qty: 1, product }],
         );
-        toast.success(`已加入购物车：${product.shortTitle || product.title}`);
+        toast.success(t("addedCart", { title: locProductShort(product, locale) }));
       },
       removeFromCart: (slug) => setCart(cart.filter((item) => item.slug !== slug)),
       toggleFavorite: (slug) => {
@@ -85,7 +90,7 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
           ? favorites.filter((id) => id !== slug)
           : [...favorites, slug];
         setFavorites(next);
-        toast(next.includes(slug) ? "已收藏" : "已取消收藏");
+        toast(next.includes(slug) ? t("favorited") : t("unfavorited"));
       },
       openPay: (target) => {
         const nextItems = resolvePayItems(target, cart);
@@ -95,13 +100,13 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
         setOpenedOn(pathname);
       },
     }),
-    [cart, favorites, pathname],
+    [cart, favorites, pathname, locale, t],
   );
 
   async function confirmPay() {
     if (!user) return;
     if (!items.length) {
-      setError("请先选择要购买的课程");
+      setError(t("pickCourse"));
       return;
     }
     setBusy(true);
@@ -114,7 +119,7 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
     const data = (await res.json()) as { error?: string; orders?: PayResult[] };
     setBusy(false);
     if (!res.ok) {
-      setError(data.error || "结算失败");
+      setError(translateApiError(locale, data.error, "checkoutFailed"));
       return;
     }
     setResult(data.orders || []);
@@ -138,10 +143,8 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
             {result ? (
               <>
                 <DialogHeader>
-                  <DialogTitle>购买成功</DialogTitle>
-                  <DialogDescription>
-                    演示结算未发起真实扣款。请保存卡密（加密课程码），之后可在订单详情或「验证课程码」查看。
-                  </DialogDescription>
+                  <DialogTitle>{t("paySuccess")}</DialogTitle>
+                  <DialogDescription>{t("paySuccessBody")}</DialogDescription>
                 </DialogHeader>
                 <div className="space-y-3">
                   {result.map((order) => (
@@ -160,28 +163,26 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
                     onClick={closePay}
                     className="w-full rounded-md bg-[#8a5a20] py-2 text-center text-[13px] text-white"
                   >
-                    查看订单与卡密
+                    {t("viewOrderKami")}
                   </Link>
                   <Link
                     href="/verify"
                     onClick={closePay}
                     className="w-full rounded-md bg-[#f3ead8] py-2 text-center text-[13px] text-[#8a5a20]"
                   >
-                    验证课程码
+                    {t("verifyCode")}
                   </Link>
                   <Button variant="ghost" onClick={closePay}>
-                    关闭
+                    {t("close")}
                   </Button>
                 </DialogFooter>
               </>
             ) : (
               <>
                 <DialogHeader>
-                  <DialogTitle>{!loading && !user ? "请先登录" : "确认演示购买"}</DialogTitle>
+                  <DialogTitle>{!loading && !user ? t("payNeedLogin") : t("payConfirm")}</DialogTitle>
                   <DialogDescription>
-                    {!loading && !user
-                      ? "浏览无需登录。购买课程、查看「我的学习」需要先注册或登录。"
-                      : "本站不接入微信支付或第三方收款，确认后只生成订单和加密课程码，不会扣款。"}
+                    {!loading && !user ? t("payNeedLoginBody") : t("payConfirmBody")}
                   </DialogDescription>
                 </DialogHeader>
                 {items.length > 0 && (
@@ -189,7 +190,7 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
                     {items.map((item) => (
                       <li key={item.slug} className="flex items-center justify-between gap-2">
                         <span>
-                          {item.title} × {item.qty || 1}
+                          {localized(locale, item.title, item.titleEn)} × {item.qty || 1}
                         </span>
                         <Money cny={item.price * (item.qty || 1)} />
                       </li>
@@ -205,14 +206,14 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
                         onClick={() => goAuth("login")}
                         className="w-full rounded-md bg-[#8a5a20] py-2 text-center text-[13px] text-white"
                       >
-                        去登录
+                        {t("goLogin")}
                       </button>
                       <button
                         type="button"
                         onClick={() => goAuth("register")}
                         className="w-full rounded-md bg-[#f3ead8] py-2 text-center text-[13px] text-[#8a5a20]"
                       >
-                        注册账号
+                        {t("registerAccount")}
                       </button>
                     </div>
                   ) : (
@@ -221,7 +222,7 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
                       disabled={busy || loading}
                       onClick={confirmPay}
                     >
-                      {busy ? "生成课程码…" : "确认购买（演示）"}
+                      {busy ? t("generatingCode") : t("confirmDemoBuy")}
                     </Button>
                   )}
                 </DialogFooter>
@@ -245,6 +246,7 @@ function resolvePayItems(target: Product | CheckoutItem | CheckoutItem[] | undef
     return cart.map((row) => ({
       slug: row.product.slug,
       title: row.product.title,
+      titleEn: row.product.titleEn,
       price: row.product.price,
       qty: row.qty,
     }));

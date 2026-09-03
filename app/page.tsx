@@ -12,10 +12,15 @@ import {
 import { VideoBlock } from "@/components/video-block";
 import { brand, caseStudy, homeCategories, introVideo, membership } from "@/lib/data";
 import { getCatalog } from "@/lib/store";
+import { getRequestLocale } from "@/lib/i18n-server";
+import { localized } from "@/lib/i18n";
+import { t } from "@/lib/messages";
+import { locPosterTitle, locVideoTitle } from "@/lib/localize";
 
 export const dynamic = "force-dynamic";
 
-export default function HomePage() {
+export default async function HomePage() {
+  const locale = await getRequestLocale();
   const { products, posters, videos } = getCatalog();
   const joinProducts = products.filter((item) => item.categoryId === "opc");
   const carousel = posters.filter((item) => item.placement === "home-carousel");
@@ -26,9 +31,9 @@ export default function HomePage() {
 
   return (
     <div className="bg-[#f7f7f7] pb-2 md:bg-transparent md:pb-8">
-      <NoticeBar href="/courses/recorded" text={brand.notice} />
+      <NoticeBar href="/courses/recorded" text={localized(locale, brand.notice, brand.noticeEn)} />
       <div className="bg-[#f7f7f7] md:hidden">
-        <SearchBox placeholder="搜索" center />
+        <SearchBox placeholder={t(locale, "search")} center />
       </div>
       <HomeCarousel
         slides={carousel.map((item) => {
@@ -38,7 +43,7 @@ export default function HomePage() {
             id: item.id,
             href: item.href,
             theme: item.theme,
-            title: item.title,
+            title: locPosterTitle(item, locale),
             image: item.image,
             priceCny:
               product?.price ??
@@ -58,7 +63,7 @@ export default function HomePage() {
               <Link key={banner.id} href={banner.href} className="block overflow-hidden rounded-md md:rounded-xl">
                 {banner.image ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={banner.image} alt={banner.title} className="aspect-[16/6] w-full object-cover" />
+                  <img src={banner.image} alt={locPosterTitle(banner, locale)} className="aspect-[16/6] w-full object-cover" />
                 ) : (
                   <GuideBanner />
                 )}
@@ -71,7 +76,7 @@ export default function HomePage() {
           </Link>
         )}
       </div>
-      <SectionTitle>加入OPC研习社</SectionTitle>
+      <SectionTitle>{t(locale, "homeJoin")}</SectionTitle>
       <div className="mx-3 overflow-hidden rounded-md bg-white md:hidden">
         {joinProducts.map((product, index) => (
           <div key={product.slug} className={index > 0 ? "border-t border-[#f2f2f2]" : undefined}>
@@ -84,29 +89,29 @@ export default function HomePage() {
           <ProductCard key={product.slug} product={product} />
         ))}
       </div>
-      <SectionTitle>{intro?.title || introVideo.title}</SectionTitle>
+      <SectionTitle>{intro ? locVideoTitle(intro, locale) : localized(locale, introVideo.title, introVideo.titleEn)}</SectionTitle>
       <div className="mx-3 md:mx-0">
         <VideoBlock video={intro} fallback="intro" />
       </div>
-      <SectionTitle>OPC研习社案例</SectionTitle>
+      <SectionTitle>{t(locale, "homeCase")}</SectionTitle>
       <div className="mx-3 md:mx-0">
         <VideoBlock video={story} fallback="case" />
-        <p className="sr-only">{story?.title || caseStudy.title}</p>
+        <p className="sr-only">{story ? locVideoTitle(story, locale) : localized(locale, caseStudy.title, caseStudy.titleEn)}</p>
       </div>
       {extraVideos.length > 0 && (
         <>
-          <SectionTitle>视频</SectionTitle>
+          <SectionTitle>{t(locale, "homeVideos")}</SectionTitle>
           <div className="mx-3 grid gap-4 md:mx-0 md:grid-cols-2">
             {extraVideos.map((video) => (
               <div key={video.id}>
                 <VideoBlock video={video} />
-                <p className="mt-2 text-[14px] font-medium">{video.title}</p>
+                <p className="mt-2 text-[14px] font-medium">{locVideoTitle(video, locale)}</p>
               </div>
             ))}
           </div>
         </>
       )}
-      <SectionTitle>AI工具小程序</SectionTitle>
+      <SectionTitle>{t(locale, "homeAiTools")}</SectionTitle>
       <Link href="/tools" className="mx-3 mb-4 block md:mx-0">
         <AiToolBanner />
       </Link>

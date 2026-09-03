@@ -6,6 +6,7 @@ import { COVER_THEMES, type CourseDetail, type Product, type ProductCategoryId }
 import { emptyCourseDetail, outlineFromLessons } from "@/lib/course";
 import { UploadField } from "@/components/admin/upload-field";
 import { CourseDetailFields } from "@/components/admin/course-detail-fields";
+import { EnInput } from "@/components/admin/en-field";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CURRENCY_CODES, CURRENCY_META, DEFAULT_SETTINGS, fromCny, toCny, type Currency } from "@/lib/currency";
@@ -49,7 +50,9 @@ export function ProductForm({ product }: { product?: Product }) {
     const form = new FormData(event.currentTarget);
     const payload = {
       title: String(form.get("title") || ""),
+      titleEn: String(form.get("titleEn") || ""),
       shortTitle: String(form.get("shortTitle") || ""),
+      shortTitleEn: String(form.get("shortTitleEn") || ""),
       slug: String(form.get("slug") || ""),
       price: toCny(Number(priceInput || 0), entryCurrency, settings.fx),
       originalPrice: originalInput === "" ? undefined : toCny(Number(originalInput), entryCurrency, settings.fx),
@@ -57,8 +60,11 @@ export function ProductForm({ product }: { product?: Product }) {
       categoryId: String(form.get("categoryId") || "opc") as ProductCategoryId,
       cover: String(form.get("cover") || "qihang") as Product["cover"],
       subtitle: String(form.get("subtitle") || ""),
+      subtitleEn: String(form.get("subtitleEn") || ""),
       giftNote: String(form.get("giftNote") || ""),
+      giftNoteEn: String(form.get("giftNoteEn") || ""),
       description: detail.body || "",
+      descriptionEn: detail.bodyEn || "",
       outline: outlineFromLessons(detail.lessons),
       coverImage,
       detail,
@@ -93,6 +99,7 @@ export function ProductForm({ product }: { product?: Product }) {
         标题
         <Input name="title" required defaultValue={product?.title} className="mt-1 h-9" />
       </label>
+      <EnInput name="titleEn" defaultValue={product?.titleEn} label="标题" />
       <div className="grid gap-3 md:grid-cols-2">
         <label className="block text-[13px]">
           短标题
@@ -109,6 +116,7 @@ export function ProductForm({ product }: { product?: Product }) {
           />
         </label>
       </div>
+      <EnInput name="shortTitleEn" defaultValue={product?.shortTitleEn} label="短标题" />
       <div className="grid gap-3 md:grid-cols-4">
         <label className="block text-[13px]">
           录入货币
@@ -191,10 +199,12 @@ export function ProductForm({ product }: { product?: Product }) {
         副标题
         <Input name="subtitle" defaultValue={product?.subtitle} className="mt-1 h-9" />
       </label>
+      <EnInput name="subtitleEn" defaultValue={product?.subtitleEn} label="副标题" />
       <label className="block text-[13px]">
         赠送说明
         <Input name="giftNote" defaultValue={product?.giftNote} className="mt-1 h-9" />
       </label>
+      <EnInput name="giftNoteEn" defaultValue={product?.giftNoteEn} label="赠送说明" />
 
       <CourseDetailFields value={detail} onChange={setDetail} />
 

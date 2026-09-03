@@ -23,6 +23,9 @@ import { emptyCourseDetail } from "@/lib/course";
 import type { CatalogVideo, CourseDetail, LessonIcon, Product } from "@/lib/data";
 import { Money } from "@/components/money";
 import { cn } from "@/lib/utils";
+import { useLocale } from "@/components/locale-provider";
+import { isPlanSectionTitle } from "@/lib/i18n";
+import { localizeProduct } from "@/lib/localize";
 
 const lessonIcons: Record<LessonIcon, typeof Play> = {
   play: Play,
@@ -43,8 +46,10 @@ export function CourseDetailView({
   video?: CatalogVideo;
 }) {
   const { toggleFavorite, favorites, openPay } = useDemoStore();
+  const { locale, t } = useLocale();
   const favored = favorites.includes(product.slug);
-  const detail: CourseDetail = product.detail ?? emptyCourseDetail();
+  const view = localizeProduct(product, locale);
+  const detail: CourseDetail = view.detail ?? emptyCourseDetail();
   const heroVideo: CatalogVideo | undefined = detail.introVideoUrl
     ? {
         id: `${product.slug}-intro`,
@@ -70,7 +75,7 @@ export function CourseDetailView({
     <div className="bg-[#f7f4ee] pb-4 md:bg-transparent">
       <div className="md:grid md:grid-cols-[1.15fr_0.85fr] md:items-start md:gap-6">
         <div className="overflow-hidden md:rounded-2xl">
-          <Hero product={product} detail={detail} video={heroVideo} />
+          <Hero product={view} detail={detail} video={heroVideo} />
         </div>
         <div className="bg-white px-3 pt-3 pb-4 md:rounded-2xl md:px-6 md:py-5">
           <div className="flex items-end justify-between">
@@ -84,14 +89,14 @@ export function CourseDetailView({
                 </span>
               ) : null}
             </div>
-            <span className="text-[12px] text-[#999]">已售 {product.sales} 件</span>
+            <span className="text-[12px] text-[#999]">{t("soldCount", { n: product.sales })}</span>
           </div>
           <div className="mt-3 flex items-start justify-between gap-3">
-            <h1 className="text-[18px] leading-7 font-semibold md:text-[26px]">{product.title}</h1>
+            <h1 className="text-[18px] leading-7 font-semibold md:text-[26px]">{view.title}</h1>
             <div className="flex shrink-0 gap-3 text-center text-[10px] text-[#888]">
               <span className="flex flex-col items-center gap-0.5">
                 <Share2 className="size-4" />
-                分享
+                {t("share")}
               </span>
               <button
                 type="button"
@@ -99,16 +104,16 @@ export function CourseDetailView({
                 className="flex flex-col items-center gap-0.5"
               >
                 <Star className={cn("size-4", favored && "fill-[#fa3534] text-[#fa3534]")} />
-                收藏
+                {t("favorite")}
               </button>
             </div>
           </div>
-          {product.subtitle && <p className="mt-2 text-[13px] text-[#666]">{product.subtitle}</p>}
-          {detail.lecturer && <p className="mt-2 text-[13px] text-[#8a7048]">{detail.lecturer} 主讲</p>}
-          {product.giftNote && (
+          {view.subtitle && <p className="mt-2 text-[13px] text-[#666]">{view.subtitle}</p>}
+          {detail.lecturer && <p className="mt-2 text-[13px] text-[#8a7048]">{t("taughtBy", { name: detail.lecturer })}</p>}
+          {view.giftNote && (
             <div className="mt-3 flex items-center gap-2 text-[12px]">
-              <span className="rounded-full bg-[#fa3534] px-2 py-0.5 text-white">赠送</span>
-              <span className="text-[#555]">{product.giftNote}</span>
+              <span className="rounded-full bg-[#fa3534] px-2 py-0.5 text-white">{t("gift")}</span>
+              <span className="text-[#555]">{view.giftNote}</span>
             </div>
           )}
           <button
@@ -116,12 +121,12 @@ export function CourseDetailView({
             onClick={() => openPay(product)}
             className="mt-5 hidden h-11 w-full rounded-md bg-[#fa3534] text-white md:block"
           >
-            立即购买
+            {t("buyNow")}
           </button>
         </div>
       </div>
 
-      <p className="py-3 text-center text-[12px] text-[#999] md:pt-8">—— 商品详情 ——</p>
+      <p className="py-3 text-center text-[12px] text-[#999] md:pt-8">{t("productDetail")}</p>
 
       <section className="px-4 pb-6 text-[#2b261c] md:px-0">
         {detail.valueLine && <p className="text-center text-[15px] md:text-[18px]">{detail.valueLine}</p>}
@@ -138,7 +143,7 @@ export function CourseDetailView({
         )}
         {detail.body && (
           <div className="mt-5 rounded-md bg-white/80 px-3 py-4 md:rounded-xl md:px-6">
-            <h3 className="text-[15px] font-semibold">课程介绍</h3>
+            <h3 className="text-[15px] font-semibold">{t("courseIntro")}</h3>
             <p className="mt-2 text-[13px] leading-6 text-[#4a4336] whitespace-pre-wrap md:text-[14px]">{detail.body}</p>
           </div>
         )}
@@ -157,7 +162,7 @@ export function CourseDetailView({
         {detail.lessons.length > 0 && (
           <div className="mt-6">
             <div className="flex items-end justify-between">
-              <h3 className="text-[16px] font-semibold">{detail.lessonsTitle || "课程大纲"}</h3>
+              <h3 className="text-[16px] font-semibold">{detail.lessonsTitle || t("syllabus")}</h3>
               {detail.lessonsTag && <span className="text-[12px] text-[#8a7048]">{detail.lessonsTag}</span>}
             </div>
             <div className="mt-3 grid grid-cols-2 gap-2 md:grid-cols-2">
@@ -171,7 +176,7 @@ export function CourseDetailView({
                     <div className="flex items-start gap-1.5">
                       <Icon className="mt-0.5 size-3.5 shrink-0 text-[#8a7048]" />
                       <div>
-                        <p className="text-[11px] text-[#8a7048]">第{lesson.index}节</p>
+                        <p className="text-[11px] text-[#8a7048]">{t("lessonN", { n: lesson.index })}</p>
                         <p className="mt-0.5 text-[12px] leading-5 md:text-[13px]">{lesson.title}</p>
                       </div>
                     </div>
@@ -183,7 +188,7 @@ export function CourseDetailView({
               href={`/courses/recorded/${product.slug}`}
               className="mt-3 inline-block text-[13px] text-[#8a5a20]"
             >
-              去线上录播课看正课 →
+              {t("goRecordedLessons")}
             </Link>
           </div>
         )}
@@ -203,7 +208,7 @@ export function CourseDetailView({
           <div key={`${live.index}-${live.title}`} className="mt-6 rounded-md bg-white px-3 py-4 md:px-5">
             <div className="flex items-center gap-2">
               <span className="flex size-8 items-center justify-center rounded-full bg-[#2b5a8a] text-[10px] text-white">
-                直播第{live.index}场
+                {t("liveN", { n: live.index })}
               </span>
               <h3 className="text-[15px] font-semibold">{live.title}</h3>
             </div>
@@ -225,7 +230,7 @@ export function CourseDetailView({
 
         {detail.outcomes.length > 0 && (
           <>
-            <h3 className="mt-8 text-center text-[16px] font-semibold">{detail.outcomesTitle || "完成课程后，你将拥有"}</h3>
+            <h3 className="mt-8 text-center text-[16px] font-semibold">{detail.outcomesTitle || t("afterCourse")}</h3>
             <div className="mt-3 grid grid-cols-3 gap-2">
               {detail.outcomes.map((item) => (
                 <div key={item.title} className="rounded-md bg-white px-2 py-3 text-center">
@@ -239,7 +244,7 @@ export function CourseDetailView({
 
         {detail.audiences.length > 0 && (
           <>
-            <h3 className="mt-8 text-center text-[16px] font-semibold">{detail.audiencesTitle || "这门课程适合谁"}</h3>
+            <h3 className="mt-8 text-center text-[16px] font-semibold">{detail.audiencesTitle || t("whoFor")}</h3>
             <div className="mt-3 grid grid-cols-3 gap-2">
               {detail.audiences.map((item) => (
                 <div key={item.title} className="rounded-md bg-white px-2 py-3 text-center">
@@ -261,7 +266,7 @@ export function CourseDetailView({
 
         {detail.extraSections.map((section, idx) => {
           if (!section.title && !section.body && !section.items?.length) return null;
-          const numbered = /学习计划|日程|安排/.test(section.title);
+          const numbered = isPlanSectionTitle(section.title);
           return (
             <div key={`${section.title}-${idx}`} className="mt-6 rounded-md bg-white px-3 py-4 md:px-5">
               {section.title ? <h3 className="text-center text-[16px] font-semibold">{section.title}</h3> : null}
@@ -294,10 +299,10 @@ export function CourseDetailView({
 
         {(detail.joinLine || detail.joinSub) && (
           <div className="relative mt-6 overflow-hidden rounded-md bg-[#1b1b1b] px-4 py-6 text-center text-white">
-            <p className="text-[13px]">{product.title}</p>
+            <p className="text-[13px]">{view.title}</p>
             {detail.joinSub && <p className="mt-1 text-[11px] text-white/70">{detail.joinSub}</p>}
             {detail.joinLine && <p className="mt-4 text-[18px] leading-7 font-medium">{detail.joinLine}</p>}
-            <p className="mt-5 text-[11px] text-[#d4b56a]">以君子之道修身 以小雅之智成事</p>
+            <p className="mt-5 text-[11px] text-[#d4b56a]">{t("coverMotto")}</p>
           </div>
         )}
       </section>
@@ -329,11 +334,16 @@ function Hero({
             {detail.heroKicker && <p className="text-[11px] text-white/75">{detail.heroKicker}</p>}
             {detail.heroOverlay && <p className="text-[22px] font-semibold">{detail.heroOverlay}</p>}
             {detail.heroSub && <p className="text-sm text-white/80">{detail.heroSub}</p>}
-            {detail.lecturer && <p className="mt-2 text-[12px]">{detail.lecturer} 主讲</p>}
+            {detail.lecturer && <HeroTaughtBy name={detail.lecturer} />}
           </div>
         )}
       </div>
     );
   }
   return <QihangHeroCover />;
+}
+
+function HeroTaughtBy({ name }: { name: string }) {
+  const { t } = useLocale();
+  return <p className="mt-2 text-[12px]">{t("taughtBy", { name })}</p>;
 }

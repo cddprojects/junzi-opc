@@ -5,16 +5,20 @@ import { getStoreProduct } from "@/lib/store";
 import { LoginPrompt } from "@/components/login-prompt";
 import { CopyCode } from "@/components/copy-code";
 import { CoverArt } from "@/components/covers";
+import { getRequestLocale } from "@/lib/i18n-server";
+import { t } from "@/lib/messages";
+import { locProductTitle } from "@/lib/localize";
 
 export const dynamic = "force-dynamic";
 
 export default async function LearningPage() {
+  const locale = await getRequestLocale();
   const user = await getCurrentUser();
   if (!user) {
     return (
       <LoginPrompt
-        title="我的学习"
-        body="登录后才能进入已购课程。购买时会生成一枚加密课程码，可随时在此查看。"
+        title={t(locale, "learningTitle")}
+        body={t(locale, "learningLoginBody")}
         next="/learning"
       />
     );
@@ -28,13 +32,13 @@ export default async function LearningPage() {
 
   return (
     <div className="px-4 py-6 md:px-0">
-      <h1 className="font-serif text-[24px]">我的学习</h1>
-      <p className="mt-2 text-[13px] text-[#777]">这里只列出你买过的课，不会看到其他学员的记录。</p>
+      <h1 className="font-serif text-[24px]">{t(locale, "learningTitle")}</h1>
+      <p className="mt-2 text-[13px] text-[#777]">{t(locale, "learningHint")}</p>
       {items.length === 0 ? (
         <div className="mt-6 rounded-2xl bg-white px-4 py-8 text-center text-[14px] text-[#666]">
-          <p>还没有已购课程。</p>
+          <p>{t(locale, "learningEmpty")}</p>
           <Link href="/product/qihang" className="mt-3 inline-block text-[#8a5a20]">
-            查看启航营
+            {t(locale, "learningViewQihang")}
           </Link>
         </div>
       ) : (
@@ -52,17 +56,17 @@ export default async function LearningPage() {
                 </Link>
                 <div className="min-w-0 flex-1">
                   <Link href={product?.href || `/product/${order.productSlug}`} className="block text-[15px] font-medium">
-                    {order.productTitle}
+                    {product ? locProductTitle(product, locale) : order.productTitle}
                   </Link>
                   {product?.detail?.lessons?.length ? (
                     <Link
                       href={`/courses/recorded/${order.productSlug}`}
                       className="mt-2 inline-block text-[13px] text-[#8a5a20]"
                     >
-                      进入正课
+                      {t(locale, "enterLessons")}
                     </Link>
                   ) : null}
-                  <p className="mt-1 text-[12px] text-[#888]">课程码</p>
+                  <p className="mt-1 text-[12px] text-[#888]">{t(locale, "courseCode")}</p>
                   <CopyCode code={order.verifyCode} className="font-mono text-[13px] text-[#8a5a20]" />
                 </div>
               </article>

@@ -5,23 +5,27 @@ import { usePathname, useRouter } from "next/navigation";
 import { Bookmark, ChevronLeft, Home, Search, ShoppingCart, UserRound } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { brand } from "@/lib/data";
+import { localized } from "@/lib/i18n";
+import { pageTitleKey } from "@/lib/messages";
 import { cartCount, useDemoStore } from "@/components/demo-store";
 import { useAuth } from "@/components/auth-provider";
 import { CurrencySwitcher } from "@/components/currency-switcher";
+import { LocaleSwitcher } from "@/components/locale-switcher";
+import { useLocale } from "@/components/locale-provider";
 
-const TABS = [
-  { href: "/", label: "首页", icon: Home },
-  { href: "/categories", label: "分类", icon: Bookmark },
-  { href: "/mine", label: "我的", icon: UserRound },
-] as const;
+const TAB_HREFS = [
+  { href: "/", key: "navHome" as const, icon: Home },
+  { href: "/categories", key: "navCategories" as const, icon: Bookmark },
+  { href: "/mine", key: "navMine" as const, icon: UserRound },
+];
 
 const DESKTOP_NAV = [
-  { href: "/", label: "首页" },
-  { href: "/categories", label: "分类" },
-  { href: "/courses/recorded", label: "录播课" },
-  { href: "/courses/live", label: "直播课" },
-  { href: "/member", label: "年度会员" },
-  { href: "/guides", label: "操作指南" },
+  { href: "/", key: "navHome" as const },
+  { href: "/categories", key: "navCategories" as const },
+  { href: "/courses/recorded", key: "navRecorded" as const },
+  { href: "/courses/live", key: "navLive" as const },
+  { href: "/member", key: "navMember" as const },
+  { href: "/guides", key: "navGuides" as const },
 ];
 
 function isTabActive(pathname: string, href: string) {
@@ -59,6 +63,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
 function AccountLink({ compact }: { compact?: boolean }) {
   const { user, loading } = useAuth();
+  const { t } = useLocale();
   if (loading) {
     return <span className="text-[13px] text-[#888]">{compact ? "…" : "…"}</span>;
   }
@@ -71,7 +76,7 @@ function AccountLink({ compact }: { compact?: boolean }) {
   }
   return (
     <Link href="/login" className={cn("text-[#444] hover:text-[#b8863b]", compact ? "text-[12px]" : "text-[14px]")}>
-      登录
+      {t("login")}
     </Link>
   );
 }
@@ -80,6 +85,7 @@ function DesktopHeader() {
   const pathname = usePathname();
   const { cart } = useDemoStore();
   const count = cartCount(cart);
+  const { t } = useLocale();
 
   return (
     <header className="sticky top-0 z-40 hidden border-b border-[#e6dcc8] bg-[#fffdf8]/96 backdrop-blur md:block">
@@ -97,7 +103,7 @@ function DesktopHeader() {
                 isTabActive(pathname, item.href) ? "font-medium text-[#b8863b]" : "text-[#444]",
               )}
             >
-              {item.label}
+              {t(item.key)}
             </Link>
           ))}
         </nav>
@@ -105,12 +111,13 @@ function DesktopHeader() {
           <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-[#bbb]" />
           <input
             name="q"
-            placeholder="搜索课程"
+            placeholder={t("searchCourses")}
             className="h-9 w-full rounded-full bg-[#f3efe6] pr-3 pl-9 text-[13px] outline-none"
           />
         </form>
+        <LocaleSwitcher />
         <CurrencySwitcher />
-        <Link href="/cart" className="relative text-[#444]">
+        <Link href="/cart" className="relative text-[#444]" aria-label={t("cart")}>
           <ShoppingCart className="size-5" />
           {count > 0 && (
             <span className="absolute -top-2 -right-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#fa3534] px-1 text-[10px] text-white">
@@ -125,17 +132,19 @@ function DesktopHeader() {
 }
 
 function DesktopFooter() {
+  const { locale, t } = useLocale();
   return (
     <footer className="hidden border-t border-[#e6dcc8] bg-[#fffdf8] py-8 text-center text-[13px] text-[#7a6a50] md:block">
-      <p className="font-serif text-[16px] text-[#3a2c10]">{brand.mottoWay}</p>
-      <p className="mt-2">演示结算不扣款 · 购买后发放加密课程码</p>
+      <p className="font-serif text-[16px] text-[#3a2c10]">{localized(locale, brand.mottoWay, brand.mottoWayEn)}</p>
+      <p className="mt-2">{t("footerDemo")}</p>
       <div className="mt-3 flex items-center justify-center gap-4">
+        <LocaleSwitcher />
         <CurrencySwitcher />
         <Link href="/verify" className="text-[#b8863b]">
-          验证课程码
+          {t("verifyCode")}
         </Link>
         <Link href="/admin" className="text-[#b8863b]">
-          管理后台
+          {t("adminBackend")}
         </Link>
       </div>
     </footer>
@@ -147,8 +156,9 @@ function MobileHeader() {
   const router = useRouter();
   const { cart } = useDemoStore();
   const count = cartCount(cart);
+  const { t } = useLocale();
   const isHome = pathname === "/";
-  const title = pageTitle(pathname);
+  const title = mobileTitle(pathname, t);
 
   return (
     <header className="sticky top-0 z-30 border-b border-[#ece4d4] bg-[#fffdf8]/96 backdrop-blur">
@@ -158,7 +168,7 @@ function MobileHeader() {
             type="button"
             onClick={() => router.back()}
             className="flex size-8 shrink-0 items-center justify-center text-[#333]"
-            aria-label="返回"
+            aria-label={t("back")}
           >
             <ChevronLeft className="size-6" />
           </button>
@@ -166,10 +176,10 @@ function MobileHeader() {
         <Link href="/" className="min-w-0 flex-1 truncate font-serif text-[17px] text-[#3a2c10]">
           {isHome ? brand.name : title}
         </Link>
-        <Link href="/search" className="text-[#444]" aria-label="搜索">
+        <Link href="/search" className="text-[#444]" aria-label={t("search")}>
           <Search className="size-5" />
         </Link>
-        <Link href="/cart" className="relative text-[#444]" aria-label="购物车">
+        <Link href="/cart" className="relative text-[#444]" aria-label={t("cart")}>
           <ShoppingCart className="size-5" />
           {count > 0 && (
             <span className="absolute -top-1.5 -right-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#fa3534] px-1 text-[10px] text-white">
@@ -177,6 +187,7 @@ function MobileHeader() {
             </span>
           )}
         </Link>
+        <LocaleSwitcher compact />
         <CurrencySwitcher compact />
         <AccountLink compact />
       </div>
@@ -184,44 +195,18 @@ function MobileHeader() {
   );
 }
 
-function pageTitle(pathname: string) {
-  const map: Record<string, string> = {
-    "/": brand.name,
-    "/categories": "商品分类",
-    "/mine": "我的",
-    "/courses/recorded": "录播课",
-    "/courses/live": "直播课",
-    "/workshop": "线下工作坊",
-    "/member": "会员中心",
-    "/events": "活动报名",
-    "/guides": "操作指南",
-    "/guides/opc": "操作指南一",
-    "/guides/ai": "操作指南二",
-    "/tools": "AI工具",
-    "/search": "搜索",
-    "/cart": "购物车",
-    "/orders": "学习订单",
-    "/agent": "代理中心",
-    "/learning": "我的学习",
-    "/help": "帮助中心",
-    "/profile": "修改资料",
-    "/about": "关于我们",
-    "/feedback": "用户反馈",
-    "/service": "客服",
-    "/login": "登录",
-    "/register": "注册",
-    "/verify": "验证课程码",
-  };
-  if (pathname.startsWith("/product/")) return "课程详情";
-  return map[pathname] ?? brand.name;
+function mobileTitle(pathname: string, translate: ReturnType<typeof useLocale>["t"]) {
+  const key = pageTitleKey(pathname);
+  return key ? translate(key) : brand.name;
 }
 
 export function TabBar() {
   const pathname = usePathname();
+  const { t } = useLocale();
 
   return (
     <nav className="fixed bottom-0 left-0 z-40 flex h-[52px] w-full border-t border-[#ece4d4] bg-[#fffdf8] md:hidden">
-      {TABS.map((tab) => {
+      {TAB_HREFS.map((tab) => {
         const active = isTabActive(pathname, tab.href);
         const Icon = tab.icon;
         return (
@@ -234,7 +219,7 @@ export function TabBar() {
             )}
           >
             <Icon className={cn("size-[22px]", active && "fill-[#8a5a20]")} strokeWidth={active ? 2.2 : 1.7} />
-            {tab.label}
+            {t(tab.key)}
           </Link>
         );
       })}

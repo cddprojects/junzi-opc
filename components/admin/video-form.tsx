@@ -6,6 +6,7 @@ import type { CatalogVideo, Product } from "@/lib/data";
 import { UploadField } from "@/components/admin/upload-field";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { EnInput } from "@/components/admin/en-field";
 
 export function VideoForm({ video, products }: { video?: CatalogVideo; products: Product[] }) {
   const router = useRouter();
@@ -21,8 +22,10 @@ export function VideoForm({ video, products }: { video?: CatalogVideo; products:
     const form = new FormData(event.currentTarget);
     const payload = {
       title: String(form.get("title") || ""),
+      titleEn: String(form.get("titleEn") || ""),
       duration: String(form.get("duration") || ""),
       overlay: String(form.get("overlay") || ""),
+      overlayEn: String(form.get("overlayEn") || ""),
       productSlug: String(form.get("productSlug") || ""),
       placement: String(form.get("placement") || "library"),
       poster,
@@ -57,6 +60,7 @@ export function VideoForm({ video, products }: { video?: CatalogVideo; products:
         标题
         <Input name="title" required defaultValue={video?.title} className="mt-1 h-9" />
       </label>
+      <EnInput name="titleEn" defaultValue={video?.titleEn} label="标题" />
       <div className="grid gap-3 md:grid-cols-2">
         <label className="block text-[13px]">
           展示位置
@@ -97,6 +101,7 @@ export function VideoForm({ video, products }: { video?: CatalogVideo; products:
           <Input name="overlay" defaultValue={video?.overlay} className="mt-1 h-9" />
         </label>
       </div>
+      <EnInput name="overlayEn" defaultValue={video?.overlayEn} label="封面叠字" />
       <UploadField label="封面图" value={poster} onChange={setPoster} accept="image/*" />
       <UploadField
         label="视频文件或链接"

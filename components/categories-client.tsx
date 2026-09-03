@@ -5,18 +5,21 @@ import { Search } from "lucide-react";
 import { EmptyHint, ProductCard, ProductRow } from "@/components/catalog";
 import { productCategories, type Product, type ProductCategoryId } from "@/lib/data";
 import { cn } from "@/lib/utils";
+import { useLocale } from "@/components/locale-provider";
+import { localized } from "@/lib/i18n";
 
 export function CategoriesClient({ products }: { products: Product[] }) {
   const [active, setActive] = useState<ProductCategoryId>("opc");
   const [query, setQuery] = useState("");
+  const { locale, t } = useLocale();
 
   const list = useMemo(() => {
     const q = query.trim().toLowerCase();
     return products.filter((item) => {
       if (item.categoryId !== active) return false;
       if (!q) return true;
-      return [item.title, item.shortTitle, item.subtitle ?? ""].some((field) =>
-        field.toLowerCase().includes(q),
+      return [item.title, item.titleEn, item.shortTitle, item.shortTitleEn, item.subtitle ?? "", item.subtitleEn ?? ""].some(
+        (field) => (field || "").toLowerCase().includes(q),
       );
     });
   }, [active, query, products]);
@@ -29,7 +32,7 @@ export function CategoriesClient({ products }: { products: Product[] }) {
           <input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="请输入关键字进行搜索"
+            placeholder={t("searchKeyword")}
             className="h-9 w-full rounded-full bg-[#f3f3f3] pr-3 pl-9 text-[13px] outline-none placeholder:text-[#bbb] md:h-10"
           />
         </div>
@@ -49,14 +52,14 @@ export function CategoriesClient({ products }: { products: Product[] }) {
                 )}
               >
                 {selected && <span className="absolute top-3 bottom-3 left-0 w-[3px] bg-[#c9a24a]" />}
-                {category.label}
+                {localized(locale, category.label, category.labelEn)}
               </button>
             );
           })}
         </aside>
         <section className="min-w-0 flex-1">
           {list.length === 0 ? (
-            <EmptyHint>没有找到相关商品</EmptyHint>
+            <EmptyHint>{t("noProducts")}</EmptyHint>
           ) : (
             <>
               <div className="md:hidden">
@@ -73,7 +76,7 @@ export function CategoriesClient({ products }: { products: Product[] }) {
               </div>
             </>
           )}
-          <p className="py-6 text-center text-[12px] text-[#bbb]">没有更多了</p>
+          <p className="py-6 text-center text-[12px] text-[#bbb]">{t("moreNone")}</p>
         </section>
       </div>
     </div>

@@ -39,7 +39,7 @@ export type AppStore = {
 const DATA_DIR = path.join(process.cwd(), "data");
 const STORE_PATH = path.join(DATA_DIR, "store.json");
 export const UPLOAD_DIR = path.join(DATA_DIR, "uploads");
-const STORE_VERSION = 6;
+const STORE_VERSION = 7;
 
 function seedProduct(product: Product): Product {
   if (product.slug === "qihang") {
@@ -64,34 +64,44 @@ function seedStore(): AppStore {
     posters: banners.map((banner, index) => ({
       id: banner.id,
       title: banner.title,
+      titleEn: banner.titleEn,
       href: banner.href,
       sort: index,
       placement: banner.id === "guide" ? "home-banner" : "home-carousel",
       subtitle: banner.line1,
+      subtitleEn: banner.line1En,
       kicker: banner.kicker,
+      kickerEn: banner.kickerEn,
       priceLabel: banner.price,
+      priceLabelEn: banner.priceEn,
       theme: banner.theme,
     })),
     videos: [
       {
         id: "intro",
         title: introVideo.title,
+        titleEn: introVideo.titleEn,
         duration: introVideo.duration,
         overlay: introVideo.overlay,
+        overlayEn: introVideo.overlayEn,
         placement: "home-intro",
       },
       {
         id: "case",
         title: caseStudy.title,
+        titleEn: caseStudy.titleEn,
         duration: caseStudy.duration,
         overlay: caseStudy.title,
+        overlayEn: caseStudy.titleEn,
         placement: "home-case",
       },
       {
         id: "qihang-hero",
         title: "课程介绍",
+        titleEn: "Course intro",
         duration: qihangDetail.duration,
         overlay: qihangDetail.heroOverlay,
+        overlayEn: qihangDetail.heroOverlayEn,
         productSlug: "qihang",
         placement: "product-hero",
       },
@@ -109,6 +119,95 @@ function ensureDirs() {
   if (!existsSync(UPLOAD_DIR)) mkdirSync(UPLOAD_DIR, { recursive: true });
 }
 
+function fillBlank<T extends Record<string, unknown>>(current: T, seed: Partial<T>, keys: (keyof T)[]): T {
+  const next = { ...current };
+  for (const key of keys) {
+    const value = next[key];
+    const incoming = seed[key];
+    if ((value == null || value === "") && incoming != null && incoming !== "") {
+      next[key] = incoming as T[typeof key];
+    }
+  }
+  return next;
+}
+
+function mergeSeededEnglish(product: Product): Product {
+  const seed =
+    product.slug === "qihang"
+      ? seedProducts.find((item) => item.slug === "qihang")
+      : product.slug === "shizhan"
+        ? seedProducts.find((item) => item.slug === "shizhan")
+        : product.slug === "compute"
+          ? seedProducts.find((item) => item.slug === "compute")
+          : undefined;
+  if (!seed) return product;
+  const seededDetail =
+    product.slug === "qihang"
+      ? qihangCourseDetail()
+      : product.slug === "shizhan"
+        ? shizhanCourseDetail()
+        : computeCourseDetail();
+  const filled = fillBlank(product, seed, [
+    "titleEn",
+    "shortTitleEn",
+    "subtitleEn",
+    "giftNoteEn",
+    "descriptionEn",
+    "outlineEn",
+  ]);
+  const detail = filled.detail;
+  if (!detail) return { ...filled, detail: seededDetail };
+  const lessons = detail.lessons.map((lesson, index) => {
+    const seedLesson = seededDetail.lessons[index];
+    return seedLesson ? fillBlank(lesson, seedLesson, ["titleEn"]) : lesson;
+  });
+  const lives = detail.lives.map((live, index) => {
+    const seedLive = seededDetail.lives[index];
+    return seedLive ? fillBlank(live, seedLive, ["titleEn", "itemsEn"]) : live;
+  });
+  return {
+    ...filled,
+    detail: {
+      ...fillBlank(detail, seededDetail, [
+        "heroOverlayEn",
+        "heroSubEn",
+        "heroKickerEn",
+        "valueLineEn",
+        "bodyEn",
+        "statsLineEn",
+        "lessonsTitleEn",
+        "lessonsTagEn",
+        "liveNoteEn",
+        "outcomesTitleEn",
+        "audiencesTitleEn",
+        "joinLineEn",
+        "joinSubEn",
+        "flowEn",
+        "disclaimerEn",
+      ]),
+      pillars: detail.pillars.map((item, index) =>
+        seededDetail.pillars[index] ? fillBlank(item, seededDetail.pillars[index], ["titleEn", "descEn"]) : item,
+      ),
+      stats: detail.stats.map((item, index) =>
+        seededDetail.stats[index] ? fillBlank(item, seededDetail.stats[index], ["valueEn", "labelEn"]) : item,
+      ),
+      lessons,
+      lives,
+      outcomes: detail.outcomes.map((item, index) =>
+        seededDetail.outcomes[index] ? fillBlank(item, seededDetail.outcomes[index], ["titleEn"]) : item,
+      ),
+      audiences: detail.audiences.map((item, index) =>
+        seededDetail.audiences[index] ? fillBlank(item, seededDetail.audiences[index], ["titleEn"]) : item,
+      ),
+      extraSections: detail.extraSections.map((section, index) =>
+        seededDetail.extraSections[index]
+          ? fillBlank(section, seededDetail.extraSections[index], ["titleEn", "bodyEn", "itemsEn"])
+          : section,
+      ),
+    },
+  };
+}
+
 function migrateStore(parsed: AppStore): AppStore {
   const products = (parsed.products ?? []).map((product) => {
     const next = ensureProductDetail(product);
@@ -118,15 +217,15 @@ function migrateStore(parsed: AppStore): AppStore {
       (!next.detail?.extraSections || next.detail.extraSections.length === 0)
     ) {
       const seeded = qihangCourseDetail();
-      return {
+      return mergeSeededEnglish({
         ...next,
         detail: {
           ...next.detail!,
           extraSections: seeded.extraSections,
         },
-      };
+      });
     }
-    return next;
+    return mergeSeededEnglish(next);
   });
   const now = Date.now();
   const users = (parsed.users ?? []).map((user) => ({
@@ -136,8 +235,28 @@ function migrateStore(parsed: AppStore): AppStore {
   return {
     version: STORE_VERSION,
     products,
-    posters: parsed.posters ?? [],
-    videos: parsed.videos ?? [],
+    posters: (parsed.posters ?? []).map((poster) => {
+      const seed = banners.find((banner) => banner.id === poster.id);
+      if (!seed) return poster;
+      return fillBlank(poster, {
+        titleEn: seed.titleEn,
+        subtitleEn: seed.line1En,
+        kickerEn: seed.kickerEn,
+        priceLabelEn: seed.priceEn,
+      }, ["titleEn", "subtitleEn", "kickerEn", "priceLabelEn"]);
+    }),
+    videos: (parsed.videos ?? []).map((video) => {
+      if (video.id === "intro") {
+        return fillBlank(video, { titleEn: introVideo.titleEn, overlayEn: introVideo.overlayEn }, ["titleEn", "overlayEn"]);
+      }
+      if (video.id === "case") {
+        return fillBlank(video, { titleEn: caseStudy.titleEn, overlayEn: caseStudy.titleEn }, ["titleEn", "overlayEn"]);
+      }
+      if (video.id === "qihang-hero") {
+        return fillBlank(video, { titleEn: "Course intro", overlayEn: qihangDetail.heroOverlayEn }, ["titleEn", "overlayEn"]);
+      }
+      return video;
+    }),
     users,
     sessions: (parsed.sessions ?? []).filter((session) => Date.parse(session.expiresAt) > now),
     orders: parsed.orders ?? [],
@@ -224,7 +343,12 @@ export function searchStoreProducts(query: string) {
       item.shortTitle,
       item.subtitle ?? "",
       item.description ?? "",
+      item.titleEn ?? "",
+      item.shortTitleEn ?? "",
+      item.subtitleEn ?? "",
+      item.descriptionEn ?? "",
       item.detail?.body ?? "",
+      item.detail?.bodyEn ?? "",
       item.detail?.lecturer ?? "",
     ].some((field) => field.toLowerCase().includes(q)),
   );

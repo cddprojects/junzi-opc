@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { useT } from "@/components/locale-provider";
 
 export function LoginPrompt({
   title,
@@ -9,6 +12,7 @@ export function LoginPrompt({
   body: string;
   next: string;
 }) {
+  const t = useT();
   const q = `?next=${encodeURIComponent(next)}`;
   return (
     <div className="px-4 py-10">
@@ -17,10 +21,10 @@ export function LoginPrompt({
         <p className="mt-3 text-[14px] leading-6 text-[#666]">{body}</p>
         <div className="mt-6 flex flex-col gap-2">
           <Link href={`/login${q}`} className="rounded-md bg-[#8a5a20] py-2.5 text-[14px] text-white">
-            登录
+            {t("loginPromptLogin")}
           </Link>
           <Link href={`/register${q}`} className="rounded-md bg-[#f3ead8] py-2.5 text-[14px] text-[#8a5a20]">
-            注册账号
+            {t("loginPromptRegister")}
           </Link>
         </div>
       </div>

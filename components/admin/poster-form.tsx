@@ -6,6 +6,7 @@ import { COVER_THEMES, type Poster } from "@/lib/data";
 import { UploadField } from "@/components/admin/upload-field";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { EnInput } from "@/components/admin/en-field";
 
 export function PosterForm({ poster }: { poster?: Poster }) {
   const router = useRouter();
@@ -20,12 +21,16 @@ export function PosterForm({ poster }: { poster?: Poster }) {
     const form = new FormData(event.currentTarget);
     const payload = {
       title: String(form.get("title") || ""),
+      titleEn: String(form.get("titleEn") || ""),
       href: String(form.get("href") || "/"),
       sort: Number(form.get("sort") || 0),
       placement: String(form.get("placement") || "home-carousel"),
       subtitle: String(form.get("subtitle") || ""),
+      subtitleEn: String(form.get("subtitleEn") || ""),
       kicker: String(form.get("kicker") || ""),
+      kickerEn: String(form.get("kickerEn") || ""),
       priceLabel: String(form.get("priceLabel") || ""),
+      priceLabelEn: String(form.get("priceLabelEn") || ""),
       theme: String(form.get("theme") || "qihang"),
       image,
     };
@@ -58,6 +63,7 @@ export function PosterForm({ poster }: { poster?: Poster }) {
         标题
         <Input name="title" required defaultValue={poster?.title} className="mt-1 h-9" />
       </label>
+      <EnInput name="titleEn" defaultValue={poster?.titleEn} label="标题" />
       <label className="block text-[13px]">
         跳转链接
         <Input name="href" defaultValue={poster?.href || "/"} className="mt-1 h-9" />
@@ -98,6 +104,7 @@ export function PosterForm({ poster }: { poster?: Poster }) {
         副标题
         <Input name="subtitle" defaultValue={poster?.subtitle} className="mt-1 h-9" />
       </label>
+      <EnInput name="subtitleEn" defaultValue={poster?.subtitleEn} label="副标题" />
       <div className="grid gap-3 md:grid-cols-2">
         <label className="block text-[13px]">
           角标
@@ -107,6 +114,10 @@ export function PosterForm({ poster }: { poster?: Poster }) {
           价格文案
           <Input name="priceLabel" defaultValue={poster?.priceLabel} className="mt-1 h-9" />
         </label>
+      </div>
+      <div className="grid gap-3 md:grid-cols-2">
+        <EnInput name="kickerEn" defaultValue={poster?.kickerEn} label="角标" />
+        <EnInput name="priceLabelEn" defaultValue={poster?.priceLabelEn} label="价格文案" />
       </div>
       {error && <p className="text-[13px] text-[#fa3534]">{error}</p>}
       <div className="flex gap-3">

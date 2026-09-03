@@ -1,8 +1,12 @@
 import Link from "next/link";
 import { CoverArt } from "@/components/covers";
 import { liveCourses } from "@/lib/data";
+import { getRequestLocale } from "@/lib/i18n-server";
+import { localized } from "@/lib/i18n";
+import { t } from "@/lib/messages";
 
-export default function LiveCoursesPage() {
+export default async function LiveCoursesPage() {
+  const locale = await getRequestLocale();
   return (
     <div className="bg-white md:grid md:grid-cols-2 md:gap-5 md:bg-transparent">
       {liveCourses.map((course, index) => (
@@ -13,8 +17,8 @@ export default function LiveCoursesPage() {
         >
           <CoverArt theme={course.cover} className="rounded-none" />
           <div className="px-3 py-3">
-            <h3 className="text-[15px] leading-6 font-medium">{course.title}</h3>
-            <p className="mt-1 text-[12px] text-[#999]">{course.learners}人学习</p>
+            <h3 className="text-[15px] leading-6 font-medium">{localized(locale, course.title, course.titleEn)}</h3>
+            <p className="mt-1 text-[12px] text-[#999]">{t(locale, "learnersCount", { n: course.learners })}</p>
           </div>
         </Link>
       ))}

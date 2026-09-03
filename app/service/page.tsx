@@ -1,13 +1,14 @@
 import { SimplePlaceholder } from "@/components/simple-page";
-import { placeholderPages } from "@/lib/data";
+import { getRequestLocale } from "@/lib/i18n-server";
+import { t } from "@/lib/messages";
 
-export default function ServicePage() {
-  const page = placeholderPages.service;
+export default async function ServicePage() {
+  const locale = await getRequestLocale();
   return (
     <SimplePlaceholder
-      title={page.title}
-      body={page.body}
-      actions={[{ href: "/help", label: "查看帮助中心" }]}
+      title={t(locale, "serviceTitle")}
+      body={t(locale, "serviceBody")}
+      actions={[{ href: "/help", label: t(locale, "serviceAction") }]}
     />
   );
 }

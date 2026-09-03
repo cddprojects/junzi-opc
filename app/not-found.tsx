@@ -1,11 +1,14 @@
 import { SimplePlaceholder } from "@/components/simple-page";
+import { getRequestLocale } from "@/lib/i18n-server";
+import { t } from "@/lib/messages";
 
-export default function NotFound() {
+export default async function NotFound() {
+  const locale = await getRequestLocale();
   return (
     <SimplePlaceholder
-      title="页面不存在"
-      body="没有找到该页面。可以从首页、分类或我的继续浏览。"
-      actions={[{ href: "/", label: "回到首页" }]}
+      title={t(locale, "pageNotFound")}
+      body={t(locale, "notFoundBody")}
+      actions={[{ href: "/", label: t(locale, "backHome") }]}
     />
   );
 }
