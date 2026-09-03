@@ -39,7 +39,7 @@ export type AppStore = {
 const DATA_DIR = path.join(process.cwd(), "data");
 const STORE_PATH = path.join(DATA_DIR, "store.json");
 export const UPLOAD_DIR = path.join(DATA_DIR, "uploads");
-const STORE_VERSION = 7;
+const STORE_VERSION = 8;
 
 function seedProduct(product: Product): Product {
   if (product.slug === "qihang") {
@@ -274,7 +274,14 @@ export function readStore(): AppStore {
   }
   const parsed = JSON.parse(readFileSync(STORE_PATH, "utf8")) as AppStore;
   const migrated = migrateStore(parsed);
-  if (parsed.version !== STORE_VERSION || parsed.products?.some((item) => !item.detail)) {
+  const missingSeededEnglish = migrated.products.some(
+    (item) => (item.slug === "qihang" || item.slug === "shizhan" || item.slug === "compute") && !item.titleEn,
+  );
+  if (
+    parsed.version !== STORE_VERSION ||
+    parsed.products?.some((item) => !item.detail) ||
+    missingSeededEnglish
+  ) {
     writeFileSync(STORE_PATH, JSON.stringify(migrated, null, 2), "utf8");
   }
   return migrated;
