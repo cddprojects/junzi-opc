@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { assertAdmin } from "@/lib/auth";
+import { releaseUnusedUploads } from "@/lib/media-refs";
 import { readStore, writeStore } from "@/lib/store";
 import { ensureProductDetail, outlineFromLessons } from "@/lib/course";
 import type { Product } from "@/lib/data";
@@ -20,23 +21,36 @@ export async function PUT(
   const index = store.products.findIndex((item) => item.slug === slug);
   if (index < 0) return NextResponse.json({ error: "商品不存在" }, { status: 404 });
   const current = store.products[index];
-    const original =
-      body.originalPrice === undefined
-        ? current.originalPrice
-        : Number(body.originalPrice) || undefined;
-    store.products[index] = ensureProductDetail({
-      ...current,
-      ...body,
-      slug: current.slug,
-      href: `/product/${current.slug}`,
-      price: Number(body.price ?? current.price),
-      originalPrice: original,
-      sales: Number(body.sales ?? current.sales),
-      description: body.description || body.detail?.body || current.description,
-      outline: body.outline || outlineFromLessons(body.detail?.lessons || current.detail?.lessons || []),
-      detail: body.detail ?? current.detail,
-    });
+  const original =
+    body.originalPrice === undefined
+      ? current.originalPrice
+      : Number(body.originalPrice) || undefined;
+  const nextDetail = body.detail ?? current.detail;
+  store.products[index] = ensureProductDetail({
+    ...current,
+    ...body,
+    slug: current.slug,
+    href: `/product/${current.slug}`,
+    price: Number(body.price ?? current.price),
+    originalPrice: original,
+    sales: Number(body.sales ?? current.sales),
+    coverImage: body.coverImage === undefined ? current.coverImage : body.coverImage?.trim() || undefined,
+    description: body.description || body.detail?.body || current.description,
+    outline: body.outline || outlineFromLessons(body.detail?.lessons || current.detail?.lessons || []),
+    detail: nextDetail
+      ? {
+          ...nextDetail,
+          introPoster: nextDetail.introPoster?.trim() || undefined,
+          introVideoUrl: nextDetail.introVideoUrl?.trim() || undefined,
+        }
+      : current.detail,
+  });
   writeStore(store);
+  releaseUnusedUploads(store, [
+    current.coverImage,
+    current.detail?.introPoster,
+    current.detail?.introVideoUrl,
+  ]);
   revalidatePath("/", "layout");
   return NextResponse.json(store.products[index]);
 }
@@ -52,8 +66,16 @@ export async function DELETE(
   }
   const { slug } = await params;
   const store = readStore();
+  const previous = store.products.find((item) => item.slug === slug);
   store.products = store.products.filter((item) => item.slug !== slug);
   writeStore(store);
+  if (previous) {
+    releaseUnusedUploads(store, [
+      previous.coverImage,
+      previous.detail?.introPoster,
+      previous.detail?.introVideoUrl,
+    ]);
+  }
   revalidatePath("/", "layout");
   return NextResponse.json({ ok: true });
 }

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { assertAdmin } from "@/lib/auth";
+import { releaseUnusedUploads } from "@/lib/media-refs";
 import { readStore, writeStore } from "@/lib/store";
 import type { Poster } from "@/lib/data";
 
@@ -18,13 +19,16 @@ export async function PUT(
   const store = readStore();
   const index = store.posters.findIndex((item) => item.id === id);
   if (index < 0) return NextResponse.json({ error: "海报不存在" }, { status: 404 });
+  const previous = store.posters[index];
   store.posters[index] = {
-    ...store.posters[index],
+    ...previous,
     ...body,
     id,
-    sort: Number(body.sort ?? store.posters[index].sort),
+    sort: Number(body.sort ?? previous.sort),
+    image: body.image === undefined ? previous.image : body.image?.trim() || undefined,
   };
   writeStore(store);
+  releaseUnusedUploads(store, [previous.image]);
   revalidatePath("/", "layout");
   return NextResponse.json(store.posters[index]);
 }
@@ -40,8 +44,10 @@ export async function DELETE(
   }
   const { id } = await params;
   const store = readStore();
+  const previous = store.posters.find((item) => item.id === id);
   store.posters = store.posters.filter((item) => item.id !== id);
   writeStore(store);
+  if (previous) releaseUnusedUploads(store, [previous.image]);
   revalidatePath("/", "layout");
   return NextResponse.json({ ok: true });
 }

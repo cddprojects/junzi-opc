@@ -171,6 +171,22 @@ export function UploadField({
           >
             {busy ? "上传中…" : buttonLabel || defaultButtonLabel(label, accept)}
           </button>
+          {value ? (
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => {
+                setFileName("");
+                setError("");
+                setProgress(0);
+                setProgressLabel("");
+                onChange("");
+              }}
+              className="h-9 rounded-md border border-[#eadfca] bg-white px-3 text-[13px] text-[#8a5a20]"
+            >
+              清除文件
+            </button>
+          ) : null}
           <span className={cn("min-w-0 truncate text-[13px]", value || fileName ? "text-[#444]" : "text-[#999]")}>
             {chosen}
           </span>
@@ -183,7 +199,7 @@ export function UploadField({
             <p className="mt-1 text-[12px] text-[#8a5a20]">{progressLabel}</p>
           </div>
         )}
-        <p className="mt-1.5 text-[12px] text-[#aaa]">也可把文件拖到这里</p>
+        <p className="mt-1.5 text-[12px] text-[#aaa]">也可把文件拖到这里。清除文件只去掉路径，不会删除这条记录。</p>
       </div>
       <input
         value={value || ""}
