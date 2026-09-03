@@ -89,17 +89,17 @@ function DesktopHeader() {
 
   return (
     <header className="sticky top-0 z-40 hidden border-b border-[#e6dcc8] bg-[#fffdf8]/96 backdrop-blur md:block">
-      <div className="mx-auto flex h-16 max-w-6xl items-center gap-6 px-6">
-        <Link href="/" className="font-serif text-[20px] tracking-wide text-[#3a2c10]">
+      <div className="mx-auto flex min-h-16 max-w-6xl flex-wrap items-center gap-x-4 gap-y-2 px-6 py-2">
+        <Link href="/" className="shrink-0 font-serif text-[20px] tracking-wide text-[#3a2c10]">
           {brand.name}
         </Link>
-        <nav className="flex flex-1 items-center gap-5 text-[14px]">
+        <nav className="flex shrink-0 flex-nowrap items-center gap-4 text-[14px] lg:gap-5">
           {DESKTOP_NAV.map((item) => (
             <Link
               key={item.href}
               href={item.href}
               className={cn(
-                "hover:text-[#b8863b]",
+                "shrink-0 whitespace-nowrap [word-break:keep-all] hover:text-[#b8863b]",
                 isTabActive(pathname, item.href) ? "font-medium text-[#b8863b]" : "text-[#444]",
               )}
             >
@@ -107,7 +107,7 @@ function DesktopHeader() {
             </Link>
           ))}
         </nav>
-        <form action="/search" className="relative w-56">
+        <form action="/search" className="relative min-w-[9rem] w-40 max-w-56 flex-1">
           <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-[#bbb]" />
           <input
             name="q"
@@ -115,17 +115,19 @@ function DesktopHeader() {
             className="h-9 w-full rounded-full bg-[#f3efe6] pr-3 pl-9 text-[13px] outline-none"
           />
         </form>
-        <LocaleSwitcher />
-        <CurrencySwitcher />
-        <Link href="/cart" className="relative text-[#444]" aria-label={t("cart")}>
-          <ShoppingCart className="size-5" />
-          {count > 0 && (
-            <span className="absolute -top-2 -right-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#fa3534] px-1 text-[10px] text-white">
-              {count}
-            </span>
-          )}
-        </Link>
-        <AccountLink />
+        <div className="flex shrink-0 items-center gap-3">
+          <LocaleSwitcher />
+          <CurrencySwitcher />
+          <Link href="/cart" className="relative text-[#444]" aria-label={t("cart")}>
+            <ShoppingCart className="size-5" />
+            {count > 0 && (
+              <span className="absolute -top-2 -right-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#fa3534] px-1 text-[10px] text-white">
+                {count}
+              </span>
+            )}
+          </Link>
+          <AccountLink />
+        </div>
       </div>
     </header>
   );
