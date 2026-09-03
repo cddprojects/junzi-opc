@@ -54,6 +54,14 @@ export default async function LearningPage() {
                   <Link href={product?.href || `/product/${order.productSlug}`} className="block text-[15px] font-medium">
                     {order.productTitle}
                   </Link>
+                  {product?.detail?.lessons?.length ? (
+                    <Link
+                      href={`/courses/recorded/${order.productSlug}`}
+                      className="mt-2 inline-block text-[13px] text-[#8a5a20]"
+                    >
+                      进入正课
+                    </Link>
+                  ) : null}
                   <p className="mt-1 text-[12px] text-[#888]">课程码</p>
                   <CopyCode code={order.verifyCode} className="font-mono text-[13px] text-[#8a5a20]" />
                 </div>

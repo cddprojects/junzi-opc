@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import {
   Box,
   CalendarDays,
@@ -178,6 +179,12 @@ export function CourseDetailView({
                 );
               })}
             </div>
+            <Link
+              href={`/courses/recorded/${product.slug}`}
+              className="mt-3 inline-block text-[13px] text-[#8a5a20]"
+            >
+              去线上录播课看正课 →
+            </Link>
           </div>
         )}
 

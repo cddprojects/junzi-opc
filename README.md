@@ -72,7 +72,10 @@ npm start
 | `/orders/[id]` | 订单详情与卡密（加密课程码） |
 | `/learning` | 我的学习 |
 | `/verify` | 验证课程码 |
-| `/product/[slug]` | 课程详情 |
+| `/product/[slug]` | 课程详情（片头介绍） |
+| `/courses/recorded` | 线上录播课（正课课节） |
+| `/courses/recorded/[slug]` | 某门课的正课目录 |
+| `/courses/recorded/[slug]/[n]` | 第 n 节播放（需已购或管理员） |
 | `/admin` | 管理后台 |
 | `/admin/users` | 学员账号 |
 | `/admin/currency` | 货币与汇率 |

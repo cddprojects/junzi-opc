@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { assertAdmin } from "@/lib/auth";
-import { releaseUnusedUploads } from "@/lib/media-refs";
+import { productMediaUrls, releaseUnusedUploads } from "@/lib/media-refs";
 import { readStore, writeStore } from "@/lib/store";
 import { ensureProductDetail, outlineFromLessons } from "@/lib/course";
 import type { Product } from "@/lib/data";
@@ -42,16 +42,24 @@ export async function PUT(
           ...nextDetail,
           introPoster: nextDetail.introPoster?.trim() || undefined,
           introVideoUrl: nextDetail.introVideoUrl?.trim() || undefined,
+          lessons: (nextDetail.lessons || []).map((lesson) => ({
+            ...lesson,
+            videoUrl: lesson.videoUrl?.trim() || undefined,
+            duration: lesson.duration?.trim() || undefined,
+          })),
+          lives: (nextDetail.lives || []).map((live) => ({
+            ...live,
+            videoUrl: live.videoUrl?.trim() || undefined,
+            meetingUrl: live.meetingUrl?.trim() || undefined,
+          })),
         }
       : current.detail,
   });
   writeStore(store);
-  releaseUnusedUploads(store, [
-    current.coverImage,
-    current.detail?.introPoster,
-    current.detail?.introVideoUrl,
-  ]);
+  releaseUnusedUploads(store, productMediaUrls(current));
   revalidatePath("/", "layout");
+  revalidatePath("/courses/recorded");
+  revalidatePath(`/courses/recorded/${slug}`);
   return NextResponse.json(store.products[index]);
 }
 
@@ -70,11 +78,7 @@ export async function DELETE(
   store.products = store.products.filter((item) => item.slug !== slug);
   writeStore(store);
   if (previous) {
-    releaseUnusedUploads(store, [
-      previous.coverImage,
-      previous.detail?.introPoster,
-      previous.detail?.introVideoUrl,
-    ]);
+    releaseUnusedUploads(store, productMediaUrls(previous));
   }
   revalidatePath("/", "layout");
   return NextResponse.json({ ok: true });

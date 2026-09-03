@@ -3,6 +3,19 @@ import "server-only";
 import { existsSync, readdirSync, unlinkSync } from "fs";
 import path from "path";
 import { type AppStore, UPLOAD_DIR } from "@/lib/store";
+import type { Product } from "@/lib/data";
+
+export function productMediaUrls(product?: Product | null) {
+  if (!product) return [];
+  const detail = product.detail;
+  return [
+    product.coverImage,
+    detail?.introPoster,
+    detail?.introVideoUrl,
+    ...(detail?.lessons || []).map((lesson) => lesson.videoUrl),
+    ...(detail?.lives || []).map((live) => live.videoUrl),
+  ];
+}
 
 export function localUploadName(url?: string | null) {
   if (!url) return null;

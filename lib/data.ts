@@ -72,12 +72,16 @@ export type Lesson = {
   title: string;
   icon: "play" | "person" | "list" | "people" | "target" | "box" | "pyramid" | "check";
   highlight?: boolean;
+  videoUrl?: string;
+  duration?: string;
 };
 
 export type LiveSession = {
   index: number;
   title: string;
   items: string[];
+  videoUrl?: string;
+  meetingUrl?: string;
 };
 
 export const LESSON_ICONS = [

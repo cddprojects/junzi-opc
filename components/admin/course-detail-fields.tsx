@@ -20,7 +20,7 @@ export function CourseDetailFields({
     <div className="space-y-4">
       <h2 className="font-serif text-[20px]">课程详情</h2>
       <p className="text-[12px] text-[#777]">
-        以下内容会完整出现在前台 /product 页，新建课程也可填写。留空的区块不会显示。
+        片头是介绍，只出现在商品详情/首页。正课视频加在课节里，学员在「线上录播课」和「我的学习」观看。
       </p>
 
       <div className="grid gap-3 md:grid-cols-2">
@@ -56,7 +56,7 @@ export function CourseDetailFields({
         value={detail.introVideoUrl || ""}
         onChange={(introVideoUrl) => set({ introVideoUrl })}
         accept="video/*"
-        hint="也可在「视频」后台做一条商品片头，并关联本课程。"
+        hint="片头是介绍，不是正课。第1节到第10节的录播请加在下方课节里。"
       />
       <label className="block text-[13px]">
         价值主张
@@ -106,7 +106,7 @@ export function CourseDetailFields({
 
       <div className="rounded-lg border border-[#efe6d4] p-3">
         <div className="flex items-center justify-between">
-          <p className="text-[13px] font-medium">录播课节次</p>
+          <p className="text-[13px] font-medium">正课 / 录播课节</p>
           <button
             type="button"
             className="text-[12px] text-[#8a5a20]"
@@ -122,9 +122,10 @@ export function CourseDetailFields({
             增加一节
           </button>
         </div>
-        <div className="mt-3 space-y-2">
+        <p className="mt-1 text-[12px] text-[#888]">每一节可单独上传或粘贴正课视频，不要放到上面的片头里。</p>
+        <div className="mt-3 space-y-3">
           {detail.lessons.map((lesson, index) => (
-            <div key={index} className="rounded-md bg-[#faf6ee] p-2">
+            <div key={index} className="rounded-md bg-[#faf6ee] p-3">
               <div className="flex flex-wrap items-center gap-2">
                 <span className="text-[12px] text-[#888]">第{index + 1}节</span>
                 <input
@@ -136,6 +137,16 @@ export function CourseDetailFields({
                   }}
                   className="h-8 min-w-[180px] flex-1 rounded border border-input px-2 text-[13px]"
                   placeholder="课时标题"
+                />
+                <input
+                  value={lesson.duration || ""}
+                  onChange={(event) => {
+                    const lessons = [...detail.lessons];
+                    lessons[index] = { ...lesson, duration: event.target.value };
+                    set({ lessons });
+                  }}
+                  className="h-8 w-24 rounded border border-input px-2 text-[13px]"
+                  placeholder="时长 12:00"
                 />
                 <select
                   value={lesson.icon}
@@ -177,6 +188,18 @@ export function CourseDetailFields({
                 >
                   删除
                 </button>
+              </div>
+              <div className="mt-2">
+                <UploadField
+                  label={`第${index + 1}节正课视频`}
+                  value={lesson.videoUrl || ""}
+                  onChange={(videoUrl) => {
+                    const lessons = [...detail.lessons];
+                    lessons[index] = { ...lesson, videoUrl };
+                    set({ lessons });
+                  }}
+                  accept="video/*"
+                />
               </div>
             </div>
           ))}
@@ -246,6 +269,31 @@ export function CourseDetailFields({
                 placeholder="每行一个要点"
                 className="mt-2 w-full rounded border border-input px-2 py-1 text-[13px]"
               />
+              <label className="mt-2 block text-[13px]">
+                会议 / 直播链接（选填）
+                <Input
+                  value={live.meetingUrl || ""}
+                  onChange={(event) => {
+                    const lives = [...detail.lives];
+                    lives[index] = { ...live, meetingUrl: event.target.value };
+                    set({ lives });
+                  }}
+                  placeholder="https://"
+                  className="mt-1 h-9"
+                />
+              </label>
+              <div className="mt-2">
+                <UploadField
+                  label="本场回放视频（选填）"
+                  value={live.videoUrl || ""}
+                  onChange={(videoUrl) => {
+                    const lives = [...detail.lives];
+                    lives[index] = { ...live, videoUrl };
+                    set({ lives });
+                  }}
+                  accept="video/*"
+                />
+              </div>
             </div>
           ))}
         </div>

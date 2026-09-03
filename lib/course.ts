@@ -137,6 +137,8 @@ export function normalizeCourseDetail(input?: Partial<CourseDetail> | null): Cou
           index: Number(live.index || index + 1),
           title: live.title || "",
           items: Array.isArray(live.items) ? live.items.filter(Boolean) : [],
+          videoUrl: live.videoUrl?.trim() || undefined,
+          meetingUrl: live.meetingUrl?.trim() || undefined,
         }))
       : [],
     outcomes: Array.isArray(input.outcomes) ? input.outcomes : [],
@@ -158,6 +160,8 @@ function normalizeLesson(lesson: Lesson, index: number): Lesson {
     title: lesson.title || "",
     icon: (lesson.icon || "play") as LessonIcon,
     highlight: Boolean(lesson.highlight),
+    videoUrl: lesson.videoUrl?.trim() || undefined,
+    duration: lesson.duration?.trim() || undefined,
   };
 }
 
