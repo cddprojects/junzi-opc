@@ -53,6 +53,7 @@ export async function POST(request: Request) {
     descriptionEn: body.descriptionEn || body.detail?.bodyEn,
     outline: body.outline || outlineFromLessons(body.detail?.lessons || []),
     coverImage: body.coverImage,
+    detailImages: body.detailImages,
     detail: body.detail,
   });
   store.products.push(product);

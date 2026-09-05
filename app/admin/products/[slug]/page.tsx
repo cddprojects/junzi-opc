@@ -15,6 +15,9 @@ export default async function EditProductPage({
   return (
     <div>
       <h1 className="mb-4 font-serif text-[24px]">编辑商品</h1>
+      <p className="mb-4 text-[13px] leading-5 text-[#777]">
+        默认只改名称、价格、封面和详情图。课节、直播和文字大纲收在「高级 / 课节与大纲」。
+      </p>
       <ProductForm product={product} />
     </div>
   );

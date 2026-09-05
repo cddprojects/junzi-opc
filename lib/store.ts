@@ -16,7 +16,6 @@ import {
 import {
   computeCourseDetail,
   ensureProductDetail,
-  outlineFromLessons,
   qihangCourseDetail,
   shizhanCourseDetail,
 } from "@/lib/course";
@@ -39,21 +38,9 @@ export type AppStore = {
 const DATA_DIR = path.join(process.cwd(), "data");
 const STORE_PATH = path.join(DATA_DIR, "store.json");
 export const UPLOAD_DIR = path.join(DATA_DIR, "uploads");
-const STORE_VERSION = 8;
+const STORE_VERSION = 9;
 
 function seedProduct(product: Product): Product {
-  if (product.slug === "qihang") {
-    const detail = qihangCourseDetail();
-    return { ...product, description: detail.body, outline: outlineFromLessons(detail.lessons), detail };
-  }
-  if (product.slug === "shizhan") {
-    const detail = shizhanCourseDetail();
-    return { ...product, description: detail.body, outline: outlineFromLessons(detail.lessons), detail };
-  }
-  if (product.slug === "compute") {
-    const detail = computeCourseDetail();
-    return { ...product, description: detail.body, detail };
-  }
   return ensureProductDetail(product);
 }
 

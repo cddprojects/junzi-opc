@@ -31,6 +31,7 @@ export type Product = {
   outline?: string;
   outlineEn?: string;
   coverImage?: string;
+  detailImages?: string[];
   detail?: CourseDetail;
 };
 

@@ -3,7 +3,7 @@ import { revalidatePath } from "next/cache";
 import { assertAdmin } from "@/lib/auth";
 import { productMediaUrls, releaseUnusedUploads } from "@/lib/media-refs";
 import { readStore, writeStore } from "@/lib/store";
-import { ensureProductDetail, outlineFromLessons } from "@/lib/course";
+import { ensureProductDetail, normalizeDetailImages, outlineFromLessons } from "@/lib/course";
 import type { Product } from "@/lib/data";
 
 export async function PUT(
@@ -35,6 +35,8 @@ export async function PUT(
     originalPrice: original,
     sales: Number(body.sales ?? current.sales),
     coverImage: body.coverImage === undefined ? current.coverImage : body.coverImage?.trim() || undefined,
+    detailImages:
+      body.detailImages === undefined ? current.detailImages : normalizeDetailImages(body.detailImages),
     description: body.description || body.detail?.body || current.description,
     outline: body.outline || outlineFromLessons(body.detail?.lessons || current.detail?.lessons || []),
     detail: nextDetail

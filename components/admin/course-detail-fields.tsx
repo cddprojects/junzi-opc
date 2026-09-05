@@ -19,9 +19,9 @@ export function CourseDetailFields({
 
   return (
     <div className="space-y-4">
-      <h2 className="font-serif text-[20px]">课程详情</h2>
+      <h2 className="font-serif text-[18px]">课节、直播与文字大纲</h2>
       <p className="text-[12px] text-[#777]">
-        片头是介绍，只出现在商品详情/首页。正课视频加在课节里，学员在「线上录播课」和「我的学习」观看。
+        有详情图时，前台商品页只铺图片。下面这些文字栏目只在没有详情图时出现。正课视频仍加在课节里，学员在「线上录播课」和「我的学习」观看。
       </p>
 
       <div className="grid gap-3 md:grid-cols-2">
@@ -51,19 +51,6 @@ export function CourseDetailFields({
         <EnInput label="片头副标" value={detail.heroSubEn || ""} onChange={(heroSubEn) => set({ heroSubEn })} />
         <EnInput label="片头角标" value={detail.heroKickerEn || ""} onChange={(heroKickerEn) => set({ heroKickerEn })} />
       </div>
-      <UploadField
-        label="片头封面 / 海报"
-        value={detail.introPoster || ""}
-        onChange={(introPoster) => set({ introPoster })}
-        accept="image/*"
-      />
-      <UploadField
-        label="片头视频（上传或粘贴 URL）"
-        value={detail.introVideoUrl || ""}
-        onChange={(introVideoUrl) => set({ introVideoUrl })}
-        accept="video/*"
-        hint="片头是介绍，不是正课。第1节到第10节的录播请加在下方课节里。"
-      />
       <label className="block text-[13px]">
         价值主张
         <Input value={detail.valueLine || ""} onChange={(e) => set({ valueLine: e.target.value })} className="mt-1 h-9" />

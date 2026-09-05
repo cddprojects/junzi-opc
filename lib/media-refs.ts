@@ -10,6 +10,7 @@ export function productMediaUrls(product?: Product | null) {
   const detail = product.detail;
   return [
     product.coverImage,
+    ...(product.detailImages || []),
     detail?.introPoster,
     detail?.introVideoUrl,
     ...(detail?.lessons || []).map((lesson) => lesson.videoUrl),

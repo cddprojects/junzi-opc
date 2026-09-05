@@ -261,11 +261,43 @@ export function outlineFromLessons(lessons: Lesson[]) {
     .join("\n");
 }
 
+export function normalizeDetailImages(images?: string[] | null) {
+  if (!Array.isArray(images)) return [];
+  return images.map((item) => String(item || "").trim()).filter(Boolean);
+}
+
+export function hasDetailImages(product?: Product | null) {
+  return normalizeDetailImages(product?.detailImages).length > 0;
+}
+
+export function hasStructuredOutline(detail?: CourseDetail | null) {
+  if (!detail) return false;
+  return Boolean(
+    detail.valueLine ||
+      detail.body ||
+      detail.statsLine ||
+      detail.joinLine ||
+      detail.joinSub ||
+      detail.liveNote ||
+      detail.pillars.length ||
+      detail.stats.length ||
+      detail.lessons.length ||
+      detail.flow.length ||
+      detail.lives.length ||
+      detail.outcomes.length ||
+      detail.audiences.length ||
+      detail.disclaimer.length ||
+      detail.extraSections.some((section) => section.title || section.body || section.items?.length),
+  );
+}
+
 export function ensureProductDetail(product: Product): Product {
+  const detailImages = normalizeDetailImages(product.detailImages);
   if (product.detail) {
     const detail = normalizeCourseDetail(product.detail);
     return {
       ...product,
+      detailImages,
       detail,
       outline: product.outline || outlineFromLessons(detail.lessons),
       description: product.description || detail.body,
@@ -273,20 +305,37 @@ export function ensureProductDetail(product: Product): Product {
   }
   if (product.slug === "qihang") {
     const detail = qihangCourseDetail();
-    return { ...product, detail, description: product.description || detail.body, outline: outlineFromLessons(detail.lessons) };
+    return {
+      ...product,
+      detailImages,
+      detail,
+      description: product.description || detail.body,
+      outline: outlineFromLessons(detail.lessons),
+    };
   }
   if (product.slug === "shizhan") {
     const detail = shizhanCourseDetail();
-    return { ...product, detail, description: product.description || detail.body, outline: outlineFromLessons(detail.lessons) };
+    return {
+      ...product,
+      detailImages,
+      detail,
+      description: product.description || detail.body,
+      outline: outlineFromLessons(detail.lessons),
+    };
   }
   if (product.slug === "compute") {
     const detail = computeCourseDetail();
-    return { ...product, detail, description: product.description || detail.body };
+    return {
+      ...product,
+      detailImages,
+      detail,
+      description: product.description || detail.body,
+    };
   }
   const lessons = lessonsFromOutline(product.outline);
   const detail = normalizeCourseDetail({
     body: product.description,
     lessons,
   });
-  return { ...product, detail };
+  return { ...product, detailImages, detail };
 }

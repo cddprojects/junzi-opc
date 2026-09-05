@@ -19,7 +19,7 @@ import { CoverArt, QihangHeroCover } from "@/components/covers";
 import { BuyBar } from "@/components/buy-bar";
 import { VideoBlock } from "@/components/video-block";
 import { useDemoStore } from "@/components/demo-store";
-import { emptyCourseDetail } from "@/lib/course";
+import { emptyCourseDetail, hasDetailImages, hasStructuredOutline, normalizeDetailImages } from "@/lib/course";
 import type { CatalogVideo, CourseDetail, LessonIcon, Product } from "@/lib/data";
 import { Money } from "@/components/money";
 import { cn } from "@/lib/utils";
@@ -128,6 +128,9 @@ export function CourseDetailView({
 
       <p className="py-3 text-center text-[12px] text-[#999] md:pt-8">{t("productDetail")}</p>
 
+      {hasDetailImages(product) ? (
+        <ImageDetail product={product} hasLessons={detail.lessons.length > 0} />
+      ) : hasStructuredOutline(detail) ? (
       <section className="px-4 pb-6 text-[#2b261c] md:px-0">
         {detail.valueLine && <p className="text-center text-[15px] md:text-[18px]">{detail.valueLine}</p>}
         {detail.pillars.length > 0 && (
@@ -306,10 +309,40 @@ export function CourseDetailView({
           </div>
         )}
       </section>
+      ) : (
+        <p className="px-4 pb-8 text-center text-[13px] text-[#999]">{t("noProductDetail")}</p>
+      )}
       <div className="md:hidden">
         <BuyBar product={product} />
       </div>
     </div>
+  );
+}
+
+function ImageDetail({ product, hasLessons }: { product: Product; hasLessons: boolean }) {
+  const { t } = useLocale();
+  const images = normalizeDetailImages(product.detailImages);
+  return (
+    <section className="pb-6">
+      <div className="overflow-hidden bg-white md:rounded-xl">
+        {images.map((src, index) => (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            key={`${src}-${index}`}
+            src={src}
+            alt=""
+            className="block w-full"
+          />
+        ))}
+      </div>
+      {hasLessons ? (
+        <div className="px-4 pt-3 md:px-0">
+          <Link href={`/courses/recorded/${product.slug}`} className="inline-block text-[13px] text-[#8a5a20]">
+            {t("goRecordedLessons")}
+          </Link>
+        </div>
+      ) : null}
+    </section>
   );
 }
 
