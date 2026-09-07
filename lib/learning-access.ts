@@ -2,12 +2,12 @@ import "server-only";
 
 import { isAdminRequest } from "@/lib/auth";
 import { getCurrentUser } from "@/lib/user-auth";
-import { ordersForUser } from "@/lib/user-store";
+import { paidOrdersForUser } from "@/lib/user-store";
 
 export async function courseAccess(productSlug: string) {
   const admin = await isAdminRequest();
   const user = await getCurrentUser();
-  const owned = user ? ordersForUser(user.id).some((order) => order.productSlug === productSlug) : false;
+  const owned = user ? paidOrdersForUser(user.id).some((order) => order.productSlug === productSlug) : false;
   return {
     admin,
     user,

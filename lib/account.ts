@@ -33,6 +33,9 @@ export type UserSession = {
   expiresAt: string;
 };
 
+export type OrderStatus = "pending" | "paid";
+export type PayMethod = "billplz" | "demo" | "grant";
+
 export type Order = {
   id: string;
   userId: string;
@@ -41,10 +44,24 @@ export type Order = {
   price: number;
   qty: number;
   createdAt: string;
-  verifyCode: string;
+  verifyCode?: string;
   currency?: string;
   priceCny?: number;
+  status?: OrderStatus;
+  paidAt?: string;
+  payMethod?: PayMethod;
+  checkoutId?: string;
+  billplzBillId?: string;
+  billplzUrl?: string;
+  amountMyr?: number;
+  amountSen?: number;
 };
+
+export function isOrderPaid(order?: Order | null) {
+  if (!order) return false;
+  if (order.status === "pending") return false;
+  return (order.status ?? "paid") === "paid";
+}
 
 export type CheckoutItem = {
   slug: string;

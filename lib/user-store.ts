@@ -5,9 +5,11 @@ import {
   type CheckoutItem,
   type Customer,
   type Order,
+  type PayMethod,
   type PublicCustomer,
   type UserSession,
   isMemberActive,
+  isOrderPaid,
   maskAccount,
   normalizeCode,
   parseAccount,
@@ -172,56 +174,162 @@ function resolveCheckoutItem(item: CheckoutItem) {
   return { slug: product.slug, title: product.title, price: product.price };
 }
 
-export function checkoutOrders(userId: string, items: CheckoutItem[], currencyInput?: string) {
+function buildPendingOrder(
+  userId: string,
+  raw: CheckoutItem,
+  currency: ReturnType<typeof parseCurrency>,
+  fx: ReturnType<typeof getSettings>["fx"],
+  checkoutId: string,
+): Order {
+  const item = resolveCheckoutItem(raw);
+  const qty = Math.max(1, Number(raw.qty || 1));
+  const priceCny = item.price;
+  const price = fromCny(priceCny, currency, fx);
+  const amountMyr = fromCny(priceCny * qty, "MYR", fx);
+  const amountSen = Math.round(amountMyr * 100);
+  return {
+    id: newId("ord"),
+    userId,
+    productSlug: item.slug,
+    productTitle: item.title,
+    price,
+    priceCny,
+    currency,
+    qty,
+    createdAt: new Date().toISOString(),
+    status: "pending",
+    checkoutId,
+    amountMyr,
+    amountSen,
+  };
+}
+
+function fulfillOrderInStore(store: ReturnType<typeof readStore>, order: Order, payMethod: PayMethod, paidAt?: string) {
+  if (isOrderPaid(order) && order.verifyCode) return false;
+  const secret = process.env.VERIFY_SECRET || store.verifySecret || generateVerifySecret();
+  if (!store.verifySecret) store.verifySecret = secret;
+  const user = store.users.find((item) => item.id === order.userId);
+  const alreadyPaid = isOrderPaid(order);
+  order.status = "paid";
+  order.paidAt = paidAt || order.paidAt || new Date().toISOString();
+  order.payMethod = order.payMethod || payMethod;
+  if (!order.verifyCode) {
+    order.verifyCode = makeVerifyCode(secret, {
+      userId: order.userId,
+      productSlug: order.productSlug,
+      orderId: order.id,
+    });
+  }
+  if (!alreadyPaid) {
+    const productIndex = store.products.findIndex((product) => product.slug === order.productSlug);
+    if (productIndex >= 0) {
+      store.products[productIndex] = {
+        ...store.products[productIndex],
+        sales: (store.products[productIndex].sales || 0) + order.qty,
+      };
+    }
+    if (user && order.productSlug === membership.slug) {
+      const base = isMemberActive(user) && user.memberUntil ? Date.parse(user.memberUntil) : Date.now();
+      user.memberUntil = new Date(base + 365 * 24 * 60 * 60 * 1000).toISOString();
+    }
+  }
+  return true;
+}
+
+export function checkoutOrders(
+  userId: string,
+  items: CheckoutItem[],
+  currencyInput?: string,
+  payMethod: PayMethod = "demo",
+) {
   if (!items.length) throw new Error("没有可结算的商品");
   const store = readStore();
   const user = store.users.find((item) => item.id === userId);
   if (!user) throw new Error("请先登录");
   if (user.status === "disabled") throw new Error("账号已被停用");
-  const secret = process.env.VERIFY_SECRET || store.verifySecret || generateVerifySecret();
-  if (!store.verifySecret) store.verifySecret = secret;
   const settings = getSettings();
   const currency = parseCurrency(currencyInput, settings.defaultCurrency);
-
+  const checkoutId = newId("chk");
   const created: Order[] = [];
   for (const raw of items) {
-    const item = resolveCheckoutItem(raw);
-    const qty = Math.max(1, Number(raw.qty || 1));
-    const orderId = newId("ord");
-    const priceCny = item.price;
-    const price = fromCny(priceCny, currency, settings.fx);
-    const order: Order = {
-      id: orderId,
-      userId,
-      productSlug: item.slug,
-      productTitle: item.title,
-      price,
-      priceCny,
-      currency,
-      qty,
-      createdAt: new Date().toISOString(),
-      verifyCode: makeVerifyCode(secret, {
-        userId,
-        productSlug: item.slug,
-        orderId,
-      }),
-    };
+    const order = buildPendingOrder(userId, raw, currency, settings.fx, checkoutId);
+    order.payMethod = payMethod;
+    fulfillOrderInStore(store, order, payMethod);
     created.push(order);
     store.orders.push(order);
-    const productIndex = store.products.findIndex((product) => product.slug === item.slug);
-    if (productIndex >= 0) {
-      store.products[productIndex] = {
-        ...store.products[productIndex],
-        sales: (store.products[productIndex].sales || 0) + qty,
-      };
-    }
-    if (item.slug === membership.slug) {
-      const base = isMemberActive(user) && user.memberUntil ? Date.parse(user.memberUntil) : Date.now();
-      user.memberUntil = new Date(base + 365 * 24 * 60 * 60 * 1000).toISOString();
-    }
   }
   writeStore(store);
   return created;
+}
+
+export function createPendingCheckout(userId: string, items: CheckoutItem[], currencyInput?: string) {
+  if (!items.length) throw new Error("没有可结算的商品");
+  const store = readStore();
+  const user = store.users.find((item) => item.id === userId);
+  if (!user) throw new Error("请先登录");
+  if (user.status === "disabled") throw new Error("账号已被停用");
+  if (!user.email?.trim()) throw new Error("请先在个人资料填写邮箱后再付款");
+  const settings = getSettings();
+  const currency = parseCurrency(currencyInput, settings.defaultCurrency);
+  const checkoutId = newId("chk");
+  const created: Order[] = [];
+  for (const raw of items) {
+    const order = buildPendingOrder(userId, raw, currency, settings.fx, checkoutId);
+    order.payMethod = "billplz";
+    created.push(order);
+    store.orders.push(order);
+  }
+  const totalSen = created.reduce((sum, order) => sum + (order.amountSen || 0), 0);
+  if (totalSen < 1) {
+    store.orders = store.orders.filter((order) => !created.some((item) => item.id === order.id));
+    writeStore(store);
+    throw new Error("收款金额无效");
+  }
+  writeStore(store);
+  return {
+    checkoutId,
+    orders: created,
+    user,
+    totalSen,
+    totalMyr: Math.round(totalSen) / 100,
+  };
+}
+
+export function attachBillToCheckout(
+  checkoutId: string,
+  bill: { id: string; url: string },
+) {
+  const store = readStore();
+  const targets = store.orders.filter((order) => order.checkoutId === checkoutId);
+  if (!targets.length) throw new Error("订单不存在");
+  for (const order of targets) {
+    order.billplzBillId = bill.id;
+    order.billplzUrl = bill.url;
+  }
+  writeStore(store);
+  return targets;
+}
+
+export function deleteCheckout(checkoutId: string) {
+  const store = readStore();
+  store.orders = store.orders.filter((order) => order.checkoutId !== checkoutId);
+  writeStore(store);
+}
+
+export function fulfillOrdersByBillId(billId: string, paidAt?: string) {
+  const store = readStore();
+  const targets = store.orders.filter((order) => order.billplzBillId === billId);
+  if (!targets.length) throw new Error("订单不存在");
+  let changed = false;
+  for (const order of targets) {
+    if (fulfillOrderInStore(store, order, "billplz", paidAt)) changed = true;
+  }
+  if (changed) writeStore(store);
+  return targets;
+}
+
+export function paidOrdersForUser(userId: string) {
+  return ordersForUser(userId).filter((order) => isOrderPaid(order));
 }
 
 export function ordersForUser(userId: string) {
@@ -234,19 +342,25 @@ export function orderForUser(userId: string, orderId: string) {
   return readStore().orders.find((order) => order.id === orderId && order.userId === userId);
 }
 
+export function ordersByBillId(billId: string) {
+  return readStore().orders.filter((order) => order.billplzBillId === billId);
+}
+
 export function lookupVerifyCode(code: string) {
   const normalized = normalizeCode(code);
   if (normalized.length < 8) return null;
   const store = readStore();
   const secret = process.env.VERIFY_SECRET || store.verifySecret;
-  const order = store.orders.find((item) => codesMatch(item.verifyCode, normalized));
+  const order = store.orders.find(
+    (item) => item.verifyCode && isOrderPaid(item) && codesMatch(item.verifyCode, normalized),
+  );
   if (!order) return null;
   const expected = makeVerifyCode(secret, {
     userId: order.userId,
     productSlug: order.productSlug,
     orderId: order.id,
   });
-  if (!codesMatch(expected, order.verifyCode)) return null;
+  if (!order.verifyCode || !codesMatch(expected, order.verifyCode)) return null;
   const user = store.users.find((item) => item.id === order.userId);
   return { order, user };
 }
@@ -343,7 +457,7 @@ export function grantCourse(userId: string, productSlug: string, currencyInput?:
           if (!product) throw new Error("课程不存在");
           return { slug: product.slug, title: product.title, price: product.price, qty: 1 };
         })();
-  return checkoutOrders(userId, [item], currencyInput);
+  return checkoutOrders(userId, [item], currencyInput, "grant");
 }
 
 export function revokeOrder(userId: string, orderId: string) {
@@ -353,7 +467,9 @@ export function revokeOrder(userId: string, orderId: string) {
   store.orders = store.orders.filter((item) => item.id !== orderId);
   if (order.productSlug === membership.slug) {
     const user = store.users.find((item) => item.id === userId);
-    const stillMember = store.orders.some((item) => item.userId === userId && item.productSlug === membership.slug);
+    const stillMember = store.orders.some(
+      (item) => item.userId === userId && item.productSlug === membership.slug && isOrderPaid(item),
+    );
     if (user && !stillMember) user.memberUntil = undefined;
   }
   writeStore(store);

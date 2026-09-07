@@ -38,7 +38,7 @@ export type AppStore = {
 const DATA_DIR = path.join(process.cwd(), "data");
 const STORE_PATH = path.join(DATA_DIR, "store.json");
 export const UPLOAD_DIR = path.join(DATA_DIR, "uploads");
-const STORE_VERSION = 9;
+const STORE_VERSION = 10;
 
 function seedProduct(product: Product): Product {
   return ensureProductDetail(product);
@@ -246,7 +246,11 @@ function migrateStore(parsed: AppStore): AppStore {
     }),
     users,
     sessions: (parsed.sessions ?? []).filter((session) => Date.parse(session.expiresAt) > now),
-    orders: parsed.orders ?? [],
+    orders: (parsed.orders ?? []).map((order) => ({
+      ...order,
+      status: order.status === "pending" ? "pending" : "paid",
+      payMethod: order.payMethod || (order.billplzBillId ? "billplz" : "demo"),
+    })),
     verifySecret: parsed.verifySecret || generateVerifySecret(),
     settings: normalizeSettings(parsed.settings),
   };

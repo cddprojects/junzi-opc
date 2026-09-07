@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { listAllOrders, listCustomers } from "@/lib/user-store";
+import { isOrderPaid } from "@/lib/account";
 import { formatMoneyAmount, type Currency } from "@/lib/currency";
 import { AdminVerifyForm } from "@/components/admin/verify-form";
 
@@ -52,8 +53,18 @@ export default function AdminOrdersPage() {
                   <p className="mt-1 text-[#666]">
                     {order.userName} · {order.userAccount} ·{" "}
                     {formatMoneyAmount(order.price, (order.currency as Currency) || "CNY")}
+                    {order.amountMyr != null ? ` · 实收 ${formatMoneyAmount(order.amountMyr, "MYR")}` : ""}
                   </p>
-                  <p className="mt-1 font-mono text-[12px] text-[#8a5a20]">{order.verifyCode}</p>
+                  <p className="mt-1 text-[12px] text-[#555]">
+                    {isOrderPaid(order) ? "已支付" : "待付款"}
+                    {order.payMethod === "billplz" ? " · Billplz" : order.payMethod === "grant" ? " · 后台授权" : " · 演示"}
+                    {order.billplzBillId ? ` · 账单 ${order.billplzBillId}` : ""}
+                  </p>
+                  {order.verifyCode ? (
+                    <p className="mt-1 font-mono text-[12px] text-[#8a5a20]">{order.verifyCode}</p>
+                  ) : (
+                    <p className="mt-1 text-[12px] text-[#999]">付款成功后发放课程码</p>
+                  )}
                 </li>
               ))}
             </ul>

@@ -5,7 +5,9 @@ import { orderForUser } from "@/lib/user-store";
 import { getStoreProduct } from "@/lib/store";
 import { CoverArt } from "@/components/covers";
 import { Money } from "@/components/money";
+import { formatMoneyAmount } from "@/lib/currency";
 import { CopyChip } from "@/components/copy-chip";
+import { isOrderPaid } from "@/lib/account";
 import { displayOrderNo, formatOrderTime } from "@/lib/orders-ui";
 import { getRequestLocale } from "@/lib/i18n-server";
 import { t } from "@/lib/messages";
@@ -31,8 +33,15 @@ export default async function OrderDetailPage({
   const totalCny = unitCny * order.qty;
   const locale = await getRequestLocale();
   const orderNo = displayOrderNo(order);
-  const paidAt = formatOrderTime(order.createdAt);
+  const paid = isOrderPaid(order);
+  const paidAt = formatOrderTime(order.paidAt || order.createdAt);
   const kamiHint = t(locale, "kamiHint");
+  const payMethod =
+    order.payMethod === "billplz"
+      ? t(locale, "orderPayBillplz")
+      : order.payMethod === "grant"
+        ? t(locale, "orderPayGrant")
+        : t(locale, "orderPayDemo");
 
   return (
     <div className="px-3 py-4 md:px-0 md:py-2">
@@ -46,27 +55,48 @@ export default async function OrderDetailPage({
 
         <section className="mt-4 rounded-xl bg-white px-4 py-4 text-[13px] leading-7">
           <Row label={t(locale, "orderNo")} value={orderNo} copy={orderNo} />
-          <Row label={t(locale, "orderStatus")} value={t(locale, "orderDone")} strong />
-          <Row label={t(locale, "orderTime")} value={paidAt} />
-          <Row label={t(locale, "orderPayMethod")} value={t(locale, "orderPayDemo")} />
-          <Row label={t(locale, "orderPayTime")} value={paidAt} />
+          <Row label={t(locale, "orderStatus")} value={paid ? t(locale, "orderDone") : t(locale, "orderPending")} strong />
+          <Row label={t(locale, "orderTime")} value={formatOrderTime(order.createdAt)} />
+          <Row label={t(locale, "orderPayMethod")} value={payMethod} />
+          {paid ? <Row label={t(locale, "orderPayTime")} value={paidAt} /> : null}
+          {order.billplzBillId ? <Row label={t(locale, "billplzBillId")} value={order.billplzBillId} copy={order.billplzBillId} /> : null}
+          {order.amountMyr != null ? (
+            <Row label={t(locale, "billplzCharge")} value={formatMoneyAmount(order.amountMyr, "MYR")} />
+          ) : null}
         </section>
 
         <section className="mt-3 rounded-xl bg-white px-4 py-4 text-[13px]">
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0">
-              <p className="text-[#888]">{t(locale, "kamiHintLabel")}</p>
-              <p className="mt-1 leading-6 text-[#333]">{kamiHint}</p>
-            </div>
-            <CopyChip text={kamiHint} toastText={t(locale, "kamiHintCopied")} />
-          </div>
-          <div className="mt-4 flex items-start justify-between gap-3 border-t border-[#f3eee4] pt-3">
-            <div className="min-w-0">
+          {paid && order.verifyCode ? (
+            <>
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-[#888]">{t(locale, "kamiHintLabel")}</p>
+                  <p className="mt-1 leading-6 text-[#333]">{kamiHint}</p>
+                </div>
+                <CopyChip text={kamiHint} toastText={t(locale, "kamiHintCopied")} />
+              </div>
+              <div className="mt-4 flex items-start justify-between gap-3 border-t border-[#f3eee4] pt-3">
+                <div className="min-w-0">
+                  <p className="text-[#888]">{t(locale, "kamiLabel")}</p>
+                  <p className="mt-1 break-all font-mono text-[14px] font-medium text-[#8a5a20]">{order.verifyCode}</p>
+                </div>
+                <CopyChip text={order.verifyCode} toastText={t(locale, "kamiCopied")} />
+              </div>
+            </>
+          ) : (
+            <div>
               <p className="text-[#888]">{t(locale, "kamiLabel")}</p>
-              <p className="mt-1 break-all font-mono text-[14px] font-medium text-[#8a5a20]">{order.verifyCode}</p>
+              <p className="mt-1 text-[13px] text-[#666]">{t(locale, "kamiPending")}</p>
+              {order.billplzUrl ? (
+                <a
+                  href={order.billplzUrl}
+                  className="mt-3 inline-block rounded-md bg-[#fa3534] px-4 py-2 text-[13px] text-white"
+                >
+                  {t(locale, "resumePay")}
+                </a>
+              ) : null}
             </div>
-            <CopyChip text={order.verifyCode} toastText={t(locale, "kamiCopied")} />
-          </div>
+          )}
         </section>
 
         <section className="mt-3 rounded-xl bg-white px-4 py-4">

@@ -191,7 +191,15 @@ export function AdminUserDetail({
                   {formatMoneyAmount(order.price, (order.currency as Currency) || "CNY")}
                   {order.priceCny != null ? `（入库 ¥${order.priceCny.toFixed(2)}）` : ""}
                 </p>
-                <p className="mt-1 font-mono text-[#8a5a20]">{order.verifyCode}</p>
+                <p className="mt-1 text-[12px] text-[#555]">
+                  {order.status === "pending" ? "待付款" : "已支付"}
+                  {order.billplzBillId ? ` · Billplz ${order.billplzBillId}` : ""}
+                </p>
+                {order.verifyCode ? (
+                  <p className="mt-1 font-mono text-[#8a5a20]">{order.verifyCode}</p>
+                ) : (
+                  <p className="mt-1 text-[12px] text-[#999]">付款成功后发放课程码</p>
+                )}
                 <button type="button" className="mt-2 text-[12px] text-[#888]" onClick={() => revoke(order.id)}>
                   撤销课程与课程码
                 </button>

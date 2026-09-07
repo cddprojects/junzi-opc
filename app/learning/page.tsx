@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { getCurrentUser } from "@/lib/user-auth";
-import { ordersForUser } from "@/lib/user-store";
+import { paidOrdersForUser } from "@/lib/user-store";
 import { getStoreProduct } from "@/lib/store";
 import { LoginPrompt } from "@/components/login-prompt";
 import { CopyCode } from "@/components/copy-code";
@@ -23,7 +23,7 @@ export default async function LearningPage() {
       />
     );
   }
-  const orders = ordersForUser(user.id);
+  const orders = paidOrdersForUser(user.id);
   const bySlug = new Map<string, (typeof orders)[number]>();
   for (const order of orders) {
     if (!bySlug.has(order.productSlug)) bySlug.set(order.productSlug, order);
@@ -67,7 +67,9 @@ export default async function LearningPage() {
                     </Link>
                   ) : null}
                   <p className="mt-1 text-[12px] text-[#888]">{t(locale, "courseCode")}</p>
-                  <CopyCode code={order.verifyCode} className="font-mono text-[13px] text-[#8a5a20]" />
+                  {order.verifyCode ? (
+                    <CopyCode code={order.verifyCode} className="font-mono text-[13px] text-[#8a5a20]" />
+                  ) : null}
                 </div>
               </article>
             );

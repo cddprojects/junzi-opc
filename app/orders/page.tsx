@@ -5,6 +5,7 @@ import { ordersForUser } from "@/lib/user-store";
 import { getStoreProduct } from "@/lib/store";
 import { CoverArt } from "@/components/covers";
 import { Money } from "@/components/money";
+import { isOrderPaid } from "@/lib/account";
 import { filterOrders, formatOrderTime, parseOrderTab, ORDER_TABS } from "@/lib/orders-ui";
 import { cn } from "@/lib/utils";
 import { getRequestLocale } from "@/lib/i18n-server";
@@ -86,7 +87,7 @@ export default async function OrdersPage({
                 >
                   <div className="flex items-center justify-between border-b border-[#f3f3f3] pb-2 text-[12px]">
                     <span className="text-[#888]">{formatOrderTime(order.createdAt)}</span>
-                    <span className="text-[#333]">{t(locale, "orderDone")}</span>
+                    <span className="text-[#333]">{isOrderPaid(order) ? t(locale, "orderDone") : t(locale, "orderPending")}</span>
                   </div>
                   <div className="mt-3 flex gap-3">
                     <div className="w-[72px] shrink-0 overflow-hidden rounded-md">
@@ -111,7 +112,7 @@ export default async function OrdersPage({
                     </div>
                   </div>
                   <p className="mt-3 text-right text-[13px] text-[#555]">
-                    {t(locale, "orderPaid")}{" "}
+                    {isOrderPaid(order) ? t(locale, "orderPaid") : t(locale, "orderPayable")}{" "}
                     <Money
                       className="text-[16px] font-semibold text-[#fa3534]"
                       cny={(order.priceCny ?? order.price) * order.qty}

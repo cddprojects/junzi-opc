@@ -1,14 +1,15 @@
 # 君子小雅OPC
 
-君子小雅OPC研习社（一人公司）课程网站。桌面端是宽屏店面（顶栏导航、多列商品）；手机端是普通网站头和底栏，**不是**微信小程序窗口。
+君子小雅OPC研习社（一人公司）课程网站。桌面端是宽屏店面（顶栏导航、多列商品）；手机端是普通网站头和底栏，不是小程序窗口。
 
-本站不接入微信支付、微信登录或原小程序接口。购买走演示结算：不扣款，但会为该用户生成一枚可核验的加密课程码。
+收款走 **Billplz**（FPX / 银行卡）。Billplz 只收林吉特（MYR）：前台仍可按 CNY / MYR / USD / SGD 浏览标价，下单时按后台汇率折成 RM 再创建账单。
 
 ## 本地运行
 
 需要 Node.js 18 或更新版本。
 
 ```bash
+cp .env.example .env.local
 npm install
 npm run dev
 ```
@@ -22,20 +23,45 @@ npm run build
 npm start
 ```
 
+## Billplz 收款
+
+1. 在 [Billplz](https://www.billplz.com/) 或沙盒 [billplz-sandbox.com](https://www.billplz-sandbox.com/) 注册并创建一个 Collection。
+2. 打开 Settings → Keys & Integration，复制 Secret Key，并启用 **X Signature Payment Completion**，保存 X Signature Key。
+3. 在环境变量中填写：
+
+| 变量 | 说明 |
+| --- | --- |
+| `BILLPLZ_API_KEY` | Secret Key，只放在服务器，不要写进前端 |
+| `BILLPLZ_COLLECTION_ID` | 收款 Collection ID |
+| `BILLPLZ_X_SIGNATURE_KEY` | 用于校验 callback / redirect 的 HMAC-SHA256 密钥 |
+| `BILLPLZ_SANDBOX` | `true` 使用 `www.billplz-sandbox.com`，`false` 使用 `www.billplz.com`。未设置时默认沙盒 |
+| `NEXT_PUBLIC_APP_URL` | 站点绝对地址，例如 `https://your-domain.com`。用于 `callback_url` 与 `redirect_url` |
+| `ALLOW_DEMO_PAY` | 仅离线调试。默认关闭。设为 `true` 且未配置 Billplz 时，才允许不跳转网关直接发课程码 |
+
+4. 登录学员账号后结算：服务端按汇率把商品折成 **sen**（RM 分），`POST /api/v3/bills` 建单，再跳转到返回的账单页。
+5. Billplz 会：
+   - `POST /api/billplz/callback`：校验 `x_signature`，已支付则发课程码、解锁课程（重复回调不会重复履约）
+   - `GET /pay/return`：回跳页同样校验签名，显示成功或处理中，并链到学习订单
+
+未配置上述密钥时，结算会明确提示先配置 Billplz，不会出现假的支付弹窗。
+
+`callback_url` 必须能被 Billplz 服务器访问。本机 `localhost` 收不到 webhook，可用沙盒 + 公网 URL，或先看回跳页（回跳也会在签名有效且 `paid=true` 时履约）。
+
 ## 学员账号
 
 - 注册 / 登录：`/register`、`/login`（邮箱或手机号 + 密码）
 - 游客可浏览课程；购买和「我的学习」需要登录
+- **付款前请在资料里填写邮箱**（Billplz 建单需要 email）
 - 每位学员只看到自己的订单、学习记录、会员状态和课程码
 - 前台账号与 `/admin` 后台密码分开
 
 ## 课程码
 
-演示购买成功后会立刻展示课程码，并写入该用户的「学习订单」「我的学习」。
+Billplz 确认付款后会为该用户生成一枚可核验的加密课程码，并写入「学习订单」「我的学习」。
 
 - 算法：HMAC-SHA256（用户 ID + 课程 + 订单 ID），再编码为 `JX-XXXX-XXXX-XXXX-XXXX`
 - 前台核对：[/verify](http://127.0.0.1:43180/verify)
-- 后台核对：[/admin/orders](http://127.0.0.1:43180/admin/orders)（显示完整学员信息）
+- 后台核对：[/admin/orders](http://127.0.0.1:43180/admin/orders)（显示完整学员信息、Billplz 账单号与支付状态）
 - 可选环境变量 `VERIFY_SECRET`；未设置时使用 `data/store.json` 里生成的密钥
 
 ## 管理后台
@@ -46,10 +72,10 @@ npm start
 - 正式环境请设置环境变量 `ADMIN_PASSWORD`
 - 可增删改：商品/课程、海报轮播、视频
 - 添加商品默认很简单：名称、价格、封面、详情图（一张或多张长图）。课节、直播、文字大纲收在「高级 / 课节与大纲」，新商品不必填
-- 前台有详情图时，商品页按小程序那样竖着铺满长图；没有详情图且已有课节/大纲时，仍显示原来的结构化详情
+- 前台有详情图时，商品页按长图竖着铺满；没有详情图且已有课节/大纲时，仍显示原来的结构化详情
 - 课节视频功能还在，只是不再作为默认填写路径
 - 学员账号：搜索、改资料、停用/启用、重设密码、授权/撤销课程与课程码
-- 货币与汇率：默认货币 + 对人民币汇率（前台 CNY / MYR / USD / SGD 切换）
+- 货币与汇率：默认货币 + 对人民币汇率（前台 CNY / MYR / USD / SGD 切换；**扣款货币始终是 MYR**）
 - 语言：前台与后台可切换中文 / English（cookie `opc_locale`，默认中文）
 - 支持上传封面图、详情长图、海报图和视频文件
 - 前台 `/product/[slug]`：有详情图就展示图片；否则按结构化课程详情渲染
@@ -73,6 +99,7 @@ npm start
 | `/login` `/register` | 登录 / 注册 |
 | `/orders` | 订单列表（学习订单） |
 | `/orders/[id]` | 订单详情与卡密（加密课程码） |
+| `/pay/return` | Billplz 回跳：成功 / 处理中 |
 | `/learning` | 我的学习 |
 | `/verify` | 验证课程码 |
 | `/product/[slug]` | 商品详情（详情图或结构化大纲） |
@@ -82,8 +109,9 @@ npm start
 | `/admin` | 管理后台 |
 | `/admin/users` | 学员账号 |
 | `/admin/currency` | 货币与汇率 |
+| `/admin/orders` | 订单、课程码、Billplz 账单号 |
 
-手机底栏为「首页 / 分类 / 我的」。桌面用顶部导航。页头可切换货币（CNY / MYR / USD / SGD）和语言（中文 / English），选择会写入 cookie，不会退出登录或清空购物车。商品以人民币入库，按后台汇率折算。订单会记下购买时的货币。卡密、价格与 slug 不随语言改变。
+手机底栏为「首页 / 分类 / 我的」。桌面用顶部导航。页头可切换货币（CNY / MYR / USD / SGD）和语言（中文 / English），选择会写入 cookie，不会退出登录或清空购物车。商品以人民币入库，按后台汇率折算展示。Billplz 实收始终为林吉特。卡密、价格与 slug 不随语言改变。
 
 ## 英文文案
 
@@ -105,4 +133,4 @@ npm start
 
 - 未上传视频时使用占位封面，不复制原片。
 - 购物车只存在当前浏览器会话。
-- 不要把 `ADMIN_PASSWORD`、`VERIFY_SECRET` 或 `data/store.json` 提交到公开仓库。
+- 不要把 `ADMIN_PASSWORD`、`VERIFY_SECRET`、`BILLPLZ_API_KEY`、`BILLPLZ_X_SIGNATURE_KEY` 或 `data/store.json` 提交到公开仓库。

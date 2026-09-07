@@ -1,4 +1,4 @@
-import type { Order } from "@/lib/account";
+import { isOrderPaid, type Order } from "@/lib/account";
 
 export const ORDER_TABS = [
   { id: "all", label: "全部" },
@@ -37,7 +37,9 @@ export function displayOrderNo(order: Order) {
 }
 
 export function filterOrders(orders: Order[], tab: OrderTabId) {
-  if (tab === "all" || tab === "done") return orders;
+  if (tab === "all") return orders;
+  if (tab === "unpaid") return orders.filter((order) => !isOrderPaid(order));
+  if (tab === "done") return orders.filter((order) => isOrderPaid(order));
   return [];
 }
 

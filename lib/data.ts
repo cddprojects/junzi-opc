@@ -641,7 +641,7 @@ export const placeholderPages: Record<
 > = {
   orders: {
     title: "学习订单",
-    body: "演示账号暂无已支付订单。购买按钮仅作展示，不会产生真实扣款。",
+    body: "还没有已支付订单。登录后可通过 Billplz 购买课程。",
   },
   agent: {
     title: "代理中心",
@@ -653,7 +653,7 @@ export const placeholderPages: Record<
   },
   help: {
     title: "帮助中心",
-    body: "如需了解如何使用本站，请先阅读「操作指南（必看）」。本站不接入微信客服。",
+    body: "如需了解如何使用本站，请先阅读「操作指南（必看）」。客服入口为站内说明页。",
   },
   profile: {
     title: "修改资料",
@@ -669,11 +669,11 @@ export const placeholderPages: Record<
   },
   service: {
     title: "客服",
-    body: "演示站不接入微信客服。购买相关说明：本站不支持支付。",
+    body: "购买请使用 Billplz 在线付款（FPX / 银行卡）。课程码在付款成功后发放。",
   },
   tools: {
     title: "君子小雅AI工具小程序",
-    body: "此处为公开网站上的占位页，用于还原首页入口。正式工具仍在微信小程序中使用。",
+    body: "此处为公开网站上的占位页，用于还原首页入口。正式工具仍在原小程序中使用。",
   },
 };
 

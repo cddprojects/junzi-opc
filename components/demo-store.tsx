@@ -24,10 +24,13 @@ import { useLocale } from "@/components/locale-provider";
 import { locProductShort } from "@/lib/localize";
 import { localized } from "@/lib/i18n";
 import { translateApiError } from "@/lib/messages";
+import { fromCny, formatMoneyAmount } from "@/lib/currency";
 
 export type CartItem = { slug: string; qty: number; product: Product };
 
 type PayResult = Pick<Order, "id" | "productTitle" | "verifyCode" | "productSlug">;
+
+type PayConfig = { billplz: boolean; demo: boolean };
 
 type Store = {
   cart: CartItem[];
@@ -42,7 +45,7 @@ const StoreContext = React.createContext<Store | null>(null);
 
 export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
   const { user, loading, refresh } = useAuth();
-  const { currency } = useCurrency();
+  const { currency, settings } = useCurrency();
   const { locale, t } = useLocale();
   const pathname = usePathname();
   const router = useRouter();
@@ -53,8 +56,14 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
   const [busy, setBusy] = React.useState(false);
   const [error, setError] = React.useState("");
   const [result, setResult] = React.useState<PayResult[] | null>(null);
+  const [payConfig, setPayConfig] = React.useState<PayConfig | null>(null);
 
   const visible = Boolean(openedOn && openedOn === pathname);
+  const chargeMyr = items.reduce(
+    (sum, item) => sum + fromCny(item.price * (item.qty || 1), "MYR", settings.fx),
+    0,
+  );
+  const chargeLabel = formatMoneyAmount(Math.round(chargeMyr * 100) / 100, "MYR");
 
   const closePay = React.useCallback(() => {
     setOpenedOn(null);
@@ -98,6 +107,10 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
         setResult(null);
         setError("");
         setOpenedOn(pathname);
+        fetch("/api/pay/config")
+          .then((res) => res.json())
+          .then((data: PayConfig) => setPayConfig(data))
+          .catch(() => setPayConfig({ billplz: false, demo: false }));
       },
     }),
     [cart, favorites, pathname, locale, t],
@@ -109,6 +122,10 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
       setError(t("pickCourse"));
       return;
     }
+    if (payConfig && !payConfig.billplz && !payConfig.demo) {
+      setError(t("billplzNotConfigured"));
+      return;
+    }
     setBusy(true);
     setError("");
     const res = await fetch("/api/orders/checkout", {
@@ -116,16 +133,37 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ items, currency }),
     });
-    const data = (await res.json()) as { error?: string; orders?: PayResult[] };
-    setBusy(false);
+    const data = (await res.json()) as {
+      error?: string;
+      mode?: string;
+      redirectUrl?: string;
+      orders?: PayResult[];
+    };
     if (!res.ok) {
+      setBusy(false);
       setError(translateApiError(locale, data.error, "checkoutFailed"));
       return;
     }
+    if (data.redirectUrl) {
+      window.location.assign(data.redirectUrl);
+      return;
+    }
+    setBusy(false);
     setResult(data.orders || []);
     setCart((current) => current.filter((row) => !items.some((item) => item.slug === row.slug)));
     await refresh();
   }
+
+  const canPay = Boolean(payConfig?.billplz || payConfig?.demo);
+  const payLabel = payConfig?.billplz
+    ? busy
+      ? t("payingRedirect")
+      : t("payWithBillplz")
+    : payConfig?.demo
+      ? busy
+        ? t("generatingCode")
+        : t("confirmDemoBuy")
+      : t("payWithBillplz");
 
   return (
     <StoreContext.Provider value={value}>
@@ -150,10 +188,12 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
                   {result.map((order) => (
                     <div key={order.id} className="rounded-lg bg-[#faf6ee] px-3 py-3">
                       <p className="text-[13px]">{order.productTitle}</p>
-                      <CopyCode
-                        code={order.verifyCode}
-                        className="mt-1 block w-full text-left font-mono text-[13px] font-medium text-[#8a5a20]"
-                      />
+                      {order.verifyCode ? (
+                        <CopyCode
+                          code={order.verifyCode}
+                          className="mt-1 block w-full text-left font-mono text-[13px] font-medium text-[#8a5a20]"
+                        />
+                      ) : null}
                     </div>
                   ))}
                 </div>
@@ -180,9 +220,15 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
             ) : (
               <>
                 <DialogHeader>
-                  <DialogTitle>{!loading && !user ? t("payNeedLogin") : t("payConfirm")}</DialogTitle>
+                  <DialogTitle>
+                    {!loading && !user ? t("payNeedLogin") : t("payConfirm")}
+                  </DialogTitle>
                   <DialogDescription>
-                    {!loading && !user ? t("payNeedLoginBody") : t("payConfirmBody")}
+                    {!loading && !user
+                      ? t("payNeedLoginBody")
+                      : payConfig && !canPay
+                        ? t("billplzNotConfigured")
+                        : t("payConfirmBody")}
                   </DialogDescription>
                 </DialogHeader>
                 {items.length > 0 && (
@@ -197,6 +243,11 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
                     ))}
                   </ul>
                 )}
+                {items.length > 0 ? (
+                  <p className="rounded-md bg-[#faf6ee] px-3 py-2 text-[13px] text-[#5a3d14]">
+                    {t("billplzChargeLine", { amount: chargeLabel })}
+                  </p>
+                ) : null}
                 {error && <p className="text-[13px] text-[#fa3534]">{error}</p>}
                 <DialogFooter>
                   {!loading && !user ? (
@@ -219,10 +270,10 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
                   ) : (
                     <Button
                       className="w-full bg-[#fa3534] text-white hover:bg-[#e12f2e]"
-                      disabled={busy || loading}
+                      disabled={busy || loading || (payConfig != null && !canPay)}
                       onClick={confirmPay}
                     >
-                      {busy ? t("generatingCode") : t("confirmDemoBuy")}
+                      {payLabel}
                     </Button>
                   )}
                 </DialogFooter>
