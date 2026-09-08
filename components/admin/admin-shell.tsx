@@ -74,14 +74,14 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           </div>
         </aside>
         <div className="admin-main">
-          <div className="admin-mobile-bar md:hidden">
+          <div className="admin-mobile-bar">
             <p className="jx-serif text-[17px]">{t("adminBrand")}</p>
             <div className="flex items-center gap-3 text-[13px] text-[var(--paper-mute)]">
               <LocaleSwitcher compact />
               <Link href="/">{t("adminFrontShort")}</Link>
             </div>
           </div>
-          <nav className="admin-mobile-nav md:hidden">
+          <nav className="admin-mobile-nav">
             {LINKS.map((link) => (
               <Link
                 key={link.href}
@@ -92,7 +92,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
               </Link>
             ))}
           </nav>
-          <header className="admin-topbar hidden md:flex">
+          <header className="admin-topbar">
             <p className="admin-topbar-title">{t(titleKey(pathname))}</p>
             <AdminSearch />
           </header>
