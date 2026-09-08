@@ -42,14 +42,14 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const [cart, setCart] = React.useState<CartItem[]>([]);
   const [favorites, setFavorites] = React.useState<string[]>([]);
-  const [openedOn, setOpenedOn] = React.useState<string | null>(null);
+  const [payOpen, setPayOpen] = React.useState(false);
   const [items, setItems] = React.useState<CheckoutItem[]>([]);
   const [busy, setBusy] = React.useState(false);
   const [error, setError] = React.useState("");
   const [result, setResult] = React.useState<PayResult[] | null>(null);
   const [payConfig, setPayConfig] = React.useState<PayConfig | null>(null);
 
-  const visible = Boolean(openedOn && openedOn === pathname);
+  const visible = payOpen;
   const chargeMyr = items.reduce(
     (sum, item) => sum + fromCny(item.price * (item.qty || 1), "MYR", settings.fx),
     0,
@@ -57,7 +57,7 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
   const chargeLabel = formatMoneyAmount(Math.round(chargeMyr * 100) / 100, "MYR");
 
   const closePay = React.useCallback(() => {
-    setOpenedOn(null);
+    setPayOpen(false);
     setResult(null);
     setError("");
     setBusy(false);
@@ -69,6 +69,13 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
       });
     }
   }, []);
+
+  const pathRef = React.useRef(pathname);
+  React.useEffect(() => {
+    if (pathRef.current === pathname) return;
+    pathRef.current = pathname;
+    closePay();
+  }, [pathname, closePay]);
 
   React.useEffect(() => {
     if (visible) return;
@@ -110,7 +117,7 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
         setItems(nextItems);
         setResult(null);
         setError(nextItems.length ? "" : t("pickCourse"));
-        setOpenedOn(pathname);
+        setPayOpen(true);
         fetch("/api/pay/config")
           .then((res) => res.json())
           .then((data: PayConfig) => setPayConfig(data))
