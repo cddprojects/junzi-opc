@@ -64,8 +64,32 @@
 }
 
 @media (min-width: 768px) {
+  .admin-app {
+    height: 100dvh;
+    overflow: hidden;
+  }
+
+  .admin-frame {
+    min-height: 100dvh;
+  }
+
   .admin-side {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 40;
     display: flex;
+    height: 100dvh;
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+
+  .admin-main {
+    margin-left: 222px;
+    height: 100dvh;
+    min-height: 100dvh;
+    overflow-x: hidden;
+    overflow-y: auto;
   }
 }
 

@@ -9,7 +9,7 @@ export function CurrencySwitcher({ compact }: { compact?: boolean }) {
   const { currency, setCurrency } = useCurrency();
   const { locale, t } = useLocale();
   return (
-    <label className={cn("inline-flex items-center gap-1 text-[#444]", compact ? "text-[12px]" : "text-[13px]")}>
+    <label className={cn("mb-[10px] inline-flex items-center gap-2 text-[#444]", compact ? "text-[12px]" : "text-[13px]")}>
       {!compact && <span className="text-[#888]">{t("currency")}</span>}
       <select
         aria-label={t("chooseCurrency")}
