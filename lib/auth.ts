@@ -33,3 +33,42 @@ export async function assertAdmin() {
     throw new Error("UNAUTHORIZED");
   }
 }
+
+export function safeAdminNext(next?: string | null) {
+  if (!next || !next.startsWith("/admin") || next.startsWith("/admin/login")) {
+    return "/admin";
+  }
+  if (next.includes("://") || next.includes("\\") || next.includes("//")) {
+    return "/admin";
+  }
+  return next;
+}
+
+function requestIsHttps(request?: Request) {
+  if (!request) return false;
+  const forwarded = request.headers.get("x-forwarded-proto")?.split(",")[0]?.trim().toLowerCase();
+  if (forwarded === "https") return true;
+  if (forwarded === "http") return false;
+  return new URL(request.url).protocol === "https:";
+}
+
+export function adminSessionCookieOptions(request?: Request) {
+  return {
+    httpOnly: true,
+    sameSite: "lax" as const,
+    // HTTP preview (127.0.0.1 / 0.0.0.0) must not get Secure, or the browser drops the cookie.
+    secure: requestIsHttps(request),
+    path: "/",
+    maxAge: 60 * 60 * 24 * 14,
+  };
+}
+
+export function clearAdminSessionCookieOptions() {
+  return {
+    httpOnly: true,
+    sameSite: "lax" as const,
+    secure: false,
+    path: "/",
+    maxAge: 0,
+  };
+}

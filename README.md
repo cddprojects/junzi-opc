@@ -14,7 +14,9 @@ npm install
 npm run dev
 ```
 
-开发服务器监听 `0.0.0.0:43180`（本机仍可用 [http://127.0.0.1:43180](http://127.0.0.1:43180)）。在 Cursor 云端预览里请用对话中的 Preview，不要只靠本机浏览器。
+开发服务器监听 `0.0.0.0:43180`。在这台云端虚拟机上，用 [http://127.0.0.1:43180](http://127.0.0.1:43180) 或对话里的 Preview 打开。
+
+如果你在自己电脑的 Cursor 内置浏览器里打开 `http://127.0.0.1:43180`，会连不上（站点不可达），那是因为应用跑在云端虚拟机上，不是你的笔记本。请用对话中的 Preview / agent 桌面，不要用本机 Simple Browser。这和后台登录是否坏掉不是同一件事。
 
 生产构建：
 
@@ -25,7 +27,7 @@ npm start
 
 ## Billplz 收款
 
-1. 在 [Billplz](https://www.billplz.com/) 或沙盒 [billplz-sandbox.com](https://www.billplz-sandbox.com/) 注册并创建一个 Collection。
+1. 在 [Billplz 生产环境](https://www.billplz.com/) 注册并创建一个 Collection（正式收款走生产，这是默认路径）。需要联调时才用沙盒 [billplz-sandbox.com](https://www.billplz-sandbox.com/)。
 2. 打开 Settings → Keys & Integration，复制 Secret Key，并启用 **X Signature Payment Completion**，保存 X Signature Key。
 3. 在环境变量中填写：
 
@@ -34,7 +36,7 @@ npm start
 | `BILLPLZ_API_KEY` | Secret Key，只放在服务器，不要写进前端 |
 | `BILLPLZ_COLLECTION_ID` | 收款 Collection ID |
 | `BILLPLZ_X_SIGNATURE_KEY` | 用于校验 callback / redirect 的 HMAC-SHA256 密钥 |
-| `BILLPLZ_SANDBOX` | `true` 使用 `www.billplz-sandbox.com`，`false` 使用 `www.billplz.com`。未设置时默认沙盒 |
+| `BILLPLZ_SANDBOX` | 可选。未设置或 `false` 使用生产 `www.billplz.com`。只有测试时才设 `true`（`www.billplz-sandbox.com`） |
 | `NEXT_PUBLIC_APP_URL` | 站点绝对地址，例如 `https://your-domain.com`。用于 `callback_url` 与 `redirect_url` |
 | `ALLOW_DEMO_PAY` | 仅离线调试。默认关闭。设为 `true` 且未配置 Billplz 时，才允许不跳转网关直接发课程码 |
 
@@ -45,7 +47,7 @@ npm start
 
 未配置上述密钥时，结算会明确提示先配置 Billplz，不会出现假的支付弹窗。
 
-`callback_url` 必须能被 Billplz 服务器访问。本机 `localhost` 收不到 webhook，可用沙盒 + 公网 URL，或先看回跳页（回跳也会在签名有效且 `paid=true` 时履约）。
+`callback_url` 必须能被 Billplz 服务器访问。本机 `localhost` 收不到 webhook；正式环境用生产密钥 + 公网 URL。本地联调可临时设 `BILLPLZ_SANDBOX=true`，或先看回跳页（回跳也会在签名有效且 `paid=true` 时履约）。
 
 ## 学员账号
 

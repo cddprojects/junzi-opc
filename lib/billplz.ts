@@ -33,7 +33,7 @@ export function getBillplzConfig(): BillplzConfig | null {
   const collectionId = process.env.BILLPLZ_COLLECTION_ID?.trim();
   const xSignatureKey = process.env.BILLPLZ_X_SIGNATURE_KEY?.trim();
   if (!apiKey || !collectionId || !xSignatureKey) return null;
-  const sandbox = process.env.BILLPLZ_SANDBOX == null ? true : truthy(process.env.BILLPLZ_SANDBOX);
+  const sandbox = truthy(process.env.BILLPLZ_SANDBOX);
   return {
     apiKey,
     collectionId,
