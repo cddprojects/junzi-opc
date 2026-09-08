@@ -40,6 +40,8 @@ npm start
 | `NEXT_PUBLIC_APP_URL` | 站点绝对地址，例如 `https://your-domain.com`。用于 `callback_url` 与 `redirect_url` |
 | `ALLOW_DEMO_PAY` | 仅离线调试。默认关闭。设为 `true` 且未配置 Billplz 时，才允许不跳转网关直接发课程码 |
 
+把 `BILLPLZ_API_KEY`、`BILLPLZ_COLLECTION_ID`、`BILLPLZ_X_SIGNATURE_KEY` 写进服务器上的 `.env.local`（已 gitignore），或在 Cursor Cloud Agent 环境变量里用同样的名字配置。不要把真实密钥提交到 git，也不要贴进聊天。
+
 4. 登录学员账号后结算：服务端按汇率把商品折成 **sen**（RM 分），`POST /api/v3/bills` 建单，再跳转到返回的账单页。
 5. Billplz 会：
    - `POST /api/billplz/callback`：校验 `x_signature`，已支付则发课程码、解锁课程（重复回调不会重复履约）
@@ -47,7 +49,7 @@ npm start
 
 未配置上述密钥时，结算会明确提示先配置 Billplz，不会出现假的支付弹窗。
 
-`callback_url` 必须能被 Billplz 服务器访问。本机 `localhost` 收不到 webhook；正式环境用生产密钥 + 公网 URL。本地联调可临时设 `BILLPLZ_SANDBOX=true`，或先看回跳页（回跳也会在签名有效且 `paid=true` 时履约）。
+**Billplz 的 callback 到不了 localhost。** 当前预览若把 `NEXT_PUBLIC_APP_URL` 设为 `http://127.0.0.1:43180`，可以在本机跳转支付页，但 Billplz 服务器无法回调这台机器，付款后的自动履约（发课程码、解锁）不会发生。正式收款需要公网 HTTPS 地址（或隧道，例如 Cloudflare Tunnel / ngrok）再改 `NEXT_PUBLIC_APP_URL`。回跳页 `/pay/return` 在签名有效且 `paid=true` 时仍会履约。
 
 ## 学员账号
 
