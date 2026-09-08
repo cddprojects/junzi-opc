@@ -42,14 +42,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const isProduct = pathname.startsWith("/product/");
 
   return (
-    <div className="min-h-dvh bg-[#f4f0e6] text-[#222]">
+    <div className="min-h-dvh bg-[#f4f0e6] text-[#2b2418]">
       <DesktopHeader />
       <div className="md:hidden">
         <MobileHeader />
       </div>
       <main
         className={cn(
-          "mx-auto w-full bg-[#f7f7f7] md:max-w-6xl md:bg-transparent md:px-6 md:pt-6 md:pb-16",
+          "mx-auto w-full bg-[#f6f2ea] md:max-w-6xl md:bg-transparent md:px-6 md:pt-7 md:pb-16",
           isProduct ? "pb-[64px] md:pb-16" : "pb-[58px] md:pb-16",
         )}
       >
@@ -88,12 +88,12 @@ function DesktopHeader() {
   const { t } = useLocale();
 
   return (
-    <header className="sticky top-0 z-40 hidden border-b border-[#e6dcc8] bg-[#fffdf8]/96 backdrop-blur md:block">
-      <div className="mx-auto flex h-16 max-w-6xl flex-nowrap items-center gap-3 px-6">
+    <header className="sticky top-0 z-40 hidden border-b border-[#e6dcc8] bg-[#fffdf8]/95 backdrop-blur-md md:block">
+      <div className="mx-auto flex h-[68px] max-w-6xl flex-nowrap items-center gap-4 px-6">
         <Link href="/" className="shrink-0 font-serif text-[20px] tracking-wide whitespace-nowrap text-[#3a2c10]">
           {brand.name}
         </Link>
-        <nav className="flex shrink-0 flex-nowrap items-center gap-3 text-[14px] xl:gap-4">
+        <nav className="flex shrink-0 flex-nowrap items-center gap-4 text-[13px] xl:gap-5">
           {DESKTOP_NAV.map((item) => (
             <Link
               key={item.href}
@@ -112,7 +112,7 @@ function DesktopHeader() {
           <input
             name="q"
             placeholder={t("searchCourses")}
-            className="h-9 w-full min-w-0 rounded-full bg-[#f3efe6] pr-3 pl-9 text-[13px] outline-none"
+            className="h-9 w-full min-w-0 rounded-full bg-[#f4efe6] pr-3 pl-9 text-[13px] text-[#333] outline-none placeholder:text-[#aaa]"
           />
         </form>
         <div className="flex shrink-0 items-center gap-2">
@@ -136,10 +136,10 @@ function DesktopHeader() {
 function DesktopFooter() {
   const { locale, t } = useLocale();
   return (
-    <footer className="hidden border-t border-[#e6dcc8] bg-[#fffdf8] py-8 text-center text-[13px] text-[#7a6a50] md:block">
-      <p className="font-serif text-[16px] text-[#3a2c10]">{localized(locale, brand.mottoWay, brand.mottoWayEn)}</p>
+    <footer className="hidden border-t border-[#e6dcc8] bg-[#fffdf8] py-10 text-center text-[13px] text-[#7a6a50] md:block">
+      <p className="font-serif text-[17px] text-[#3a2c10]">{localized(locale, brand.mottoWay, brand.mottoWayEn)}</p>
       <p className="mt-2">{t("footerDemo")}</p>
-      <div className="mt-3 flex items-center justify-center gap-4">
+      <div className="mt-4 flex items-center justify-center gap-5">
         <LocaleSwitcher />
         <CurrencySwitcher />
         <Link href="/verify" className="text-[#b8863b]">

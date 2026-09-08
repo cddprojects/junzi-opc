@@ -37,9 +37,9 @@ export default function MinePage() {
   const t = useT();
 
   return (
-    <div className="bg-[#f7f7f7] md:overflow-hidden md:rounded-2xl md:bg-white">
-      <div className="flex items-center gap-3 bg-[#4a4a4a] px-4 py-5 text-white md:px-8 md:py-8">
-        <div className="flex size-14 items-center justify-center rounded-full bg-[#7d7d7d]">
+    <div className="overflow-hidden bg-white md:rounded-2xl">
+      <div className="flex items-center gap-3 bg-[#3a2c10] px-4 py-6 text-[#fffdf8] md:px-8 md:py-8">
+        <div className="flex size-14 items-center justify-center rounded-full bg-[#8a5a20]">
           <svg viewBox="0 0 48 48" className="size-8 text-[#d8d8d8]" aria-hidden>
             <circle cx="24" cy="18" r="8" fill="currentColor" />
             <path d="M8 40c2-10 8-14 16-14s14 4 16 14" fill="currentColor" />
@@ -85,7 +85,7 @@ export default function MinePage() {
             const Icon = personalIcons[index] || ReceiptText;
             return (
               <Link key={item.href} href={item.href} className="flex flex-col items-center gap-2">
-                <Icon className="size-7 text-[#777]" strokeWidth={1.5} />
+                <Icon className="size-7 text-[#8a5a20]" strokeWidth={1.5} />
                 <span className="text-[13px] text-[#444]">{t(MINE_LABELS[item.href] || "mineOrders")}</span>
               </Link>
             );
@@ -100,8 +100,8 @@ export default function MinePage() {
             const Icon = serviceIcons[index] || CircleHelp;
             return (
               <Link key={item.href} href={item.href} className="flex flex-col items-center gap-2">
-                <span className="flex size-11 items-center justify-center rounded-full bg-[#f4f4f4]">
-                  <Icon className="size-5 text-[#777]" strokeWidth={1.5} />
+                <span className="flex size-11 items-center justify-center rounded-full bg-[#f4efe6]">
+                  <Icon className="size-5 text-[#8a5a20]" strokeWidth={1.5} />
                 </span>
                 <span className="text-[11px] text-[#444]">{t(MINE_LABELS[item.href] || "mineLearning")}</span>
               </Link>

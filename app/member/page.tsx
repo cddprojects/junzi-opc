@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { memberCheckoutItem, useDemoStore } from "@/components/demo-store";
 import { useAuth } from "@/components/auth-provider";
 import { Money } from "@/components/money";
 import { membership } from "@/lib/data";
@@ -8,17 +8,18 @@ import { useLocale } from "@/components/locale-provider";
 import { localized } from "@/lib/i18n";
 
 export default function MemberPage() {
+  const { openPay } = useDemoStore();
   const { user } = useAuth();
   const { locale, t } = useLocale();
   const title = localized(locale, membership.title, membership.titleEn);
   const campTitle = localized(locale, membership.campTitle, membership.campTitleEn);
 
   return (
-    <div className="bg-[#f7f7f7] pb-6 md:overflow-hidden md:rounded-2xl">
-      <div className="bg-[#2c2c2c] px-3 pt-4 pb-5">
+    <div className="bg-[#f6f2ea] pb-6 md:overflow-hidden md:rounded-2xl md:bg-white">
+      <div className="bg-[#3a2c10] px-3 pt-4 pb-5 md:px-6">
         <div className="rounded-xl bg-[linear-gradient(135deg,#f0d48a,#d7b25a)] px-4 py-5 text-[#3a2c10]">
           <div className="flex items-start justify-between">
-            <h2 className="text-[18px] font-semibold">{title}</h2>
+            <h2 className="font-serif text-[20px] font-semibold">{title}</h2>
             <span className="text-[11px] text-[#6a5420]">{t("memberPerk")}</span>
           </div>
           <div className="mt-8 flex items-center justify-between">
@@ -31,8 +32,8 @@ export default function MemberPage() {
             </p>
             <button
               type="button"
-              onClick={buy}
-              className="rounded-full bg-[#f4c27a] px-3 py-1 text-[12px] text-[#5a3f16]"
+              onClick={() => openPay(memberCheckoutItem())}
+              className="rounded-full bg-[#8a5a20] px-3 py-1 text-[12px] text-white"
             >
               {user?.memberActive ? t("renew") : t("activate")}
             </button>
@@ -40,7 +41,7 @@ export default function MemberPage() {
         </div>
       </div>
 
-      <div className="mx-3 mt-3 flex items-center justify-between rounded-md border border-[#e8d7b0] bg-[#f8f1de] px-3 py-3">
+      <div className="mx-3 mt-3 flex items-center justify-between rounded-xl border border-[#e8d7b0] bg-[#f8f1de] px-3 py-3 md:mx-6">
         <span className="text-[14px]">{title}</span>
         <span className="text-right text-[#8a5a20]">
           <span className="text-[20px] font-semibold">{membership.priceLabel}</span>
@@ -51,8 +52,8 @@ export default function MemberPage() {
         </span>
       </div>
 
-      <div className="relative mx-3 mt-3 overflow-hidden rounded-md bg-[#161616] text-white">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom,#5a4a2c,transparent_60%)]" />
+      <div className="relative mx-3 mt-3 overflow-hidden rounded-xl bg-[#3a2c10] text-[#fffdf8] md:mx-6">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom,#8a5a20,transparent_60%)]" />
         <div className="relative px-4 pt-6 pb-5 text-center">
           <p className="text-[11px] text-white/70">{t("memberHeroKicker")}</p>
           <h3 className="mt-3 font-serif text-[22px]">{campTitle}</h3>
@@ -67,12 +68,13 @@ export default function MemberPage() {
             <br />
             {t("memberHeroQuote2")}
           </p>
-          <Link
-            href="/checkout?member=1"
-            className="mt-5 block w-full rounded-md bg-[#3a3a3a] py-2.5 text-center text-[15px]"
+          <button
+            type="button"
+            onClick={() => openPay(memberCheckoutItem())}
+            className="mt-5 w-full rounded-lg bg-[#8a5a20] py-2.5 text-[15px] text-white"
           >
             {t("buyNow")}
-          </Link>
+          </button>
         </div>
       </div>
     </div>

@@ -9,12 +9,12 @@ import { useLocale } from "@/components/locale-provider";
 import { locProductTitle } from "@/lib/localize";
 
 export default function CartPage() {
-  const { cart, removeFromCart } = useDemoStore();
+  const { cart, removeFromCart, openPay } = useDemoStore();
   const { locale, t } = useLocale();
   const total = cart.reduce((sum, row) => sum + row.product.price * row.qty, 0);
 
   return (
-    <div className="min-h-[60vh] bg-[#f7f7f7] md:rounded-2xl md:bg-white">
+    <div className="min-h-[60vh] bg-white md:overflow-hidden md:rounded-2xl md:shadow-sm">
       {cart.length === 0 ? (
         <EmptyHint>{t("cartEmpty")}</EmptyHint>
       ) : (
@@ -47,9 +47,13 @@ export default function CartPage() {
                 <Money cny={total} />
               </span>
             </p>
-            <Link href="/checkout" className="rounded-md bg-[#fa3534] px-4 py-2 text-[14px] text-white">
+            <button
+              type="button"
+              onClick={() => openPay()}
+              className="rounded-lg bg-[#fa3534] px-4 py-2 text-[14px] text-white"
+            >
               {t("checkout")}
-            </Link>
+            </button>
           </div>
         </div>
       )}

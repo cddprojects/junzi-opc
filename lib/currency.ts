@@ -12,12 +12,12 @@ export type StoreSettings = {
 
 export const CURRENCY_META: Record<
   Currency,
-  { label: string; symbol: string; prefix: string }
+  { label: string; labelEn: string; symbol: string; prefix: string }
 > = {
-  CNY: { label: "人民币 CNY", symbol: "¥", prefix: "¥" },
-  MYR: { label: "林吉特 MYR", symbol: "RM", prefix: "RM " },
-  USD: { label: "美元 USD", symbol: "$", prefix: "$" },
-  SGD: { label: "新元 SGD", symbol: "S$", prefix: "S$" },
+  CNY: { label: "人民币 CNY", labelEn: "Yuan CNY", symbol: "¥", prefix: "¥" },
+  MYR: { label: "令吉 MYR", labelEn: "Ringgit MYR", symbol: "RM", prefix: "RM " },
+  USD: { label: "美元 USD", labelEn: "US Dollar", symbol: "$", prefix: "$" },
+  SGD: { label: "新元 SGD", labelEn: "Singapore Dollar", symbol: "S$", prefix: "S$" },
 };
 
 /** 1 单位该货币 = 多少人民币。后台可改。 */

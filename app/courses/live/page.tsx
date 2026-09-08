@@ -13,7 +13,8 @@ export default async function LiveCoursesPage() {
         <Link
           key={course.slug}
           href={course.href}
-          className={index > 0 ? "block border-t border-[#f0f0f0] md:overflow-hidden md:rounded-2xl md:border-0 md:bg-white" : "block md:overflow-hidden md:rounded-2xl md:bg-white"}
+          prefetch
+          className={index > 0 ? "block cursor-pointer border-t border-[#eadfca] transition active:opacity-70 md:overflow-hidden md:rounded-2xl md:border-0 md:bg-white md:shadow-sm" : "block cursor-pointer transition active:opacity-70 md:overflow-hidden md:rounded-2xl md:bg-white md:shadow-sm"}
         >
           <CoverArt theme={course.cover} className="rounded-none" />
           <div className="px-3 py-3">

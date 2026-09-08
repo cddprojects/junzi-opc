@@ -50,6 +50,17 @@
 }
 
 :root {
+  --opc-canvas: #f4f0e6;
+  --opc-paper: #f6f2ea;
+  --opc-cream: #fffdf8;
+  --opc-card: #ffffff;
+  --opc-ink: #2b2418;
+  --opc-title: #3a2c10;
+  --opc-brown: #8a5a20;
+  --opc-gold: #c9a24a;
+  --opc-line: #e6dcc8;
+  --opc-muted: #7a6a50;
+  --opc-sale: #fa3534;
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
@@ -136,4 +147,27 @@
 
 .toaster {
   --width: min(360px, calc(100vw - 24px));
+}
+
+@layer components {
+  .opc-card {
+    border-radius: 0.875rem;
+    background: #fff;
+    box-shadow: 0 1px 2px rgb(58 44 16 / 6%);
+  }
+  .opc-btn-brown {
+    border-radius: 0.5rem;
+    background: #8a5a20;
+    color: #fff;
+  }
+  .opc-btn-beige {
+    border-radius: 0.5rem;
+    background: #f3ead8;
+    color: #8a5a20;
+  }
+  .opc-section-title {
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: #3a2c10;
+  }
 }

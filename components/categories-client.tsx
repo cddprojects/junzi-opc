@@ -33,12 +33,12 @@ export function CategoriesClient({ products }: { products: Product[] }) {
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder={t("searchKeyword")}
-            className="h-9 w-full rounded-full bg-[#f3f3f3] pr-3 pl-9 text-[13px] outline-none placeholder:text-[#bbb] md:h-10"
+            className="h-9 w-full rounded-full bg-[#f4efe6] pr-3 pl-9 text-[13px] outline-none placeholder:text-[#bbb] md:h-10"
           />
         </div>
       </div>
       <div className="flex min-h-0 flex-1">
-        <aside className="w-[96px] shrink-0 bg-[#f6f6f6] md:w-44">
+        <aside className="w-[96px] shrink-0 bg-[#f6f2ea] md:w-44">
           {productCategories.map((category) => {
             const selected = category.id === active;
             return (
@@ -48,10 +48,10 @@ export function CategoriesClient({ products }: { products: Product[] }) {
                 onClick={() => setActive(category.id)}
                 className={cn(
                   "relative flex h-12 w-full items-center justify-center text-[13px] md:justify-start md:px-5 md:text-[15px]",
-                  selected ? "bg-white font-medium text-[#c9a24a]" : "text-[#555]",
+                  selected ? "bg-white font-medium text-[#8a5a20]" : "text-[#555]",
                 )}
               >
-                {selected && <span className="absolute top-3 bottom-3 left-0 w-[3px] bg-[#c9a24a]" />}
+                {selected && <span className="absolute top-3 bottom-3 left-0 w-[3px] bg-[#8a5a20]" />}
                 {localized(locale, category.label, category.labelEn)}
               </button>
             );

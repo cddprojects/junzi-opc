@@ -20,6 +20,7 @@ export function VideoBlock({
         <video
           className="aspect-video w-full"
           controls
+          preload="none"
           poster={video.poster}
           src={video.videoUrl}
         />
@@ -31,7 +32,13 @@ export function VideoBlock({
     return (
       <div className="relative aspect-video overflow-hidden rounded-md bg-[#2a3340] text-white">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={video.poster} alt={video.title} className="absolute inset-0 size-full object-cover" />
+        <img
+          src={video.poster}
+          alt={video.title}
+          loading="lazy"
+          decoding="async"
+          className="absolute inset-0 size-full object-cover"
+        />
         <div className="absolute inset-0 bg-black/25" />
         <div className="relative z-10 flex h-full flex-col justify-end p-4">
           <p className="text-[18px] font-semibold md:text-[22px]">{video.overlay || video.title}</p>

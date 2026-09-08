@@ -15,7 +15,7 @@ export default async function SearchPage({
   const results = searchStoreProducts(q);
 
   return (
-    <div className="bg-[#f7f7f7] md:bg-transparent">
+    <div className="bg-[#f6f2ea] md:bg-transparent">
       <div className="bg-white md:rounded-2xl md:px-4">
         <SearchBox placeholder={t(locale, "searchCoursesOrProducts")} defaultValue={q} />
       </div>

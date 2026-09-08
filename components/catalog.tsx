@@ -2,7 +2,6 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { Megaphone, Plus, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { CoverArt } from "@/components/covers";
@@ -18,7 +17,7 @@ export function NoticeBar({ href, text }: { href: string; text: string }) {
   return (
     <Link
       href={href}
-      className="flex items-center gap-2 bg-[#f3f3f3] px-3 py-2 text-[12px] text-[#555] md:rounded-md md:px-4"
+      className="flex items-center gap-2 rounded-none bg-[#f7f1e4] px-4 py-2 text-[12px] text-[#6a5840] md:rounded-xl"
     >
       <Megaphone className="size-3.5 shrink-0 text-[#888]" />
       <span className="min-w-0 flex-1 truncate">{text}</span>
@@ -69,7 +68,12 @@ export function ProductRow({
   const href = `/product/${product.slug}`;
 
   return (
-    <Link href={href} className="relative z-10 flex gap-3 bg-white px-3 py-3" aria-label={title}>
+    <Link
+      href={href}
+      prefetch
+      className="relative z-10 flex cursor-pointer gap-3 bg-white px-3 py-3 transition duration-150 hover:bg-[#fffdf8] active:opacity-70"
+      aria-label={title}
+    >
       <span className="block w-[88px] shrink-0 overflow-hidden rounded-md">
         <CoverArt
           theme={product.cover}
@@ -119,7 +123,14 @@ export function CourseListCard({
   className?: string;
 }) {
   return (
-    <Link href={href} className={cn("block overflow-hidden rounded-md bg-white shadow-sm", className)}>
+    <Link
+      href={href}
+      prefetch
+      className={cn(
+        "block cursor-pointer overflow-hidden rounded-xl bg-white shadow-sm transition duration-150 hover:-translate-y-0.5 hover:shadow-md active:opacity-70",
+        className,
+      )}
+    >
       <CoverArt theme={cover} showVideoBadge />
       <div className="px-3 py-2.5">
         <h3 className="text-[15px] leading-6 font-medium">{title}</h3>
@@ -141,7 +152,7 @@ export function CategoryIcons({
 }) {
   const { locale } = useLocale();
   return (
-    <div className="grid grid-cols-5 bg-white px-1 py-3 md:rounded-xl md:px-6 md:py-6">
+    <div className="grid grid-cols-5 bg-white px-1 py-4 md:rounded-xl md:px-6 md:py-5">
       {items.map((item) => (
         <Link key={item.id} href={item.href} className="flex flex-col items-center gap-1.5">
           <span className="flex size-12 items-center justify-center overflow-hidden rounded-full bg-[#f4efe6] md:size-16">
@@ -208,7 +219,8 @@ export function ProductCard({ product }: { product: Product }) {
   return (
     <Link
       href={href}
-      className="relative z-10 block overflow-hidden rounded-xl bg-white shadow-sm"
+      prefetch
+      className="relative z-10 block cursor-pointer overflow-hidden rounded-xl bg-white shadow-sm transition duration-150 hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 active:opacity-70"
       aria-label={title}
     >
       <CoverArt
@@ -254,7 +266,6 @@ export function HomeCarousel({
 }: {
   slides: { id: string; href: string; theme?: CoverTheme; title: string; image?: string; priceCny?: number }[];
 }) {
-  const router = useRouter();
   const [index, setIndex] = React.useState(0);
   const slideLabel = useSlideLabel();
   const safeSlides = slides.length ? slides : [];
@@ -271,15 +282,15 @@ export function HomeCarousel({
   if (!slide) return null;
 
   return (
-    <div className="relative mx-3 overflow-hidden rounded-md md:mx-0 md:rounded-2xl">
-      <button type="button" className="block w-full text-left" onClick={() => router.push(slide.href)}>
+    <div className="relative mx-4 overflow-hidden rounded-xl md:mx-0 md:rounded-2xl">
+      <Link href={slide.href} prefetch className="block transition active:opacity-80">
         <CoverArt
           theme={slide.theme}
           image={slide.image}
           priceCny={slide.priceCny}
           className="aspect-[16/9] md:aspect-[21/8]"
         />
-      </button>
+      </Link>
       <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-1.5">
         {slides.map((item, i) => (
           <button
@@ -299,7 +310,11 @@ export function HomeCarousel({
 }
 
 export function SectionTitle({ children }: { children: React.ReactNode }) {
-  return <h2 className="px-3 pt-4 pb-2 text-[16px] font-semibold md:px-0 md:pt-8 md:text-[22px]">{children}</h2>;
+  return (
+    <h2 className="px-4 pt-6 pb-2 text-[16px] font-semibold tracking-tight text-[#3a2c10] md:px-0 md:pt-8 md:text-[20px]">
+      {children}
+    </h2>
+  );
 }
 
 export function EmptyHint({ children }: { children: React.ReactNode }) {

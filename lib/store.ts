@@ -1,6 +1,6 @@
 import "server-only";
 
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
+import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "fs";
 import path from "path";
 import {
   banners,
@@ -39,6 +39,14 @@ const DATA_DIR = path.join(process.cwd(), "data");
 const STORE_PATH = path.join(DATA_DIR, "store.json");
 export const UPLOAD_DIR = path.join(DATA_DIR, "uploads");
 const STORE_VERSION = 10;
+
+let storeCache: { mtimeMs: number; store: AppStore } | null = null;
+
+function rememberStore(store: AppStore, mtimeMs?: number) {
+  const stamp = mtimeMs ?? (existsSync(STORE_PATH) ? statSync(STORE_PATH).mtimeMs : Date.now());
+  storeCache = { mtimeMs: stamp, store };
+  return store;
+}
 
 function seedProduct(product: Product): Product {
   return ensureProductDetail(product);
@@ -261,8 +269,10 @@ export function readStore(): AppStore {
   if (!existsSync(STORE_PATH)) {
     const seeded = seedStore();
     writeFileSync(STORE_PATH, JSON.stringify(seeded, null, 2), "utf8");
-    return seeded;
+    return rememberStore(seeded);
   }
+  const mtimeMs = statSync(STORE_PATH).mtimeMs;
+  if (storeCache && storeCache.mtimeMs === mtimeMs) return storeCache.store;
   const parsed = JSON.parse(readFileSync(STORE_PATH, "utf8")) as AppStore;
   const migrated = migrateStore(parsed);
   const missingSeededEnglish = migrated.products.some(
@@ -274,30 +284,25 @@ export function readStore(): AppStore {
     missingSeededEnglish
   ) {
     writeFileSync(STORE_PATH, JSON.stringify(migrated, null, 2), "utf8");
+    return rememberStore(migrated);
   }
-  return migrated;
+  return rememberStore(migrated, mtimeMs);
 }
 
 export function writeStore(store: AppStore) {
   ensureDirs();
-  writeFileSync(
-    STORE_PATH,
-    JSON.stringify(
-      {
-        ...store,
-        version: STORE_VERSION,
-        products: store.products.map(ensureProductDetail),
-        users: store.users ?? [],
-        sessions: store.sessions ?? [],
-        orders: store.orders ?? [],
-        verifySecret: store.verifySecret || generateVerifySecret(),
-        settings: normalizeSettings(store.settings),
-      },
-      null,
-      2,
-    ),
-    "utf8",
-  );
+  const next: AppStore = {
+    ...store,
+    version: STORE_VERSION,
+    products: store.products.map(ensureProductDetail),
+    users: store.users ?? [],
+    sessions: store.sessions ?? [],
+    orders: store.orders ?? [],
+    verifySecret: store.verifySecret || generateVerifySecret(),
+    settings: normalizeSettings(store.settings),
+  };
+  writeFileSync(STORE_PATH, JSON.stringify(next, null, 2), "utf8");
+  rememberStore(next);
 }
 
 export function getCatalog() {
@@ -328,7 +333,22 @@ export function updateSettings(patch: Partial<StoreSettings>) {
 }
 
 export function getStoreProduct(slug: string) {
-  return getCatalog().products.find((item) => item.slug === slug);
+  return getProductPage(slug).product;
+}
+
+export function getProductPage(slug: string) {
+  const store = readStore();
+  const raw = store.products.find((item) => item.slug === slug);
+  return {
+    product: raw
+      ? {
+          ...ensureProductDetail(raw),
+          href: raw.href || `/product/${raw.slug}`,
+          shortTitle: raw.shortTitle || raw.title,
+        }
+      : undefined,
+    video: store.videos.find((item) => item.placement === "product-hero" && item.productSlug === slug),
+  };
 }
 
 export function searchStoreProducts(query: string) {

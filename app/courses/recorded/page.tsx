@@ -27,7 +27,8 @@ export default async function RecordedCoursesPage() {
               <Link
                 key={product.slug}
                 href={`/courses/recorded/${product.slug}`}
-                className="overflow-hidden rounded-xl bg-white shadow-sm"
+                prefetch
+                className="overflow-hidden rounded-xl bg-white shadow-sm transition duration-150 hover:-translate-y-0.5 hover:shadow-md active:opacity-70"
               >
                 <CoverArt theme={product.cover} image={product.coverImage} showVideoBadge />
                 <div className="px-4 py-3">

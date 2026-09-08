@@ -2,12 +2,12 @@
 
 import { CURRENCY_CODES, CURRENCY_META } from "@/lib/currency";
 import { useCurrency } from "@/components/currency-provider";
-import { useT } from "@/components/locale-provider";
+import { useLocale } from "@/components/locale-provider";
 import { cn } from "@/lib/utils";
 
 export function CurrencySwitcher({ compact }: { compact?: boolean }) {
   const { currency, setCurrency } = useCurrency();
-  const t = useT();
+  const { locale, t } = useLocale();
   return (
     <label className={cn("inline-flex items-center gap-1 text-[#444]", compact ? "text-[12px]" : "text-[13px]")}>
       {!compact && <span className="text-[#888]">{t("currency")}</span>}
@@ -22,7 +22,11 @@ export function CurrencySwitcher({ compact }: { compact?: boolean }) {
       >
         {CURRENCY_CODES.map((code) => (
           <option key={code} value={code}>
-            {compact ? `${CURRENCY_META[code].symbol} ${code}` : CURRENCY_META[code].label}
+            {compact
+              ? `${CURRENCY_META[code].symbol} ${code}`
+              : locale === "en"
+                ? CURRENCY_META[code].labelEn
+                : CURRENCY_META[code].label}
           </option>
         ))}
       </select>

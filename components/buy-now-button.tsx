@@ -1,7 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import type { Product } from "@/lib/data";
+import { useDemoStore } from "@/components/demo-store";
 import { useT } from "@/components/locale-provider";
 import { cn } from "@/lib/utils";
 
@@ -14,18 +14,19 @@ export function BuyNowButton({
   className?: string;
   children?: React.ReactNode;
 }) {
+  const { openPay } = useDemoStore();
   const t = useT();
-  const href = product ? `/checkout?slug=${encodeURIComponent(product.slug)}` : "/checkout";
 
   return (
-    <Link
-      href={href}
+    <button
+      type="button"
+      onClick={() => openPay(product)}
       className={cn(
-        "relative z-20 inline-flex cursor-pointer items-center justify-center rounded-md bg-[#fa3534] text-[15px] font-medium text-white hover:bg-[#e12f2e]",
+        "relative z-20 inline-flex cursor-pointer items-center justify-center rounded-lg bg-[#fa3534] text-[15px] font-medium text-white transition hover:bg-[#e12f2e] active:opacity-80",
         className,
       )}
     >
       {children || t("buyNow")}
-    </Link>
+    </button>
   );
 }

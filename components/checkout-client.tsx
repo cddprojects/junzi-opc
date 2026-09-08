@@ -10,7 +10,6 @@ import { useAuth } from "@/components/auth-provider";
 import { useCurrency } from "@/components/currency-provider";
 import { useDemoStore } from "@/components/demo-store";
 import { useLocale } from "@/components/locale-provider";
-import { Money } from "@/components/money";
 import { localized } from "@/lib/i18n";
 import { translateApiError } from "@/lib/messages";
 import { formatMoneyAmount, fromCny } from "@/lib/currency";
@@ -108,7 +107,7 @@ export function CheckoutClient({
   return (
     <div className="mx-auto max-w-md px-4 py-8 md:px-0">
       <div className="rounded-xl bg-white p-5 shadow-sm">
-        <h1 className="font-serif text-[22px]">{title}</h1>
+        <h1 className="font-serif text-[22px] text-[#3a2c10]">{title}</h1>
         <p className="mt-2 text-[13px] leading-6 text-[#666]">{body}</p>
         {items.length > 0 ? (
           <ul className="mt-4 space-y-2 text-[14px] text-[#333]">
@@ -117,7 +116,10 @@ export function CheckoutClient({
                 <span>
                   {localized(locale, item.title, item.titleEn)} × {item.qty || 1}
                 </span>
-                <Money cny={item.price * (item.qty || 1)} />
+                        {formatMoneyAmount(
+                          Math.round(fromCny(item.price * (item.qty || 1), "MYR", settings.fx) * 100) / 100,
+                          "MYR",
+                        )}
               </li>
             ))}
           </ul>

@@ -39,8 +39,8 @@ export default async function OrdersPage({
   const orders = filterOrders(all, tab);
 
   return (
-    <div className="px-3 py-4 md:px-0 md:py-2">
-      <div className="mx-auto max-w-2xl">
+    <div className="px-4 py-5 md:px-0 md:py-2">
+      <div className="mx-auto max-w-2xl md:rounded-2xl md:bg-white md:px-6 md:py-6">
         <h1 className="text-center text-[17px] font-medium md:text-left md:font-serif md:text-[24px]">{t(locale, "ordersList")}</h1>
 
         <nav className="-mx-1 mt-3 flex gap-1 overflow-x-auto px-1 text-[13px] md:mt-5 md:gap-4">
@@ -53,7 +53,7 @@ export default async function OrdersPage({
                 href={href}
                 className={cn(
                   "shrink-0 px-2 py-2",
-                  active ? "border-b-2 border-[#e08a2c] font-medium text-[#e08a2c]" : "text-[#888]",
+                  active ? "border-b-2 border-[#8a5a20] font-medium text-[#8a5a20]" : "text-[#888]",
                 )}
               >
                 {t(locale, TAB_KEYS[item.id])}

@@ -38,6 +38,7 @@ export function CoverArt({
   showPrice,
   priceLabel,
   priceCny,
+  priority,
 }: {
   theme?: CoverTheme;
   image?: string;
@@ -47,6 +48,7 @@ export function CoverArt({
   showPrice?: boolean;
   priceLabel?: string;
   priceCny?: number;
+  priority?: boolean;
 }) {
   const { format } = useCurrency();
   const resolvedCny = priceCny ?? (theme ? THEME_PRICE_CNY[theme] : undefined);
@@ -61,7 +63,14 @@ export function CoverArt({
     >
       {image ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={image} alt="" className="absolute inset-0 size-full object-cover" />
+        <img
+          src={image}
+          alt=""
+          loading={priority ? "eager" : "lazy"}
+          decoding="async"
+          fetchPriority={priority ? "high" : "auto"}
+          className="absolute inset-0 size-full object-cover"
+        />
       ) : (
         <>
           {theme === "qihang" && <QihangArt compact={compact} priceLabel={resolvedPrice} />}
