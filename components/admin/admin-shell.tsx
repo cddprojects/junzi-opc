@@ -15,6 +15,7 @@ const LINKS: { href: string; key: MessageKey }[] = [
   { href: "/admin/orders", key: "adminOrders" },
   { href: "/admin/users", key: "adminUsers" },
   { href: "/admin/currency", key: "adminCurrency" },
+  { href: "/admin/billplz", key: "adminBillplz" },
 ];
 
 export function AdminShell({ children }: { children: React.ReactNode }) {

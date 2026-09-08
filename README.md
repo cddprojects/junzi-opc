@@ -40,7 +40,7 @@ npm start
 | `NEXT_PUBLIC_APP_URL` | 站点绝对地址，例如 `https://your-domain.com`。用于 `callback_url` 与 `redirect_url` |
 | `ALLOW_DEMO_PAY` | 仅离线调试。默认关闭。设为 `true` 且未配置 Billplz 时，才允许不跳转网关直接发课程码 |
 
-把 `BILLPLZ_API_KEY`、`BILLPLZ_COLLECTION_ID`、`BILLPLZ_X_SIGNATURE_KEY` 写进服务器上的 `.env.local`（已 gitignore），或在 Cursor Cloud Agent 环境变量里用同样的名字配置。不要把真实密钥提交到 git，也不要贴进聊天。
+在后台 [/admin/billplz](http://127.0.0.1:43180/admin/billplz)（「Billplz 支付配置」）粘贴三项密钥并保存。会写入本机 `.env.local`（已 gitignore），结算立即读取，不必手改文件。不要把真实密钥提交到 git，也不要贴进聊天。
 
 4. 登录学员账号后结算：服务端按汇率把商品折成 **sen**（RM 分），`POST /api/v3/bills` 建单，再跳转到返回的账单页。
 5. Billplz 会：

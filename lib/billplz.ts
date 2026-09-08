@@ -1,5 +1,6 @@
 import "server-only";
 
+import { runtimeEnv } from "@/lib/env-local";
 import {
   flattenRedirectParams,
   verifyXSignature,
@@ -25,15 +26,15 @@ function truthy(value?: string | null) {
 }
 
 export function allowDemoPay() {
-  return truthy(process.env.ALLOW_DEMO_PAY);
+  return truthy(runtimeEnv("ALLOW_DEMO_PAY") || process.env.ALLOW_DEMO_PAY);
 }
 
 export function getBillplzConfig(): BillplzConfig | null {
-  const apiKey = process.env.BILLPLZ_API_KEY?.trim();
-  const collectionId = process.env.BILLPLZ_COLLECTION_ID?.trim();
-  const xSignatureKey = process.env.BILLPLZ_X_SIGNATURE_KEY?.trim();
+  const apiKey = runtimeEnv("BILLPLZ_API_KEY");
+  const collectionId = runtimeEnv("BILLPLZ_COLLECTION_ID");
+  const xSignatureKey = runtimeEnv("BILLPLZ_X_SIGNATURE_KEY");
   if (!apiKey || !collectionId || !xSignatureKey) return null;
-  const sandbox = truthy(process.env.BILLPLZ_SANDBOX);
+  const sandbox = truthy(runtimeEnv("BILLPLZ_SANDBOX"));
   return {
     apiKey,
     collectionId,
@@ -48,7 +49,7 @@ export function isBillplzConfigured() {
 }
 
 export function appBaseUrl(request?: Request) {
-  const fromEnv = process.env.NEXT_PUBLIC_APP_URL?.trim().replace(/\/$/, "");
+  const fromEnv = runtimeEnv("NEXT_PUBLIC_APP_URL").replace(/\/$/, "");
   if (fromEnv) return fromEnv;
   if (request) {
     const host = request.headers.get("x-forwarded-host") || request.headers.get("host");

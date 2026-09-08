@@ -2,10 +2,13 @@ import Link from "next/link";
 import { getCatalog } from "@/lib/store";
 import { listAllOrders, listCustomers } from "@/lib/user-store";
 import { isBillplzConfigured } from "@/lib/billplz";
+import { getRequestLocale } from "@/lib/i18n-server";
+import { t } from "@/lib/messages";
 
 export const dynamic = "force-dynamic";
 
-export default function AdminHomePage() {
+export default async function AdminHomePage() {
+  const locale = await getRequestLocale();
   const { products, posters, videos } = getCatalog();
   const users = listCustomers();
   const orders = listAllOrders();
@@ -14,15 +17,15 @@ export default function AdminHomePage() {
     <div>
       <h1 className="font-serif text-[26px]">内容概览</h1>
       <p className="mt-2 text-[14px] text-[#666]">前台首页、分类和详情会读取这里保存的数据。</p>
-      <p className="mt-3 rounded-xl bg-[#f8f1de] px-4 py-3 text-[13px] leading-6 text-[#5a3d14]">
-        Billplz：把 <code className="font-mono">BILLPLZ_API_KEY</code>、
-        <code className="font-mono">BILLPLZ_COLLECTION_ID</code>、
-        <code className="font-mono">BILLPLZ_X_SIGNATURE_KEY</code> 写进服务器上的{" "}
-        <code className="font-mono">.env.local</code>
-        （或 Cursor Cloud Agent 同名环境变量），不要提交到 git。当前{" "}
-        {billplzReady ? "已读取到三项密钥。" : "尚未配置三项密钥。"}
-        本地 <code className="font-mono">127.0.0.1</code> 收不到 Billplz callback，正式履约需要公网 HTTPS。
-      </p>
+      <Link
+        href="/admin/billplz"
+        className="mt-4 block rounded-xl border-2 border-[#8a5a20] bg-[#fffdf8] px-5 py-4"
+      >
+        <p className="text-[16px] font-semibold text-[#8a5a20]">{t(locale, "adminBillplz")}</p>
+        <p className="mt-1 text-[13px] leading-6 text-[#5a3d14]">
+          {billplzReady ? t(locale, "adminBillplzConfigured") : t(locale, "adminBillplzNotConfigured")}
+        </p>
+      </Link>
       <div className="mt-6 grid gap-4 md:grid-cols-3">
         {[
           { href: "/admin/products", label: "商品 / 课程", count: products.length },
@@ -31,6 +34,7 @@ export default function AdminHomePage() {
           { href: "/admin/users", label: "学员账号", count: users.length },
           { href: "/admin/orders", label: "订单 / 课程码", count: orders.length },
           { href: "/admin/currency", label: "货币 / 汇率", count: 4 },
+          { href: "/admin/billplz", label: t(locale, "adminBillplz"), count: billplzReady ? "ON" : "OFF" },
         ].map((card) => (
           <Link key={card.label} href={card.href} className="rounded-xl bg-white p-5">
             <p className="text-[13px] text-[#888]">{card.label}</p>
