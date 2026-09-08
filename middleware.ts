@@ -32,9 +32,10 @@ export async function middleware(request: NextRequest) {
   if (pathname.startsWith("/api/admin")) {
     return NextResponse.json({ error: "未登录" }, { status: 401 });
   }
-  const login = new URL("/admin/login", request.url);
-  login.searchParams.set("next", pathname);
-  return NextResponse.redirect(login);
+  const dest = `/admin/login?next=${encodeURIComponent(pathname)}`;
+  const response = new NextResponse(null, { status: 307 });
+  response.headers.set("Location", dest);
+  return response;
 }
 
 export const config = {

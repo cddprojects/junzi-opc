@@ -5,6 +5,7 @@ import {
   adminSessionCookieOptions,
   adminToken,
   safeAdminNext,
+  sameHostRedirect,
 } from "@/lib/auth";
 
 async function readLogin(request: Request) {
@@ -26,25 +27,22 @@ async function readLogin(request: Request) {
   };
 }
 
-function loginFail(request: Request, next: string, wantsJson: boolean) {
+function loginFail(next: string, wantsJson: boolean) {
   if (wantsJson) {
     return NextResponse.json({ error: "密码不正确" }, { status: 401 });
   }
-  const url = new URL("/admin/login", request.url);
-  url.searchParams.set("error", "1");
-  if (next !== "/admin") url.searchParams.set("next", next);
-  return NextResponse.redirect(url);
+  const query = new URLSearchParams({ error: "1" });
+  if (next !== "/admin") query.set("next", next);
+  return sameHostRedirect(`/admin/login?${query.toString()}`, 303);
 }
 
 export async function POST(request: Request) {
   const { password, next, wantsJson } = await readLogin(request);
   if (!password.trim() || password !== adminPassword()) {
-    return loginFail(request, next, wantsJson);
+    return loginFail(next, wantsJson);
   }
 
-  const response = wantsJson
-    ? NextResponse.json({ ok: true })
-    : NextResponse.redirect(new URL(next, request.url), 303);
+  const response = wantsJson ? NextResponse.json({ ok: true }) : sameHostRedirect(next, 303);
   response.cookies.set(ADMIN_COOKIE, await adminToken(), adminSessionCookieOptions(request));
   return response;
 }

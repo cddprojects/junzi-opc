@@ -1,3 +1,4 @@
+import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 
 export const ADMIN_COOKIE = "opc_admin_session";
@@ -71,4 +72,14 @@ export function clearAdminSessionCookieOptions() {
     path: "/",
     maxAge: 0,
   };
+}
+
+/** Stay on the browser host. request.url is 0.0.0.0 when the server binds there. */
+export function sameHostRedirect(path: string, status = 303) {
+  if (!path.startsWith("/") || path.startsWith("//")) {
+    path = "/admin";
+  }
+  const response = new NextResponse(null, { status });
+  response.headers.set("Location", path);
+  return response;
 }
