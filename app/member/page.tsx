@@ -1,6 +1,6 @@
 "use client";
 
-import { memberCheckoutItem, useDemoStore } from "@/components/demo-store";
+import Link from "next/link";
 import { useAuth } from "@/components/auth-provider";
 import { Money } from "@/components/money";
 import { membership } from "@/lib/data";
@@ -8,10 +8,8 @@ import { useLocale } from "@/components/locale-provider";
 import { localized } from "@/lib/i18n";
 
 export default function MemberPage() {
-  const { openPay } = useDemoStore();
   const { user } = useAuth();
   const { locale, t } = useLocale();
-  const buy = () => openPay(memberCheckoutItem());
   const title = localized(locale, membership.title, membership.titleEn);
   const campTitle = localized(locale, membership.campTitle, membership.campTitleEn);
 
@@ -69,13 +67,12 @@ export default function MemberPage() {
             <br />
             {t("memberHeroQuote2")}
           </p>
-          <button
-            type="button"
-            onClick={buy}
-            className="mt-5 w-full rounded-md bg-[#3a3a3a] py-2.5 text-[15px]"
+          <Link
+            href="/checkout?member=1"
+            className="mt-5 block w-full rounded-md bg-[#3a3a3a] py-2.5 text-center text-[15px]"
           >
             {t("buyNow")}
-          </button>
+          </Link>
         </div>
       </div>
     </div>

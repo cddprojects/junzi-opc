@@ -1,8 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import Link from "next/link";
 import type { Product } from "@/lib/data";
-import { useDemoStore } from "@/components/demo-store";
 import { useT } from "@/components/locale-provider";
 import { cn } from "@/lib/utils";
 
@@ -15,25 +14,18 @@ export function BuyNowButton({
   className?: string;
   children?: React.ReactNode;
 }) {
-  const { openPay } = useDemoStore();
   const t = useT();
-  const [busy, setBusy] = useState(false);
+  const href = product ? `/checkout?slug=${encodeURIComponent(product.slug)}` : "/checkout";
 
   return (
-    <button
-      type="button"
-      disabled={busy}
-      onClick={() => {
-        setBusy(true);
-        openPay(product);
-        window.setTimeout(() => setBusy(false), 600);
-      }}
+    <Link
+      href={href}
       className={cn(
-        "relative z-20 cursor-pointer rounded-md bg-[#fa3534] text-[15px] font-medium text-white hover:bg-[#e12f2e] disabled:opacity-70",
+        "relative z-20 inline-flex cursor-pointer items-center justify-center rounded-md bg-[#fa3534] text-[15px] font-medium text-white hover:bg-[#e12f2e]",
         className,
       )}
     >
-      {busy ? t("pleaseWait") : children || t("buyNow")}
-    </button>
+      {children || t("buyNow")}
+    </Link>
   );
 }

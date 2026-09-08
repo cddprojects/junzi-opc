@@ -9,7 +9,7 @@ import { useLocale } from "@/components/locale-provider";
 import { locProductTitle } from "@/lib/localize";
 
 export default function CartPage() {
-  const { cart, removeFromCart, openPay } = useDemoStore();
+  const { cart, removeFromCart } = useDemoStore();
   const { locale, t } = useLocale();
   const total = cart.reduce((sum, row) => sum + row.product.price * row.qty, 0);
 
@@ -47,13 +47,9 @@ export default function CartPage() {
                 <Money cny={total} />
               </span>
             </p>
-            <button
-              type="button"
-              onClick={() => openPay()}
-              className="rounded-md bg-[#fa3534] px-4 py-2 text-[14px] text-white"
-            >
+            <Link href="/checkout" className="rounded-md bg-[#fa3534] px-4 py-2 text-[14px] text-white">
               {t("checkout")}
-            </button>
+            </Link>
           </div>
         </div>
       )}
