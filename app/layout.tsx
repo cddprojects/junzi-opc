@@ -17,7 +17,7 @@ const sans = Noto_Sans_SC({
 const serif = Noto_Serif_SC({
   variable: "--font-serif",
   subsets: ["latin"],
-  weight: ["600", "700"],
+  weight: ["400", "500", "600", "700"],
 });
 
 export const metadata: Metadata = {

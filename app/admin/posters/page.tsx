@@ -12,30 +12,33 @@ export default function AdminPostersPage() {
   const { posters } = getCatalog();
   return (
     <div>
-      <div className="flex items-center justify-between">
-        <h1 className="font-serif text-[24px]">海报 / 轮播</h1>
-        <Link href="/admin/posters/new" className="rounded-md bg-[#8a5a20] px-3 py-2 text-[13px] text-white">
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1>海报 / 轮播</h1>
+          <p className="jx-lede">共 {posters.length} 张。</p>
+        </div>
+        <Link href="/admin/posters/new" className="jx-btn">
           新增海报
         </Link>
       </div>
-      <div className="mt-5 overflow-x-auto rounded-xl bg-white">
-        <table className="w-full text-left text-[13px]">
-          <thead className="border-b bg-[#faf6ee] text-[#777]">
+      <div className="jx-panel mt-5 overflow-x-auto">
+        <table className="jx-table">
+          <thead>
             <tr>
-              <th className="px-4 py-3">标题</th>
-              <th className="px-4 py-3">位置</th>
-              <th className="px-4 py-3">排序</th>
-              <th className="px-4 py-3"></th>
+              <th>标题</th>
+              <th>位置</th>
+              <th>排序</th>
+              <th></th>
             </tr>
           </thead>
           <tbody>
             {posters.map((poster) => (
-              <tr key={poster.id} className="border-b last:border-0">
-                <td className="px-4 py-3">{poster.title}</td>
-                <td className="px-4 py-3">{PLACES[poster.placement]}</td>
-                <td className="px-4 py-3">{poster.sort}</td>
-                <td className="px-4 py-3">
-                  <Link href={`/admin/posters/${poster.id}`} className="text-[#8a5a20]">
+              <tr key={poster.id}>
+                <td>{poster.title}</td>
+                <td>{PLACES[poster.placement]}</td>
+                <td>{poster.sort}</td>
+                <td>
+                  <Link href={`/admin/posters/${poster.id}`} className="jx-link">
                     编辑
                   </Link>
                 </td>

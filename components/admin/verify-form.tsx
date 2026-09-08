@@ -39,7 +39,7 @@ export function AdminVerifyForm() {
     <form onSubmit={onSubmit} className="mt-3 space-y-3">
       <div className="flex gap-2">
         <Input name="code" required placeholder="JX-XXXX-XXXX-XXXX-XXXX" className="h-9 font-mono" />
-        <Button type="submit" disabled={busy} className="bg-[#8a5a20] text-white hover:bg-[#6f4818]">
+        <Button type="submit" disabled={busy} className="jx-btn h-auto">
           {busy ? "…" : "核对"}
         </Button>
       </div>

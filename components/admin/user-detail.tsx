@@ -112,7 +112,7 @@ export function AdminUserDetail({
   return (
     <div className="space-y-6">
       <div>
-        <Link href="/admin/users" className="text-[13px] text-[#8a5a20]">
+        <Link href="/admin/users" className="jx-link">
           ← 返回学员列表
         </Link>
         <h1 className="mt-2 font-serif text-[26px]">{user.name}</h1>
@@ -125,7 +125,7 @@ export function AdminUserDetail({
       {error && <p className="text-[13px] text-[#fa3534]">{error}</p>}
       {saved && <p className="text-[13px] text-[#2f7d4a]">{saved}</p>}
 
-      <form onSubmit={saveProfile} className="space-y-3 rounded-xl bg-white p-5">
+      <form onSubmit={saveProfile} className="jx-panel space-y-3 p-5">
         <h2 className="font-medium">资料</h2>
         <label className="block text-[13px]">
           昵称
@@ -155,12 +155,12 @@ export function AdminUserDetail({
             className="mt-1 h-9 w-full rounded-md border px-3"
           />
         </label>
-        <button type="submit" disabled={busy} className="h-9 rounded-md bg-[#8a5a20] px-3 text-[13px] text-white">
+        <button type="submit" disabled={busy} className="jx-btn">
           保存资料
         </button>
       </form>
 
-      <form onSubmit={resetPassword} className="space-y-3 rounded-xl bg-white p-5">
+      <form onSubmit={resetPassword} className="jx-panel space-y-3 p-5">
         <h2 className="font-medium">重设密码</h2>
         <p className="text-[12px] text-[#888]">设置新密码后，该学员的前台会话会全部退出。</p>
         <input
@@ -171,12 +171,12 @@ export function AdminUserDetail({
           placeholder="至少 6 位"
           className="h-9 w-full rounded-md border px-3 text-[13px]"
         />
-        <button type="submit" disabled={busy} className="h-9 rounded-md bg-[#8a5a20] px-3 text-[13px] text-white">
+        <button type="submit" disabled={busy} className="jx-btn">
           设置新密码
         </button>
       </form>
 
-      <div className="rounded-xl bg-white p-5">
+      <div className="jx-panel p-5">
         <h2 className="font-medium">订单 / 课程码 / 学习权限</h2>
         <p className="mt-1 text-[12px] text-[#888]">购物车只存在学员浏览器里，后台看不到。</p>
         {user.orders.length === 0 ? (
@@ -216,7 +216,7 @@ export function AdminUserDetail({
             ))}
             <option value="member">君子小雅OPC年度会员</option>
           </select>
-          <button type="submit" disabled={busy} className="h-9 rounded-md bg-[#8a5a20] px-3 text-[13px] text-white">
+          <button type="submit" disabled={busy} className="jx-btn">
             授权课程并生成课程码
           </button>
         </form>

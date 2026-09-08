@@ -14,30 +14,33 @@ export default function AdminVideosPage() {
   const { videos } = getCatalog();
   return (
     <div>
-      <div className="flex items-center justify-between">
-        <h1 className="font-serif text-[24px]">视频</h1>
-        <Link href="/admin/videos/new" className="rounded-md bg-[#8a5a20] px-3 py-2 text-[13px] text-white">
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1>视频</h1>
+          <p className="jx-lede">共 {videos.length} 个。</p>
+        </div>
+        <Link href="/admin/videos/new" className="jx-btn">
           新增视频
         </Link>
       </div>
-      <div className="mt-5 overflow-x-auto rounded-xl bg-white">
-        <table className="w-full text-left text-[13px]">
-          <thead className="border-b bg-[#faf6ee] text-[#777]">
+      <div className="jx-panel mt-5 overflow-x-auto">
+        <table className="jx-table">
+          <thead>
             <tr>
-              <th className="px-4 py-3">标题</th>
-              <th className="px-4 py-3">位置</th>
-              <th className="px-4 py-3">关联</th>
-              <th className="px-4 py-3"></th>
+              <th>标题</th>
+              <th>位置</th>
+              <th>关联</th>
+              <th></th>
             </tr>
           </thead>
           <tbody>
             {videos.map((video) => (
-              <tr key={video.id} className="border-b last:border-0">
-                <td className="px-4 py-3">{video.title}</td>
-                <td className="px-4 py-3">{PLACES[video.placement]}</td>
-                <td className="px-4 py-3">{video.productSlug || "—"}</td>
-                <td className="px-4 py-3">
-                  <Link href={`/admin/videos/${video.id}`} className="text-[#8a5a20]">
+              <tr key={video.id}>
+                <td>{video.title}</td>
+                <td>{PLACES[video.placement]}</td>
+                <td>{video.productSlug || "—"}</td>
+                <td>
+                  <Link href={`/admin/videos/${video.id}`} className="jx-link">
                     编辑
                   </Link>
                 </td>

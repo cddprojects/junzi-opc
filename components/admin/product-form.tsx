@@ -100,7 +100,7 @@ export function ProductForm({ product }: { product?: Product }) {
   }
 
   return (
-    <form onSubmit={onSubmit} className="max-w-3xl space-y-5 rounded-xl bg-white p-5">
+    <form onSubmit={onSubmit} className="jx-panel max-w-3xl space-y-5 p-5">
       <div>
         <h2 className="font-serif text-[20px]">基本信息</h2>
         <p className="mt-1 text-[13px] leading-5 text-[#777]">
@@ -271,7 +271,7 @@ export function ProductForm({ product }: { product?: Product }) {
 
       {error && <p className="text-[13px] text-[#fa3534]">{error}</p>}
       <div className="flex flex-wrap gap-3">
-        <Button type="submit" disabled={busy} className="bg-[#8a5a20] text-white hover:bg-[#6f4818]">
+        <Button type="submit" disabled={busy} className="jx-btn h-auto hover:bg-[#8d3228]">
           {busy ? "保存中…" : product ? "保存" : "保存并上架"}
         </Button>
         {product && (

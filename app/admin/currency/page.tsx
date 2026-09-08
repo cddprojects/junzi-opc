@@ -40,8 +40,8 @@ export default function AdminCurrencyPage() {
 
   return (
     <form onSubmit={onSubmit} className="max-w-xl space-y-4">
-      <h1 className="font-serif text-[26px]">货币与汇率</h1>
-      <p className="text-[14px] text-[#666]">
+      <h1>货币与汇率</h1>
+      <p className="jx-lede">
         商品价格以人民币保存。前台按这里的汇率折算。填写「1 单位该货币 = 多少人民币」。
       </p>
       <label className="block text-[13px]">
@@ -60,7 +60,7 @@ export default function AdminCurrencyPage() {
           ))}
         </select>
       </label>
-      <div className="rounded-xl bg-white p-5">
+      <div className="jx-panel p-5">
         {CURRENCY_CODES.map((code) => (
           <label key={code} className="mb-3 flex items-center justify-between gap-3 text-[13px] last:mb-0">
             <span>
@@ -91,7 +91,7 @@ export default function AdminCurrencyPage() {
       <button
         type="submit"
         disabled={busy}
-        className="h-10 rounded-md bg-[#8a5a20] px-4 text-[14px] text-white disabled:opacity-60"
+        className="jx-btn h-10"
       >
         {busy ? "保存中…" : "保存汇率"}
       </button>

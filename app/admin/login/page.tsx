@@ -12,9 +12,5 @@ export default async function AdminLoginPage({
   const next = safeAdminNext(params.next ?? null);
   const wrongPassword = params.error === "1" || params.error === "password";
 
-  return (
-    <div className="flex min-h-[70vh] items-center justify-center">
-      <AdminLoginForm next={next} wrongPassword={wrongPassword} />
-    </div>
-  );
+  return <AdminLoginForm next={next} wrongPassword={wrongPassword} />;
 }

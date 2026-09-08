@@ -78,18 +78,12 @@ export function BillplzForm() {
 
   return (
     <form onSubmit={onSubmit} className="max-w-xl space-y-4">
-      <h1 className="font-serif text-[26px] text-[#3a2c10]">{t("adminBillplzTitle")}</h1>
-      <p className="text-[14px] leading-6 text-[#666]">{t("adminBillplzIntro")}</p>
-      <p
-        className={
-          status?.configured
-            ? "rounded-xl bg-[#e8f4ea] px-4 py-3 text-[13px] text-[#2f7d4a]"
-            : "rounded-xl bg-[#f8f1de] px-4 py-3 text-[13px] text-[#5a3d14]"
-        }
-      >
+      <h1>{t("adminBillplzTitle")}</h1>
+      <p className="jx-lede">{t("adminBillplzIntro")}</p>
+      <p className={status?.configured ? "jx-insight text-[var(--green)]" : "jx-insight"}>
         {status?.configured ? t("adminBillplzConfigured") : t("adminBillplzNotConfigured")}
       </p>
-      <p className="rounded-xl bg-white px-4 py-3 text-[13px] leading-6 text-[#5a3d14]">{t("adminBillplzCallbackNote")}</p>
+      <p className="jx-panel px-4 py-3 text-[13px] leading-6 text-[var(--ink-line)]">{t("adminBillplzCallbackNote")}</p>
 
       <label className="block text-[13px]">
         {t("adminBillplzApiKey")}
@@ -145,7 +139,7 @@ export function BillplzForm() {
       <button
         type="submit"
         disabled={busy}
-        className="h-10 rounded-md bg-[#8a5a20] px-4 text-[14px] text-white disabled:opacity-60"
+        className="jx-btn h-10"
       >
         {busy ? t("saving") : t("adminBillplzSave")}
       </button>

@@ -55,7 +55,7 @@ export function VideoForm({ video, products }: { video?: CatalogVideo; products:
   }
 
   return (
-    <form onSubmit={onSubmit} className="max-w-2xl space-y-4 rounded-xl bg-white p-5">
+    <form onSubmit={onSubmit} className="jx-panel max-w-2xl space-y-4 p-5">
       <label className="block text-[13px]">
         标题
         <Input name="title" required defaultValue={video?.title} className="mt-1 h-9" />
@@ -112,7 +112,7 @@ export function VideoForm({ video, products }: { video?: CatalogVideo; products:
       />
       {error && <p className="text-[13px] text-[#fa3534]">{error}</p>}
       <div className="flex gap-3">
-        <Button type="submit" disabled={busy} className="bg-[#8a5a20] text-white hover:bg-[#6f4818]">
+        <Button type="submit" disabled={busy} className="jx-btn h-auto">
           {busy ? "保存中…" : "保存"}
         </Button>
         {video && (
