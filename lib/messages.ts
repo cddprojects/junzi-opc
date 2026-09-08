@@ -83,7 +83,7 @@ export const zh = {
   videoBadge: "视频",
   free: "免费",
 
-  cartEmpty: "购物车是空的。可在课程卡片上点击红色 + 加入，登录后通过 Billplz 付款并获得课程码。",
+  cartEmpty: "购物车是空的。打开课程详情后点击立即购买，登录后通过 Billplz 付款并获得课程码。",
   qty: "数量 {n}",
   qtyLabel: "数量: {n}",
   total: "合计",
@@ -477,7 +477,7 @@ export const en: Record<MessageKey, string> = {
   videoBadge: "Video",
   free: "Free",
 
-  cartEmpty: "Your cart is empty. Tap the red + on a course card, then log in to pay with Billplz and get a course code.",
+  cartEmpty: "Your cart is empty. Open a course, tap Buy now, then log in to pay with Billplz and get a course code.",
   qty: "Qty {n}",
   qtyLabel: "Qty: {n}",
   total: "Total",

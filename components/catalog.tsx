@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import { Megaphone, Plus, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { CoverArt } from "@/components/covers";
-import { useDemoStore } from "@/components/demo-store";
 import { cn } from "@/lib/utils";
 import { Money } from "@/components/money";
 import { useCurrency } from "@/components/currency-provider";
@@ -64,13 +63,13 @@ export function ProductRow({
   product: Product;
   showOriginal?: boolean;
 }) {
-  const { addToCart } = useDemoStore();
   const { format } = useCurrency();
   const { locale, t } = useLocale();
+  const title = locProductTitle(product, locale);
 
   return (
-    <div className="flex gap-3 bg-white px-3 py-3">
-      <Link href={product.href} className="block w-[88px] shrink-0 overflow-hidden rounded-md">
+    <Link href={product.href} className="flex gap-3 bg-white px-3 py-3" aria-label={title}>
+      <span className="block w-[88px] shrink-0 overflow-hidden rounded-md">
         <CoverArt
           theme={product.cover}
           image={product.coverImage}
@@ -78,11 +77,9 @@ export function ProductRow({
           showPrice
           priceLabel={format(product.price)}
         />
-      </Link>
+      </span>
       <div className="min-w-0 flex-1">
-        <Link href={product.href} className="block text-[15px] leading-6 font-medium">
-          {locProductTitle(product, locale)}
-        </Link>
+        <p className="text-[15px] leading-6 font-medium">{title}</p>
         <div className="mt-5 flex items-end justify-between">
           <div>
             <p className="text-[18px] leading-none font-semibold text-[#fa3534]">
@@ -95,17 +92,15 @@ export function ProductRow({
             ) : null}
             <p className="mt-1 text-[11px] text-[#999]">{t("salesCount", { n: product.sales })}</p>
           </div>
-          <button
-            type="button"
-            onClick={() => addToCart(product)}
+          <span
             className="flex size-7 items-center justify-center rounded-full bg-[#fa3534] text-white"
-            aria-label={t("addToCart")}
+            aria-hidden
           >
             <Plus className="size-4" />
-          </button>
+          </span>
         </div>
       </div>
-    </div>
+    </Link>
   );
 }
 
@@ -204,24 +199,24 @@ function CategoryGlyph({ id }: { id: string }) {
 }
 
 export function ProductCard({ product }: { product: Product }) {
-  const { addToCart } = useDemoStore();
   const { format } = useCurrency();
   const { locale, t } = useLocale();
+  const title = locProductTitle(product, locale);
   const subtitle = locProductSubtitle(product, locale);
   return (
-    <div className="overflow-hidden rounded-xl bg-white shadow-sm">
-      <Link href={product.href}>
-        <CoverArt
-          theme={product.cover}
-          image={product.coverImage}
-          showPrice
-          priceLabel={format(product.price)}
-        />
-      </Link>
+    <Link
+      href={product.href}
+      className="block overflow-hidden rounded-xl bg-white shadow-sm"
+      aria-label={title}
+    >
+      <CoverArt
+        theme={product.cover}
+        image={product.coverImage}
+        showPrice
+        priceLabel={format(product.price)}
+      />
       <div className="p-4">
-        <Link href={product.href} className="block text-[16px] leading-6 font-medium">
-          {locProductTitle(product, locale)}
-        </Link>
+        <p className="text-[16px] leading-6 font-medium">{title}</p>
         {subtitle && <p className="mt-1 line-clamp-2 text-[13px] text-[#777]">{subtitle}</p>}
         <div className="mt-4 flex items-end justify-between">
           <div>
@@ -235,17 +230,15 @@ export function ProductCard({ product }: { product: Product }) {
             ) : null}
             <p className="mt-1 text-[12px] text-[#999]">{t("salesCount", { n: product.sales })}</p>
           </div>
-          <button
-            type="button"
-            onClick={() => addToCart(product)}
+          <span
             className="flex size-8 items-center justify-center rounded-full bg-[#fa3534] text-white"
-            aria-label={t("addToCart")}
+            aria-hidden
           >
             <Plus className="size-4" />
-          </button>
+          </span>
         </div>
       </div>
-    </div>
+    </Link>
   );
 }
 
