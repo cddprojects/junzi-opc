@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { requestAbsoluteUrl } from "@/lib/request-origin";
 
 const COOKIE = "opc_admin_session";
 
@@ -32,10 +33,8 @@ export async function middleware(request: NextRequest) {
   if (pathname.startsWith("/api/admin")) {
     return NextResponse.json({ error: "未登录" }, { status: 401 });
   }
-  const dest = `/admin/login?next=${encodeURIComponent(pathname)}`;
-  const response = new NextResponse(null, { status: 307 });
-  response.headers.set("Location", dest);
-  return response;
+  const login = requestAbsoluteUrl(request, `/admin/login?next=${encodeURIComponent(pathname)}`);
+  return NextResponse.redirect(login);
 }
 
 export const config = {
