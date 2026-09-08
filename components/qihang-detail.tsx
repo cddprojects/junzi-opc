@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { QihangHeroCover } from "@/components/covers";
 import { BuyBar } from "@/components/buy-bar";
+import { BuyNowButton } from "@/components/buy-now-button";
 import { VideoBlock } from "@/components/video-block";
 import { useDemoStore } from "@/components/demo-store";
 import { qihangDetail } from "@/lib/data";
@@ -35,7 +36,7 @@ const lessonIcons = {
 };
 
 export function QihangDetail({ product, video }: { product: Product; video?: CatalogVideo }) {
-  const { toggleFavorite, favorites, openPay } = useDemoStore();
+  const { toggleFavorite, favorites } = useDemoStore();
   const favored = favorites.includes(product.slug);
 
   return (
@@ -78,13 +79,7 @@ export function QihangDetail({ product, video }: { product: Product; video?: Cat
           {product.giftNote && <span className="rounded-full bg-[#fa3534] px-2 py-0.5 text-white">赠送</span>}
           <span className="text-[#555]">{product.giftNote}</span>
         </div>
-        <button
-          type="button"
-          onClick={() => openPay(product)}
-          className="mt-5 hidden h-11 w-full rounded-md bg-[#fa3534] text-white md:block md:max-w-xs"
-        >
-          立即购买
-        </button>
+        <BuyNowButton product={product} className="mt-5 h-11 w-full md:max-w-xs" />
       </div>
 
       <p className="py-3 text-center text-[12px] text-[#999]">—— 商品详情 ——</p>

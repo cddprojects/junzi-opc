@@ -17,7 +17,9 @@ import {
 } from "lucide-react";
 import { CoverArt, QihangHeroCover } from "@/components/covers";
 import { BuyBar } from "@/components/buy-bar";
+import { BuyNowButton } from "@/components/buy-now-button";
 import { VideoBlock } from "@/components/video-block";
+import { toast } from "sonner";
 import { useDemoStore } from "@/components/demo-store";
 import { emptyCourseDetail, hasDetailImages, hasStructuredOutline, normalizeDetailImages } from "@/lib/course";
 import type { CatalogVideo, CourseDetail, LessonIcon, Product } from "@/lib/data";
@@ -45,7 +47,7 @@ export function CourseDetailView({
   product: Product;
   video?: CatalogVideo;
 }) {
-  const { toggleFavorite, favorites, openPay } = useDemoStore();
+  const { toggleFavorite, favorites } = useDemoStore();
   const { locale, t } = useLocale();
   const favored = favorites.includes(product.slug);
   const view = localizeProduct(product, locale);
@@ -93,11 +95,23 @@ export function CourseDetailView({
           </div>
           <div className="mt-3 flex items-start justify-between gap-3">
             <h1 className="text-[18px] leading-7 font-semibold md:text-[26px]">{view.title}</h1>
-            <div className="flex shrink-0 gap-3 text-center text-[10px] text-[#888]">
-              <span className="flex flex-col items-center gap-0.5">
+            <div className="relative z-20 flex shrink-0 gap-3 text-center text-[10px] text-[#888]">
+              <button
+                type="button"
+                className="flex flex-col items-center gap-0.5"
+                onClick={async () => {
+                  const url = `${window.location.origin}/product/${product.slug}`;
+                  try {
+                    await navigator.clipboard.writeText(url);
+                    toast.success(t("copied"));
+                  } catch {
+                    toast.message(url);
+                  }
+                }}
+              >
                 <Share2 className="size-4" />
                 {t("share")}
-              </span>
+              </button>
               <button
                 type="button"
                 onClick={() => toggleFavorite(product.slug)}
@@ -116,13 +130,7 @@ export function CourseDetailView({
               <span className="text-[#555]">{view.giftNote}</span>
             </div>
           )}
-          <button
-            type="button"
-            onClick={() => openPay(product)}
-            className="mt-5 hidden h-11 w-full rounded-md bg-[#fa3534] text-white md:block"
-          >
-            {t("buyNow")}
-          </button>
+          <BuyNowButton product={product} className="mt-5 h-11 w-full" />
         </div>
       </div>
 

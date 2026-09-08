@@ -5,7 +5,6 @@ import {
   HomeCarousel,
   NoticeBar,
   ProductCard,
-  ProductRow,
   SearchBox,
   SectionTitle,
 } from "@/components/catalog";
@@ -77,14 +76,7 @@ export default async function HomePage() {
         )}
       </div>
       <SectionTitle>{t(locale, "homeJoin")}</SectionTitle>
-      <div className="mx-3 overflow-hidden rounded-md bg-white md:hidden">
-        {joinProducts.map((product, index) => (
-          <div key={product.slug} className={index > 0 ? "border-t border-[#f2f2f2]" : undefined}>
-            <ProductRow product={product} />
-          </div>
-        ))}
-      </div>
-      <div className="hidden gap-5 md:grid md:grid-cols-3">
+      <div id="join-opc" className="mx-3 grid grid-cols-1 gap-4 md:mx-0 md:grid-cols-3 md:gap-5">
         {joinProducts.map((product) => (
           <ProductCard key={product.slug} product={product} />
         ))}

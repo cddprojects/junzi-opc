@@ -66,9 +66,10 @@ export function ProductRow({
   const { format } = useCurrency();
   const { locale, t } = useLocale();
   const title = locProductTitle(product, locale);
+  const href = `/product/${product.slug}`;
 
   return (
-    <Link href={product.href} className="flex gap-3 bg-white px-3 py-3" aria-label={title}>
+    <Link href={href} className="relative z-10 flex gap-3 bg-white px-3 py-3" aria-label={title}>
       <span className="block w-[88px] shrink-0 overflow-hidden rounded-md">
         <CoverArt
           theme={product.cover}
@@ -203,10 +204,11 @@ export function ProductCard({ product }: { product: Product }) {
   const { locale, t } = useLocale();
   const title = locProductTitle(product, locale);
   const subtitle = locProductSubtitle(product, locale);
+  const href = `/product/${product.slug}`;
   return (
     <Link
-      href={product.href}
-      className="block overflow-hidden rounded-xl bg-white shadow-sm"
+      href={href}
+      className="relative z-10 block overflow-hidden rounded-xl bg-white shadow-sm"
       aria-label={title}
     >
       <CoverArt

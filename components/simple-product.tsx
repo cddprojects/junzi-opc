@@ -3,6 +3,7 @@
 import { Share2, Star } from "lucide-react";
 import { CoverArt } from "@/components/covers";
 import { BuyBar } from "@/components/buy-bar";
+import { BuyNowButton } from "@/components/buy-now-button";
 import { VideoBlock } from "@/components/video-block";
 import { useDemoStore } from "@/components/demo-store";
 import { Money } from "@/components/money";
@@ -17,7 +18,7 @@ export function SimpleProductDetail({
   product: Product;
   video?: CatalogVideo;
 }) {
-  const { toggleFavorite, favorites, openPay } = useDemoStore();
+  const { toggleFavorite, favorites } = useDemoStore();
   const favored = favorites.includes(product.slug);
 
   return (
@@ -64,13 +65,7 @@ export function SimpleProductDetail({
         {product.description && (
           <p className="mt-3 text-[13px] leading-6 text-[#555] whitespace-pre-wrap">{product.description}</p>
         )}
-        <button
-          type="button"
-          onClick={() => openPay(product)}
-          className="mt-5 hidden h-11 rounded-md bg-[#fa3534] px-8 text-white md:inline-flex md:items-center"
-        >
-          立即购买
-        </button>
+        <BuyNowButton product={product} className="mt-5 h-11 w-full md:w-auto md:px-8" />
       </div>
 
       <p className="py-3 text-center text-[12px] text-[#999]">—— 商品详情 ——</p>

@@ -11,15 +11,6 @@ import { useAuth } from "@/components/auth-provider";
 import { useCurrency } from "@/components/currency-provider";
 import { Money } from "@/components/money";
 import { CopyCode } from "@/components/copy-code";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { useLocale } from "@/components/locale-provider";
 import { locProductShort } from "@/lib/localize";
 import { localized } from "@/lib/i18n";
@@ -70,7 +61,20 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
     setResult(null);
     setError("");
     setBusy(false);
+    if (typeof document !== "undefined") {
+      document.body.removeAttribute("inert");
+      document.documentElement.removeAttribute("inert");
+      document.querySelectorAll("[data-slot='dialog-overlay'], [data-slot='dialog-content']").forEach((node) => {
+        node.parentElement?.removeChild(node);
+      });
+    }
   }, []);
+
+  React.useEffect(() => {
+    if (visible) return;
+    document.body.removeAttribute("inert");
+    document.documentElement.removeAttribute("inert");
+  }, [visible]);
 
   function goAuth(mode: "login" | "register") {
     const next = pathname === "/" ? "/cart" : pathname;
@@ -105,7 +109,7 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
         const nextItems = resolvePayItems(target, cart);
         setItems(nextItems);
         setResult(null);
-        setError("");
+        setError(nextItems.length ? "" : t("pickCourse"));
         setOpenedOn(pathname);
         fetch("/api/pay/config")
           .then((res) => res.json())
@@ -169,22 +173,23 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
     <StoreContext.Provider value={value}>
       {children}
       {visible ? (
-        <Dialog
-          key={pathname}
-          open
-          disablePointerDismissal={false}
-          onOpenChange={(next) => {
-            if (!next) closePay();
-          }}
-        >
-          <DialogContent className="max-w-[360px]">
+        <div className="fixed inset-0 z-[80] flex items-center justify-center p-4">
+          <button
+            type="button"
+            className="absolute inset-0 bg-black/40"
+            aria-label={t("close")}
+            onClick={closePay}
+          />
+          <div
+            role="dialog"
+            aria-modal="true"
+            className="relative z-10 w-full max-w-[360px] rounded-xl bg-white p-4 shadow-xl"
+          >
             {result ? (
               <>
-                <DialogHeader>
-                  <DialogTitle>{t("paySuccess")}</DialogTitle>
-                  <DialogDescription>{t("paySuccessBody")}</DialogDescription>
-                </DialogHeader>
-                <div className="space-y-3">
+                <h2 className="text-[16px] font-medium">{t("paySuccess")}</h2>
+                <p className="mt-2 text-[13px] text-[#666]">{t("paySuccessBody")}</p>
+                <div className="mt-3 space-y-3">
                   {result.map((order) => (
                     <div key={order.id} className="rounded-lg bg-[#faf6ee] px-3 py-3">
                       <p className="text-[13px]">{order.productTitle}</p>
@@ -197,7 +202,7 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
                     </div>
                   ))}
                 </div>
-                <DialogFooter className="flex-col gap-2 sm:flex-col">
+                <div className="mt-4 flex flex-col gap-2">
                   <Link
                     href={result[0] ? `/orders/${result[0].id}` : "/orders"}
                     onClick={closePay}
@@ -212,27 +217,25 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
                   >
                     {t("verifyCode")}
                   </Link>
-                  <Button variant="ghost" onClick={closePay}>
+                  <button type="button" onClick={closePay} className="w-full py-2 text-[13px] text-[#666]">
                     {t("close")}
-                  </Button>
-                </DialogFooter>
+                  </button>
+                </div>
               </>
             ) : (
               <>
-                <DialogHeader>
-                  <DialogTitle>
-                    {!loading && !user ? t("payNeedLogin") : t("payConfirm")}
-                  </DialogTitle>
-                  <DialogDescription>
-                    {!loading && !user
-                      ? t("payNeedLoginBody")
-                      : payConfig && !canPay
-                        ? t("billplzNotConfigured")
-                        : t("payConfirmBody")}
-                  </DialogDescription>
-                </DialogHeader>
+                <h2 className="text-[16px] font-medium">
+                  {!loading && !user ? t("payNeedLogin") : t("payConfirm")}
+                </h2>
+                <p className="mt-2 text-[13px] text-[#666]">
+                  {!loading && !user
+                    ? t("payNeedLoginBody")
+                    : payConfig && !canPay
+                      ? t("billplzNotConfigured")
+                      : t("payConfirmBody")}
+                </p>
                 {items.length > 0 && (
-                  <ul className="space-y-1 text-[13px] text-[#555]">
+                  <ul className="mt-3 space-y-1 text-[13px] text-[#555]">
                     {items.map((item) => (
                       <li key={item.slug} className="flex items-center justify-between gap-2">
                         <span>
@@ -244,14 +247,14 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
                   </ul>
                 )}
                 {items.length > 0 ? (
-                  <p className="rounded-md bg-[#faf6ee] px-3 py-2 text-[13px] text-[#5a3d14]">
+                  <p className="mt-3 rounded-md bg-[#faf6ee] px-3 py-2 text-[13px] text-[#5a3d14]">
                     {t("billplzChargeLine", { amount: chargeLabel })}
                   </p>
                 ) : null}
-                {error && <p className="text-[13px] text-[#fa3534]">{error}</p>}
-                <DialogFooter>
+                {error ? <p className="mt-2 text-[13px] text-[#fa3534]">{error}</p> : null}
+                <div className="mt-4 flex flex-col gap-2">
                   {!loading && !user ? (
-                    <div className="flex w-full flex-col gap-2">
+                    <>
                       <button
                         type="button"
                         onClick={() => goAuth("login")}
@@ -266,21 +269,25 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
                       >
                         {t("registerAccount")}
                       </button>
-                    </div>
+                    </>
                   ) : (
-                    <Button
-                      className="w-full bg-[#fa3534] text-white hover:bg-[#e12f2e]"
+                    <button
+                      type="button"
+                      className="w-full rounded-md bg-[#fa3534] py-2 text-[13px] text-white disabled:opacity-60"
                       disabled={busy || loading || (payConfig != null && !canPay)}
                       onClick={confirmPay}
                     >
                       {payLabel}
-                    </Button>
+                    </button>
                   )}
-                </DialogFooter>
+                  <button type="button" onClick={closePay} className="w-full py-2 text-[13px] text-[#666]">
+                    {t("close")}
+                  </button>
+                </div>
               </>
             )}
-          </DialogContent>
-        </Dialog>
+          </div>
+        </div>
       ) : null}
     </StoreContext.Provider>
   );

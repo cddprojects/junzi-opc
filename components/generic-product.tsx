@@ -3,6 +3,7 @@
 import { Share2, Star } from "lucide-react";
 import { CoverArt } from "@/components/covers";
 import { BuyBar } from "@/components/buy-bar";
+import { BuyNowButton } from "@/components/buy-now-button";
 import { VideoBlock } from "@/components/video-block";
 import { useDemoStore } from "@/components/demo-store";
 import { Money } from "@/components/money";
@@ -16,7 +17,7 @@ export function GenericProductDetail({
   product: Product;
   video?: CatalogVideo;
 }) {
-  const { toggleFavorite, favorites, openPay } = useDemoStore();
+  const { toggleFavorite, favorites } = useDemoStore();
   const favored = favorites.includes(product.slug);
   const lessons = (product.outline || "")
     .split("\n")
@@ -55,13 +56,7 @@ export function GenericProductDetail({
             </button>
           </div>
           {product.subtitle && <p className="mt-2 text-[13px] text-[#666]">{product.subtitle}</p>}
-          <button
-            type="button"
-            onClick={() => openPay(product)}
-            className="mt-6 hidden h-11 w-full rounded-md bg-[#fa3534] text-[15px] text-white md:block"
-          >
-            立即购买
-          </button>
+          <BuyNowButton product={product} className="mt-6 h-11 w-full" />
         </div>
       </div>
 
