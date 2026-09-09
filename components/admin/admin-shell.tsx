@@ -254,7 +254,10 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           </div>
           {renderNav(sideCollapsed)}
           <div className="admin-side-foot admin-side-footer">
-            <AdminLocaleSwitch compact={sideCollapsed} />
+            <AdminLocaleSwitch
+              key={sideCollapsed ? "rail" : "segmented"}
+              variant={sideCollapsed ? "rail" : "segmented"}
+            />
             <Link
               href="/"
               aria-label={t("adminFront")}
@@ -319,7 +322,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
             </button>
             <p className="jx-serif text-[17px]">{t("adminBrand")}</p>
             <div className="flex items-center gap-3 text-[13px] text-[var(--paper-mute)]">
-              <AdminLocaleSwitch compact />
+              <AdminLocaleSwitch />
               <Link href="/">{t("adminFrontShort")}</Link>
             </div>
           </div>

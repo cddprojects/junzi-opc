@@ -57,8 +57,10 @@
 .admin-side {
   display: none;
   box-sizing: border-box;
+  flex: 0 0 230px;
   width: 230px;
-  flex-shrink: 0;
+  min-width: 230px;
+  max-width: 230px;
   flex-direction: column;
   background: var(--ink);
   color: var(--paper-text);
@@ -80,7 +82,10 @@
     left: 0;
     z-index: 40;
     display: flex;
+    flex: 0 0 230px;
     width: 230px;
+    min-width: 230px;
+    max-width: 230px;
     height: 100dvh;
     overflow: visible;
     transition: width var(--motion-sidebar) var(--ease-standard);
@@ -97,7 +102,10 @@
   }
 
   .admin-frame.is-collapsed .admin-side {
+    flex: 0 0 72px;
     width: 72px;
+    min-width: 72px;
+    max-width: 72px;
   }
 
   .admin-frame.is-collapsed .admin-main {
@@ -117,14 +125,20 @@
   }
 
   .admin-frame.is-collapsed .admin-nav {
+    align-items: center;
     overflow-x: hidden;
     overflow-y: auto;
     scrollbar-gutter: stable;
-    padding: 4px 8px 8px;
+    padding: 4px 0 8px;
   }
 
   .admin-frame.is-collapsed .admin-nav a.is-icon {
-    padding: 7px 6px;
+    box-sizing: border-box;
+    width: 44px;
+    min-width: 44px;
+    height: 44px;
+    min-height: 44px;
+    padding: 0;
   }
 }
 
@@ -378,6 +392,7 @@
   .admin-nav-chevron,
   .admin-nav-items,
   .admin-nav-items a,
+  .admin-locale-thumb,
   .admin-locale-trigger,
   .admin-locale-pop-wrap,
   .admin-locale-pop,
@@ -402,6 +417,7 @@
 .admin-side-foot {
   display: flex;
   flex-direction: column;
+  flex-shrink: 0;
   gap: 6px;
   padding: 16px 22px 24px;
   font-size: 13px;
@@ -410,33 +426,93 @@
 
 .admin-frame.is-collapsed .admin-side-foot {
   align-items: center;
-  padding: 16px 8px 24px;
+  gap: 6px;
+  padding: 12px 8px 16px;
+  border-top: 1px solid rgb(255 255 255 / 8%);
 }
 
 .admin-side-foot .admin-locale {
   align-self: flex-start;
-  margin-bottom: 22px;
+  margin-bottom: 21px;
 }
 
 .admin-frame.is-collapsed .admin-side-foot .admin-locale {
   align-self: center;
-  margin-bottom: 22px;
+  margin-bottom: 6px;
 }
 
 .admin-locale {
   position: relative;
   display: inline-flex;
   width: max-content;
+  max-width: max-content;
+}
+
+.admin-locale.is-segmented {
+  height: 46px;
+  align-items: stretch;
+  padding: 4px;
+  border: 1px solid rgb(255 255 255 / 14%);
+  border-radius: 999px;
+  background: #161a17;
+}
+
+.admin-locale-thumb {
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  left: 4px;
+  width: calc(50% - 4px);
+  border-radius: 999px;
+  background: #f4efe4;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 22%);
+  transition: transform var(--motion-base) var(--ease-standard);
+}
+
+.admin-locale.is-segmented[data-locale="zh"] .admin-locale-thumb {
+  transform: translateX(100%);
+}
+
+.admin-locale.is-segmented button,
+.admin-side-foot .admin-locale.is-segmented button {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 54px;
+  min-width: 50px;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: #a9a392;
+  font-size: 13px;
+  line-height: 1;
+  text-align: center;
+}
+
+.admin-locale.is-segmented button.is-on,
+.admin-side-foot .admin-locale.is-segmented button.is-on {
+  background: transparent;
+  color: #1e2420;
+}
+
+.admin-locale.is-segmented button:hover:not(.is-on),
+.admin-side-foot .admin-locale.is-segmented button:hover:not(.is-on) {
+  color: var(--paper-text);
+  background: transparent;
 }
 
 .admin-locale-trigger,
-.admin-side-foot .admin-locale-trigger,
-.admin-mobile-bar .admin-locale-trigger {
+.admin-side-foot .admin-locale-trigger {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
+  box-sizing: border-box;
+  width: 44px;
+  height: 44px;
   padding: 0;
   border: 1px solid rgb(255 255 255 / 14%);
   border-radius: 8px;
@@ -446,11 +522,6 @@
     color var(--motion-hover) var(--ease-standard),
     background-color var(--motion-hover) var(--ease-standard),
     border-color var(--motion-hover) var(--ease-standard);
-}
-
-.admin-locale.is-compact .admin-locale-trigger {
-  width: 32px;
-  height: 32px;
 }
 
 .admin-locale-trigger:hover,
@@ -464,76 +535,77 @@
 
 .admin-locale-pop-wrap {
   position: fixed;
-  left: var(--pop-left, 0);
+  left: var(--pop-left, 80px);
   top: var(--pop-top, auto);
-  bottom: var(--pop-bottom, auto);
   z-index: 90;
-  transition: opacity var(--motion-base) var(--ease-standard);
-}
-
-.admin-locale-pop-wrap[data-motion="closed"] {
-  opacity: 0;
-  pointer-events: none;
-}
-
-.admin-locale-pop {
-  min-width: 156px;
-  padding: 6px;
-  border: 1px solid var(--ink-line);
-  border-radius: 10px;
-  background: #161b18;
-  box-shadow: 0 12px 28px rgb(0 0 0 / 32%);
+  transform-origin: left center;
   transition:
     opacity var(--motion-base) var(--ease-standard),
     transform var(--motion-base) var(--ease-standard);
 }
 
-.admin-locale-pop-wrap[data-motion="open"] .admin-locale-pop {
-  animation: opc-drop-in var(--motion-base) var(--ease-standard);
+.admin-locale-pop-wrap[data-motion="open"] {
+  opacity: 1;
+  transform: translateX(0) scale(1);
 }
 
-.admin-locale-pop-wrap[data-motion="closed"] .admin-locale-pop {
+.admin-locale-pop-wrap[data-motion="closed"] {
   opacity: 0;
-  transform: translateY(4px) scale(0.985);
+  pointer-events: none;
+  transform: translateX(-3px) scale(0.985);
 }
 
-.admin-locale-pop button,
-.admin-side-foot .admin-locale-pop button {
+.admin-locale-pop {
+  box-sizing: border-box;
+  width: 160px;
+  padding: 6px;
+  border: 1px solid rgb(232 220 196 / 12%);
+  border-radius: 12px;
+  background: #121614;
+  box-shadow: 0 12px 28px rgb(0 0 0 / 32%);
+}
+
+.admin-locale-pop button {
   display: flex;
   width: 100%;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
+  gap: 12px;
   min-height: 36px;
   padding: 8px 10px;
   border: 0;
-  border-radius: 6px;
+  border-radius: 8px;
   background: transparent;
   color: var(--paper-mute);
   font-size: 13px;
   text-align: left;
 }
 
-.admin-locale-pop button:hover,
-.admin-side-foot .admin-locale-pop button:hover {
+.admin-locale-pop button:hover {
   background: rgb(255 255 255 / 6%);
   color: var(--paper-text);
 }
 
-.admin-locale-pop button.is-on,
-.admin-side-foot .admin-locale-pop button.is-on {
-  background: rgb(255 255 255 / 6%);
+.admin-locale-pop button.is-on {
+  background: transparent;
   color: var(--paper-text);
 }
 
-.admin-locale-pop span,
-.admin-side-foot .admin-locale-pop span {
+.admin-locale-pop span {
   color: inherit !important;
 }
 
-.admin-locale-check-gap {
-  width: 14px;
-  height: 14px;
+.admin-locale-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: transparent;
+  box-shadow: inset 0 0 0 1px rgb(237 231 216 / 28%);
+}
+
+.admin-locale-dot.is-on {
+  background: #f4efe4;
+  box-shadow: none;
 }
 
 .admin-side-foot a,
@@ -553,8 +625,8 @@
 }
 
 .admin-side-foot .admin-locale-trigger.is-icon {
-  width: 32px;
-  height: 32px;
+  width: 44px;
+  height: 44px;
   padding: 0;
 }
 
