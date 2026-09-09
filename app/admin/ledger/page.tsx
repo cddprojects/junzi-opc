@@ -55,19 +55,28 @@ export default async function AdminLedgerPage() {
                 rows.map((row, index) => {
                   const status = commissionUiStatus(row);
                   return (
-                    <tr key={row.id} className={index === 0 ? "jx-group-start" : "jx-group-cont"}>
+                    <tr
+                      key={row.id}
+                      className={[
+                        index === 0 ? "jx-group-start" : "jx-group-cont",
+                        index === rows.length - 1 ? "jx-group-end" : "",
+                      ]
+                        .filter(Boolean)
+                        .join(" ")}
+                    >
                       {index === 0 ? (
-                        <td rowSpan={rows.length} className="align-top">
-                          <p className="font-medium">{row.buyerName || "—"}</p>
-                          {row.orderTitle ? (
-                            <span className="block text-[12px] text-[var(--mute)]">{row.orderTitle}</span>
-                          ) : null}
-                          {row.orderId ? (
-                            <span className="block text-[12px] text-[var(--mute)]">{row.orderId}</span>
-                          ) : null}
-                          <span className="block text-[12px] text-[var(--mute)]">
+                        <td rowSpan={rows.length} className="jx-buyer-cell">
+                          <p className="jx-buyer-name">{row.buyerName || "—"}</p>
+                          {row.orderTitle ? <p className="jx-buyer-meta">{row.orderTitle}</p> : null}
+                          <p className="jx-buyer-meta">
                             {new Date(row.createdAt).toLocaleDateString(locale === "en" ? "en-MY" : "zh-CN")}
-                          </span>
+                            {row.orderId ? (
+                              <span className="jx-mono" title={row.orderId}>
+                                {" "}
+                                {row.orderId.replace(/^ord_/, "").slice(0, 8)}
+                              </span>
+                            ) : null}
+                          </p>
                         </td>
                       ) : null}
                       <td>

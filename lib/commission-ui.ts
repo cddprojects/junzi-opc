@@ -68,7 +68,7 @@ export function orderCommissionSummary(order: {
     return { kind: "none" as const, text: "无佣金" };
   }
   const sen = credited.reduce((sum, row) => sum + (row.amountSen || 0), 0);
-  return { kind: "ready" as const, text: `${credited.length}人 · ${formatMyrSen(sen)} ›` };
+  return { kind: "ready" as const, text: `${credited.length}人 · ${formatMyrSen(sen)}` };
 }
 
 export function t4Plus(genealogy?: GenealogyPerson[]) {

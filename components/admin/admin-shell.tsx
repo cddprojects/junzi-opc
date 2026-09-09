@@ -155,16 +155,18 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
 
   function renderLink(link: NavLink, compact: boolean) {
     const Icon = link.icon;
+    const label = t(link.key);
     return (
       <Link
         key={link.href}
         href={link.href}
-        title={compact ? t(link.key) : undefined}
+        aria-label={compact ? label : undefined}
+        data-tip={compact ? label : undefined}
         onClick={() => setMobileOpen(false)}
         className={cn(compact && "is-icon", isActive(pathname, link.href) && "is-active")}
       >
         <Icon size={16} strokeWidth={1.75} />
-        {!compact && <span>{t(link.key)}</span>}
+        {!compact && <span>{label}</span>}
       </Link>
     );
   }
@@ -174,7 +176,8 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
       <nav className="admin-nav">
         <Link
           href="/admin"
-          title={compact ? t("adminOverview") : undefined}
+          aria-label={compact ? t("adminOverview") : undefined}
+          data-tip={compact ? t("adminOverview") : undefined}
           onClick={() => setMobileOpen(false)}
           className={cn(compact && "is-icon", isActive(pathname, "/admin") && "is-active")}
         >
@@ -199,7 +202,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
                   >
                     <span>{t(group.label)}</span>
                     <span className="admin-nav-chevron" aria-hidden>
-                      {expanded ? "▾" : "▸"}
+                      {expanded ? "–" : "+"}
                     </span>
                   </button>
                   {expanded ? <div className="admin-nav-items">{group.links.map((link) => renderLink(link, false))}</div> : null}
@@ -230,21 +233,48 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           {renderNav(sideCollapsed)}
           <div className="admin-side-foot">
             {!sideCollapsed ? <LocaleSwitcher /> : null}
-            <Link href="/" title={t("adminFront")} className={cn(sideCollapsed && "is-icon")}>
+            <Link
+              href="/"
+              aria-label={t("adminFront")}
+              data-tip={sideCollapsed ? t("adminFront") : undefined}
+              className={cn(sideCollapsed && "is-icon")}
+            >
               <Home size={16} strokeWidth={1.75} />
               {!sideCollapsed && <span>{t("adminFront")}</span>}
             </Link>
-            <button type="button" onClick={logout} title={t("adminLogout")} className={cn(sideCollapsed && "is-icon")}>
+            <button
+              type="button"
+              onClick={logout}
+              aria-label={t("adminLogout")}
+              data-tip={sideCollapsed ? t("adminLogout") : undefined}
+              className={cn(sideCollapsed && "is-icon")}
+            >
               <LogOut size={16} strokeWidth={1.75} />
               {!sideCollapsed && <span>{t("adminLogout")}</span>}
             </button>
+            {sideCollapsed ? (
+              <button
+                type="button"
+                className="admin-side-reopen is-icon"
+                onClick={toggleSide}
+                aria-label={t("adminSideExpand")}
+                data-tip={t("adminSideExpand")}
+              >
+                <PanelLeftOpen size={16} />
+              </button>
+            ) : null}
           </div>
         </aside>
 
         {mobileOpen ? (
-          <div className="admin-drawer-root admin-nav-drawer">
+          <div
+            className="admin-drawer-root admin-nav-drawer"
+            onKeyDown={(event) => {
+              if (event.key === "Escape") setMobileOpen(false);
+            }}
+          >
             <button type="button" className="admin-drawer-mask" aria-label={t("close")} onClick={() => setMobileOpen(false)} />
-            <aside className="admin-mobile-drawer">
+            <aside className="admin-mobile-drawer" tabIndex={-1} autoFocus>
               <div className="admin-side-head">
                 <p className="admin-brand">{t("adminBrand")}</p>
                 <button type="button" className="admin-drawer-close" onClick={() => setMobileOpen(false)} aria-label={t("close")}>

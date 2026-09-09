@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { ChevronDown, ChevronRight } from "lucide-react";
 import { isOrderPaid, type Order } from "@/lib/account";
 import { formatMoneyAmount, type Currency } from "@/lib/currency";
 import {
@@ -65,7 +66,7 @@ export function AdminOrdersTable({ orders }: { orders: AdminOrder[] }) {
                 );
                 const canExpand = isOrderPaid(order) && payTiers.length > 0;
                 const rows = [
-                  <tr key={order.id}>
+                  <tr key={order.id} className={expanded ? "is-open-order" : undefined}>
                     <td>{order.productTitle}</td>
                     <td>
                       <Link href={`/admin/users/${order.userId}`} className="jx-link">
@@ -91,12 +92,17 @@ export function AdminOrdersTable({ orders }: { orders: AdminOrder[] }) {
                     </td>
                     <td>
                       {canExpand ? (
-                        <button type="button" className="jx-link" onClick={() => toggle(order.id)}>
-                          {expanded ? "▾ " : "› "}
-                          {summary.text}
+                        <button
+                          type="button"
+                          className="jx-comm-sum"
+                          aria-expanded={expanded}
+                          onClick={() => toggle(order.id)}
+                        >
+                          <span>{summary.text}</span>
+                          {expanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
                         </button>
                       ) : (
-                        <span className="text-[13px] text-[var(--mute)]">{summary.text}</span>
+                        <span className="jx-comm-quiet">{summary.text}</span>
                       )}
                     </td>
                     <td className="font-mono text-[12px] text-[var(--gold)]">{order.verifyCode || "—"}</td>
@@ -106,7 +112,7 @@ export function AdminOrdersTable({ orders }: { orders: AdminOrder[] }) {
                   rows.push(
                     <tr key={`${order.id}-detail`} className="jx-order-detail">
                       <td colSpan={7}>
-                        <table className="jx-table">
+                        <table className="jx-mini">
                           <thead>
                             <tr>
                               <th>{t("adminColTier")}</th>
@@ -128,11 +134,11 @@ export function AdminOrdersTable({ orders }: { orders: AdminOrder[] }) {
                                         {slot.name}
                                       </Link>
                                     ) : (
-                                      "—"
+                                      <span className="text-[var(--mute)]">—</span>
                                     )}
                                   </td>
                                   <td>{formatTierRateLabel(slot)}</td>
-                                  <td className="jx-price">{formatMyrSen(slot.amountSen)}</td>
+                                  <td className="jx-num">{formatMyrSen(slot.amountSen)}</td>
                                   <td>
                                     <span className={commissionStatusClass(status)}>
                                       {t(COMMISSION_STATUS_KEY[status] as MessageKey)}
@@ -143,7 +149,7 @@ export function AdminOrdersTable({ orders }: { orders: AdminOrder[] }) {
                             })}
                           </tbody>
                         </table>
-                        <button type="button" className="jx-link mt-3" onClick={() => setChain(order)}>
+                        <button type="button" className="jx-link jx-chain-link" onClick={() => setChain(order)}>
                           {t("adminViewFullChain")}
                         </button>
                       </td>

@@ -39,11 +39,21 @@ export function ReferralChainDrawer({
   return (
     <div className="admin-drawer-root">
       <button type="button" className="admin-drawer-mask" aria-label={t("close")} onClick={onClose} />
-      <aside className="admin-chain-drawer" role="dialog" aria-modal="true">
-        <div className="flex items-start justify-between gap-3">
+      <aside
+        className="admin-chain-drawer"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="admin-chain-title"
+        tabIndex={-1}
+        autoFocus
+        onKeyDown={(event) => {
+          if (event.key === "Escape") onClose();
+        }}
+      >
+        <div className="admin-chain-head">
           <div>
-            <h2>{t("adminViewFullChain")}</h2>
-            <p className="mt-1 text-[13px] text-[var(--mute)]">
+            <h2 id="admin-chain-title">{t("adminViewFullChain")}</h2>
+            <p className="admin-chain-sub">
               {buyerName || "—"}
               {orderTitle ? ` · ${orderTitle}` : ""}
             </p>
@@ -52,42 +62,53 @@ export function ReferralChainDrawer({
             {t("close")}
           </button>
         </div>
-        <p className="mt-4 text-[12px] text-[var(--gold)]">↑ {buyerName || t("adminColBuyer")}</p>
-        <ol className="mt-2 space-y-2">
+
+        <ol className="admin-chain-spine">
+          <li className="admin-chain-buyer">
+            <span className="admin-chain-mark">↑</span>
+            <div>
+              <p className="admin-chain-kicker">{t("adminColBuyer")}</p>
+              <p>{buyerName || "—"}</p>
+            </div>
+          </li>
           {(tiers || []).map((slot) => {
             const status = commissionUiStatus(slot);
             return (
-              <li key={slot.tier} className="rounded-md border border-[var(--line)] bg-[var(--paper-dim)] px-3 py-2 text-[13px]">
-                <span className="jx-serif">T{slot.tier}</span>{" "}
-                {slot.userId ? (
-                  <Link href={`/admin/users/${slot.userId}`} className="jx-link">
-                    {slot.name} ({slot.code})
-                  </Link>
-                ) : (
-                  <span className="text-[var(--mute)]">—</span>
-                )}
-                <span className="ml-2 text-[12px] text-[var(--mute)]">
-                  {formatTierRateLabel(slot)} · {formatMyrSen(slot.amountSen)}
-                </span>
-                <span className={`ml-2 ${commissionStatusClass(status)}`}>
-                  {t(COMMISSION_STATUS_KEY[status] as MessageKey)}
-                </span>
+              <li key={slot.tier} className="admin-chain-node">
+                <span className="admin-chain-mark">T{slot.tier}</span>
+                <div className="admin-chain-body">
+                  {slot.userId ? (
+                    <Link href={`/admin/users/${slot.userId}`} className="jx-link">
+                      {slot.name}
+                      {slot.code ? <span className="admin-chain-code"> {slot.code}</span> : null}
+                    </Link>
+                  ) : (
+                    <span className="text-[var(--mute)]">—</span>
+                  )}
+                  <p className="admin-chain-meta">
+                    {formatTierRateLabel(slot)} · {formatMyrSen(slot.amountSen)}
+                  </p>
+                </div>
+                <span className={commissionStatusClass(status)}>{t(COMMISSION_STATUS_KEY[status] as MessageKey)}</span>
               </li>
             );
           })}
         </ol>
-        <p className="mt-4 rounded-md bg-[var(--paper-dim)] px-3 py-2 text-[12px] text-[var(--mute)]">
+
+        <p className="admin-chain-limit">
           {t("adminCommissionLimit")} ({MAX_COMMISSION_LEVELS})
         </p>
+
         {extra.length ? (
-          <ol className="mt-3 space-y-1 text-[13px] text-[var(--mute)]">
+          <ol className="admin-chain-beyond">
             {extra.map((row) => (
               <li key={`${row.depth}-${row.userId}`}>
-                T{row.depth}{" "}
+                <span className="admin-chain-mark is-mute">T{row.depth}</span>
                 <Link href={`/admin/users/${row.userId}`} className="jx-link">
-                  {row.name} ({row.code})
-                </Link>{" "}
-                {t("adminStatusOverDepth")} · {t("adminNoCommission")}
+                  {row.name}
+                  {row.code ? <span className="admin-chain-code"> {row.code}</span> : null}
+                </Link>
+                <span className="jx-chip">{t("adminStatusOverDepth")}</span>
               </li>
             ))}
           </ol>
