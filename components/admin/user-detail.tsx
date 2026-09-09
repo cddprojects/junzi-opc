@@ -317,7 +317,7 @@ export function AdminUserDetail({
 
       {tab === "wallet" ? (
         <div className="space-y-4">
-          <div className="jx-ledger">
+          <div className="jx-row4">
             <div className="jx-panel jx-ledger-card">
               <p className="jx-ledger-label">{t("adminWalletTopUp")}</p>
               <p className="jx-ledger-value">{formatMyrSen(wallet.topUpBalanceSen)}</p>

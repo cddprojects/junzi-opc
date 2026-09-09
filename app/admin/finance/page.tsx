@@ -15,7 +15,7 @@ export default async function AdminFinancePage() {
     <div>
       <h1>{t(locale, "adminFinanceOverview")}</h1>
       <p className="jx-lede">{t(locale, "adminFinanceIntro")}</p>
-      <div className="jx-ledger mt-6">
+      <div className="jx-row4 mt-6">
         <Link href="/admin/ledger" className="jx-panel jx-ledger-card">
           <p className="jx-ledger-label">{t(locale, "adminKpiAccrued")}</p>
           <p className="jx-ledger-value is-seal">{formatMyrSen(desk.accruedSen)}</p>
@@ -32,6 +32,8 @@ export default async function AdminFinancePage() {
           <p className="jx-ledger-label">{t(locale, "adminKpiPaidOut")}</p>
           <p className="jx-ledger-value">{formatMyrSen(desk.paidWithdrawSen || 0)}</p>
         </Link>
+      </div>
+      <div className="jx-row4 mt-3">
         <div className="jx-panel jx-ledger-card">
           <p className="jx-ledger-label">{t(locale, "adminKpiMonth")}</p>
           <p className="jx-ledger-value">{formatMyrSen(desk.monthCommissionSen || 0)}</p>

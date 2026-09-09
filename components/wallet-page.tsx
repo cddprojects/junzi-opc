@@ -101,13 +101,15 @@ export function WalletPage() {
       <section className="rounded-2xl bg-white px-4 py-5 md:px-6">
         <h1 className="font-serif text-[24px]">{t("walletTitle")}</h1>
         <p className="mt-2 text-[13px] leading-6 text-[#666]">{t("walletIntro")}</p>
-        <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-3">
+        <div className="mt-4 grid grid-cols-4 gap-2 sm:gap-3">
+          <Bucket label={t("adminWalletTotal")} value={data.totalSen} />
           <Bucket label={t("adminWalletTopUp")} value={data.topUpBalanceSen} />
           <Bucket label={t("adminWalletCommission")} value={data.commissionBalanceSen} />
-          <Bucket label={t("adminWalletPending")} value={data.pendingWithdrawalSen} />
           <Bucket label={t("adminWalletAvailable")} value={data.availableToWithdrawSen} />
-          <Bucket label={t("adminWalletTotal")} value={data.totalSen} />
         </div>
+        <p className="mt-2 text-[12px] text-[#888]">
+          {t("adminWalletPending")}: {formatMyrSen(data.pendingWithdrawalSen)}
+        </p>
         <p className="mt-3 text-[12px] text-[#888]">{t("walletSpendNote")}</p>
       </section>
 
@@ -225,9 +227,9 @@ export function WalletPage() {
 
 function Bucket({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded-xl bg-[#faf6ee] px-3 py-3">
-      <p className="text-[12px] text-[#777]">{label}</p>
-      <p className="opc-price mt-1 text-[20px] text-[#8a5a20]">{formatMyrSen(value)}</p>
+    <div className="min-w-0 rounded-xl bg-[#faf6ee] px-2 py-2.5 sm:px-3 sm:py-3">
+      <p className="truncate text-[10px] leading-4 text-[#777] sm:text-[12px]">{label}</p>
+      <p className="opc-price mt-1 text-[15px] leading-tight text-[#8a5a20] sm:text-[20px]">{formatMyrSen(value)}</p>
     </div>
   );
 }
