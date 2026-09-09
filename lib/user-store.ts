@@ -28,6 +28,7 @@ import { ensureCustomerReferral, getSettings, getStoreProduct, readStore, writeS
 import { fromCny, parseCurrency } from "@/lib/currency";
 import {
   buildDownlineTree,
+  countDownlineByPayDepth,
   commissionSkipReason,
   computeTierPayouts,
   findCustomerByReferralCode,
@@ -554,7 +555,15 @@ export function getReferralDashboard(userId: string) {
   const balanceSen = Math.max(0, Math.round(user.commissionBalanceSen || 0));
   const earnings = store.commissionLedger
     .filter((row) => row.userId === userId && isPayableEarn(row, plan))
-    .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
+    .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt))
+    .map((row) => {
+      const order = row.orderId ? store.orders.find((item) => item.id === row.orderId) : undefined;
+      return {
+        ...row,
+        orderTitle: order?.productTitle,
+      };
+    });
+  const team = countDownlineByPayDepth(store.users, user.id);
   const downline = store.users
     .filter((item) => item.referrerId === user.id)
     .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt))
@@ -570,6 +579,7 @@ export function getReferralDashboard(userId: string) {
     availableSen: Math.max(0, balanceSen - pendingSen),
     tiers: visiblePlanTiers(plan),
     earnings,
+    team,
     downline,
     withdrawals: store.withdrawals
       .filter((row) => row.userId === userId)

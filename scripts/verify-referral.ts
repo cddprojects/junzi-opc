@@ -3,6 +3,7 @@ import {
   buildDownlineTree,
   commissionSkipReason,
   computeTierPayouts,
+  countDownlineByPayDepth,
   DEFAULT_REFERRAL_PLAN,
   walkFullUpline,
   walkReferralChain,
@@ -105,6 +106,10 @@ const tree = buildDownlineTree(deepUsers, "u5");
 assert.equal(tree[0]?.userId, "u4");
 assert.equal(tree[0]?.children[0]?.userId, "u3");
 assert.ok(tree[0]?.children[0]?.children[0]?.children.some((row) => row.userId === "u1"));
+const teamFromTop = countDownlineByPayDepth(deepUsers, "u5");
+assert.equal(teamFromTop[1], 1);
+assert.equal(teamFromTop[2], 1);
+assert.equal(teamFromTop[3], 1);
 
 const ding = user({ id: "ding", name: "顶", referralCode: "RDING", referrerId: "yi" });
 const yi = user({ id: "yi", name: "学员乙", referralCode: "RYI" });

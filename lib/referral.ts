@@ -191,6 +191,20 @@ export function walkFullUpline(users: Customer[], start: Customer | undefined): 
   return out;
 }
 
+export function countDownlineByPayDepth(users: Customer[], rootId: string) {
+  const counts = { 1: 0, 2: 0, 3: 0 };
+  function walk(nodes: DownlineNode[]) {
+    for (const node of nodes) {
+      if (node.depth >= 1 && node.depth <= PAY_DEPTH) {
+        counts[node.depth as 1 | 2 | 3] += 1;
+      }
+      if (node.depth < PAY_DEPTH) walk(node.children);
+    }
+  }
+  walk(buildDownlineTree(users, rootId));
+  return counts;
+}
+
 export function buildDownlineTree(users: Customer[], rootId: string): DownlineNode[] {
   const childrenOf = new Map<string, Customer[]>();
   for (const user of users) {

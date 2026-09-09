@@ -14,7 +14,8 @@ type Dashboard = {
   pendingSen: number;
   availableSen: number;
   tiers: ReferralTierPlan[];
-  earnings: CommissionEntry[];
+  earnings: (CommissionEntry & { orderTitle?: string })[];
+  team?: { 1: number; 2: number; 3: number };
   downline: { id: string; name: string; createdAt: string }[];
   withdrawals: Withdrawal[];
 };
@@ -160,6 +161,21 @@ export function ReferralCenter() {
             ))}
           </div>
         </div>
+        <div className="mt-4">
+          <p className="text-[12px] text-[#777]">{t("referralTeam")}</p>
+          <div className="mt-2 grid grid-cols-3 gap-2">
+            {([1, 2, 3] as const).map((depth) => (
+              <div key={depth} className="rounded-xl bg-[#faf6ee] px-3 py-3 text-center">
+                <p className="text-[12px] text-[#777]">
+                  {depth === 1 ? t("referralTeamL1") : depth === 2 ? t("referralTeamL2") : t("referralTeamL3")}
+                </p>
+                <p className="mt-1 font-serif text-[20px] text-[#3a2c10]">
+                  {t("referralTeamPeople", { n: data.team?.[depth] ?? 0 })}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
       </section>
 
       <section className="rounded-2xl bg-white px-4 py-5 md:px-6">
@@ -215,12 +231,16 @@ export function ReferralCenter() {
             {data.earnings.map((row) => (
               <li key={row.id} className="flex items-start justify-between gap-3 border-b border-[#f3eee4] pb-3 last:border-0">
                 <div>
-                  <p className="text-[14px]">
+                  <p className="font-serif text-[15px] text-[#3a2c10]">
                     {t("referralTierN", { n: row.tier || 1 })} · {t("referralTierRate", { n: row.ratePercent || 0 })}
                   </p>
-                  <p className="mt-1 text-[12px] text-[#888]">
-                    {t("referralBuyer")}: {row.buyerName || "—"}
-                    {row.orderId ? ` · ${t("referralOrder")} ${row.orderId.slice(-6)}` : ""}
+                  <p className="mt-1 text-[13px] text-[#555]">
+                    {row.buyerName || "—"}
+                    {row.orderTitle ? ` · ${row.orderTitle}` : ""}
+                  </p>
+                  <p className="mt-0.5 text-[12px] text-[#999]">
+                    {row.baseSen ? formatMyrSen(row.baseSen) : ""}
+                    {row.orderId ? `${row.baseSen ? " · " : ""}${t("referralOrder")} ${row.orderId.slice(-6)}` : ""}
                   </p>
                 </div>
                 <p className="opc-price text-[16px] text-[#8a5a20]">{formatMyrSen(row.amountSen)}</p>
