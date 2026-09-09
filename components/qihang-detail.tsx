@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import { QihangHeroCover } from "@/components/covers";
 import { BuyBar } from "@/components/buy-bar";
-import { BuyNowButton } from "@/components/buy-now-button";
+import { ProductCtaRow } from "@/components/product-cta";
 import { VideoBlock } from "@/components/video-block";
 import { useDemoStore } from "@/components/demo-store";
 import { qihangDetail } from "@/lib/data";
@@ -79,7 +79,7 @@ export function QihangDetail({ product, video }: { product: Product; video?: Cat
           {product.giftNote && <span className="rounded-full bg-[#fa3534] px-2 py-0.5 text-white">赠送</span>}
           <span className="text-[#555]">{product.giftNote}</span>
         </div>
-        <BuyNowButton product={product} className="mt-5 h-11 w-full md:max-w-xs" />
+        <ProductCtaRow product={product} className="mt-5" />
       </div>
 
       <p className="py-3 text-center text-[12px] text-[#999]">—— 商品详情 ——</p>
@@ -205,7 +205,7 @@ export function QihangDetail({ product, video }: { product: Product; video?: Cat
         </div>
       </section>
       <div className="md:hidden">
-        <BuyBar />
+        <BuyBar product={product} />
       </div>
     </div>
   );

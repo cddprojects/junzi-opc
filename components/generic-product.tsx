@@ -3,7 +3,7 @@
 import { Share2, Star } from "lucide-react";
 import { CoverArt } from "@/components/covers";
 import { BuyBar } from "@/components/buy-bar";
-import { BuyNowButton } from "@/components/buy-now-button";
+import { ProductCtaRow } from "@/components/product-cta";
 import { VideoBlock } from "@/components/video-block";
 import { useDemoStore } from "@/components/demo-store";
 import { Money } from "@/components/money";
@@ -56,7 +56,7 @@ export function GenericProductDetail({
             </button>
           </div>
           {product.subtitle && <p className="mt-2 text-[13px] text-[#666]">{product.subtitle}</p>}
-          <BuyNowButton product={product} className="mt-6 h-11 w-full" />
+          <ProductCtaRow product={product} className="mt-6" />
         </div>
       </div>
 
@@ -83,7 +83,7 @@ export function GenericProductDetail({
         </p>
       </div>
       <div className="md:hidden">
-        <BuyBar />
+        <BuyBar product={product} />
       </div>
     </div>
   );

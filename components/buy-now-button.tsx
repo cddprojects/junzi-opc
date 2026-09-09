@@ -22,7 +22,7 @@ export function BuyNowButton({
       type="button"
       onClick={() => openPay(product)}
       className={cn(
-        "relative z-20 inline-flex cursor-pointer items-center justify-center rounded-lg bg-[#fa3534] text-[15px] font-medium text-white transition hover:bg-[#e12f2e] active:opacity-80",
+        "relative z-20 inline-flex cursor-pointer items-center justify-center rounded-lg bg-[#8a5a20] text-[15px] font-medium text-white transition hover:bg-[#6f4818] active:opacity-80",
         className,
       )}
     >

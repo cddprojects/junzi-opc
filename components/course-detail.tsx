@@ -4,7 +4,7 @@ import dynamic from "next/dynamic";
 import { Share2, Star } from "lucide-react";
 import { CoverArt, QihangHeroCover } from "@/components/covers";
 import { BuyBar } from "@/components/buy-bar";
-import { BuyNowButton } from "@/components/buy-now-button";
+import { ProductCtaRow } from "@/components/product-cta";
 import { VideoBlock } from "@/components/video-block";
 import { toast } from "sonner";
 import { useDemoStore } from "@/components/demo-store";
@@ -109,7 +109,7 @@ export function CourseDetailView({
               <span className="text-[#555]">{view.giftNote}</span>
             </div>
           )}
-          <BuyNowButton product={product} className="mt-5 h-11 w-full" />
+          <ProductCtaRow product={product} className="mt-5" />
         </div>
       </div>
 

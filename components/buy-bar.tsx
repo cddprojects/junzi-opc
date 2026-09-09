@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Headset, Home, ShoppingCart } from "lucide-react";
 import type { Product } from "@/lib/data";
 import { useDemoStore, cartCount } from "@/components/demo-store";
+import { ProductCtaRow } from "@/components/product-cta";
 import { BuyNowButton } from "@/components/buy-now-button";
 import { useT } from "@/components/locale-provider";
 
@@ -26,12 +27,16 @@ export function BuyBar({ product }: { product?: Product }) {
         <ShoppingCart className="size-5" />
         {t("cart")}
         {count > 0 && (
-          <span className="absolute top-[-2px] right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#fa3534] px-1 text-[10px] text-white">
+          <span className="absolute top-[-2px] right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#8a5a20] px-1 text-[10px] text-white">
             {count}
           </span>
         )}
       </Link>
-      <BuyNowButton product={product} className="ml-1 h-10 flex-1" />
+      {product ? (
+        <ProductCtaRow product={product} compact className="ml-1 min-w-0 flex-1" />
+      ) : (
+        <BuyNowButton className="ml-1 h-10 flex-1" />
+      )}
     </div>
   );
 }
