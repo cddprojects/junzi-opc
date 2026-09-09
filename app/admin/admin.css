@@ -446,6 +446,8 @@
 .admin-side-foot .admin-locale button {
   position: relative;
   z-index: 1;
+  display: flex;
+  justify-content: center;
   width: 54px;
   min-width: 50px;
   min-height: 0;
