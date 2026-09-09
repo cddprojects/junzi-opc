@@ -70,13 +70,12 @@ export default async function AdminLedgerPage() {
                           {row.orderTitle ? <p className="jx-buyer-meta">{row.orderTitle}</p> : null}
                           <p className="jx-buyer-meta">
                             {new Date(row.createdAt).toLocaleDateString(locale === "en" ? "en-MY" : "zh-CN")}
-                            {row.orderId ? (
-                              <span className="jx-mono" title={row.orderId}>
-                                {" "}
-                                {row.orderId.replace(/^ord_/, "").slice(0, 8)}
-                              </span>
-                            ) : null}
                           </p>
+                          {row.orderId ? (
+                            <p className="jx-buyer-meta jx-mono jx-order-id" title={row.orderId}>
+                              {t(locale, "adminOrderId")} {row.orderId}
+                            </p>
+                          ) : null}
                         </td>
                       ) : null}
                       <td>

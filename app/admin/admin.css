@@ -1164,6 +1164,11 @@
   color: var(--mute);
 }
 
+.jx-buyer-cell .jx-order-id {
+  white-space: normal;
+  word-break: break-all;
+}
+
 .jx-comm-sum {
   display: inline-flex;
   align-items: center;
