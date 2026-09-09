@@ -1,16 +1,34 @@
 import Link from "next/link";
 import { listCommissionDesk } from "@/lib/user-store";
-import { formatMyrSen, formatTierRateLabel } from "@/lib/referral";
+import { formatMyrSen, formatTierRateLabel, MAX_COMMISSION_LEVELS } from "@/lib/referral";
 import { getRequestLocale } from "@/lib/i18n-server";
-import { t } from "@/lib/messages";
-import { CommissionChain } from "@/components/admin/commission-chain";
+import { t, type MessageKey } from "@/lib/messages";
+import {
+  COMMISSION_STATUS_KEY,
+  commissionStatusClass,
+  commissionUiStatus,
+} from "@/lib/commission-ui";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminLedgerPage() {
   const locale = await getRequestLocale();
   const desk = listCommissionDesk();
-  const earns = desk.earnings.filter((row) => row.kind === "earn");
+  const earns = desk.earnings.filter(
+    (row) => row.kind === "earn" && (!row.tier || row.tier <= MAX_COMMISSION_LEVELS),
+  );
+  const groups = new Map<string, typeof earns>();
+  for (const row of earns) {
+    const key = row.orderId || row.id;
+    const list = groups.get(key) || [];
+    list.push(row);
+    groups.set(key, list);
+  }
+  const grouped = [...groups.values()]
+    .map((rows) =>
+      [...rows].sort((a, b) => (a.tier || 0) - (b.tier || 0) || Date.parse(b.createdAt) - Date.parse(a.createdAt)),
+    )
+    .sort((a, b) => Date.parse(b[0]?.createdAt || "") - Date.parse(a[0]?.createdAt || ""));
 
   return (
     <div>
@@ -20,53 +38,62 @@ export default async function AdminLedgerPage() {
         <table className="jx-table">
           <thead>
             <tr>
-              <th>{t(locale, "referralBuyer")}</th>
-              <th>{t(locale, "adminColName")}</th>
-              <th>{t(locale, "adminReferralTier", { n: "" })}</th>
-              <th>{t(locale, "adminColPaidAmount")}</th>
+              <th>{t(locale, "adminColBuyer")}</th>
+              <th>{t(locale, "adminColEarner")}</th>
+              <th>{t(locale, "adminColTier")}</th>
+              <th>{t(locale, "adminColCommission")}</th>
               <th>{t(locale, "adminColStatus")}</th>
             </tr>
           </thead>
           <tbody>
-            {earns.length === 0 ? (
+            {grouped.length === 0 ? (
               <tr>
                 <td colSpan={5}>{t(locale, "referralHistoryEmpty")}</td>
               </tr>
             ) : (
-              earns.map((row) => (
-                <tr key={row.id}>
-                  <td>
-                    {row.buyerName || "—"}
-                    {row.orderId ? (
-                      <span className="block text-[12px] text-[var(--mute)]">{row.orderTitle}</span>
-                    ) : null}
-                  </td>
-                  <td>
-                    {row.userId ? (
-                      <Link href={`/admin/users/${row.userId}`} className="jx-link">
-                        {row.userName}
-                      </Link>
-                    ) : (
-                      "—"
-                    )}
-                  </td>
-                  <td>
-                    {row.tier ? `${t(locale, "referralTierN", { n: row.tier })} · ${formatTierRateLabel(row)}` : row.kind}
-                  </td>
-                  <td className="jx-price">{formatMyrSen(row.amountSen)}</td>
-                  <td>
-                    <span className={row.paid ? "jx-chip jx-chip-ok" : "jx-chip"}>
-                      {row.paid ? t(locale, "adminCredited") : t(locale, "adminNotCredited")}
-                    </span>
-                    {row.chain ? (
-                      <details className="mt-2">
-                        <summary className="cursor-pointer text-[12px] text-[var(--gold)]">T1–T3+</summary>
-                        <CommissionChain tiers={row.chain.tiers} genealogy={row.genealogy} />
-                      </details>
-                    ) : null}
-                  </td>
-                </tr>
-              ))
+              grouped.flatMap((rows) =>
+                rows.map((row, index) => {
+                  const status = commissionUiStatus(row);
+                  return (
+                    <tr key={row.id} className={index === 0 ? "jx-group-start" : "jx-group-cont"}>
+                      {index === 0 ? (
+                        <td rowSpan={rows.length} className="align-top">
+                          <p className="font-medium">{row.buyerName || "—"}</p>
+                          {row.orderTitle ? (
+                            <span className="block text-[12px] text-[var(--mute)]">{row.orderTitle}</span>
+                          ) : null}
+                          {row.orderId ? (
+                            <span className="block text-[12px] text-[var(--mute)]">{row.orderId}</span>
+                          ) : null}
+                          <span className="block text-[12px] text-[var(--mute)]">
+                            {new Date(row.createdAt).toLocaleDateString(locale === "en" ? "en-MY" : "zh-CN")}
+                          </span>
+                        </td>
+                      ) : null}
+                      <td>
+                        {row.userId ? (
+                          <Link href={`/admin/users/${row.userId}`} className="jx-link">
+                            {row.userName || row.userId}
+                          </Link>
+                        ) : (
+                          <span className="text-[var(--mute)]">—</span>
+                        )}
+                      </td>
+                      <td>
+                        {row.tier
+                          ? `${t(locale, "referralTierN", { n: row.tier })} · ${formatTierRateLabel(row)}`
+                          : row.kind}
+                      </td>
+                      <td className="jx-price">{formatMyrSen(row.amountSen)}</td>
+                      <td>
+                        <span className={commissionStatusClass(status)}>
+                          {t(locale, COMMISSION_STATUS_KEY[status] as MessageKey)}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                }),
+              )
             )}
           </tbody>
         </table>

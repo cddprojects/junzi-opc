@@ -1,9 +1,7 @@
 import Link from "next/link";
 import { listAllOrders, listCustomers } from "@/lib/user-store";
-import { isOrderPaid } from "@/lib/account";
-import { formatMoneyAmount, type Currency } from "@/lib/currency";
 import { AdminVerifyForm } from "@/components/admin/verify-form";
-import { CommissionChain } from "@/components/admin/commission-chain";
+import { AdminOrdersTable } from "@/components/admin/orders-table";
 
 export const dynamic = "force-dynamic";
 
@@ -21,76 +19,7 @@ export default function AdminOrdersPage() {
         <AdminVerifyForm />
       </div>
 
-      <div className="jx-panel mt-6 overflow-x-auto">
-        <table className="jx-table">
-          <thead>
-            <tr>
-              <th>课程</th>
-              <th>学员</th>
-              <th>金额</th>
-              <th>状态</th>
-              <th>支付</th>
-              <th>课程码</th>
-            </tr>
-          </thead>
-          <tbody>
-            {orders.length === 0 ? (
-              <tr>
-                <td colSpan={6}>暂无订单。</td>
-              </tr>
-            ) : (
-              orders.map((order) => (
-                <tr key={order.id}>
-                  <td>{order.productTitle}</td>
-                  <td>
-                    <Link href={`/admin/users/${order.userId}`} className="jx-link">
-                      {order.userName}
-                    </Link>
-                    <span className="block text-[12px] text-[var(--mute)]">{order.userAccount}</span>
-                  </td>
-                  <td className="jx-price">
-                    {formatMoneyAmount(order.price, (order.currency as Currency) || "CNY")}
-                    {order.amountMyr != null ? (
-                      <span className="ml-1 text-[12px] font-sans font-normal text-[var(--mute)]">
-                        / {formatMoneyAmount(order.amountMyr, "MYR")}
-                      </span>
-                    ) : null}
-                  </td>
-                  <td>
-                    <span className={isOrderPaid(order) ? "jx-chip jx-chip-ok" : "jx-chip jx-chip-wait"}>
-                      {isOrderPaid(order) ? "已支付" : "待付款"}
-                    </span>
-                  </td>
-                  <td className="whitespace-nowrap text-[13px] text-[var(--mute)]">
-                    {order.payMethod === "billplz"
-                      ? "Billplz"
-                      : order.payMethod === "grant"
-                        ? "后台授权"
-                        : order.payMethod === "demo"
-                          ? "演示"
-                          : "—"}
-                    {order.referralSettled?.tiers.some((tier) => tier.paid && tier.amountSen > 0) ? (
-                      <span className="block text-[12px]">已入账</span>
-                    ) : isOrderPaid(order) && order.payMethod ? (
-                      <span className="block text-[12px]">未计提</span>
-                    ) : null}
-                    {order.referralSettled ? (
-                      <details className="mt-1">
-                        <summary className="cursor-pointer text-[12px] text-[var(--gold)]">T1–T3+</summary>
-                        <CommissionChain
-                          tiers={order.referralSettled.tiers}
-                          genealogy={order.referralSettled.genealogy}
-                        />
-                      </details>
-                    ) : null}
-                  </td>
-                  <td className="font-mono text-[12px] text-[var(--gold)]">{order.verifyCode || "—"}</td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+      <AdminOrdersTable orders={orders} />
 
       <div className="jx-panel mt-6 p-5">
         <h2>注册用户（{users.length}）</h2>
