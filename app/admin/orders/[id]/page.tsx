@@ -22,14 +22,7 @@ export default async function AdminOrderDetailPage({
   const locale = await getRequestLocale();
   const publicNo = publicOrderNo(order);
   const kind = adminOrderKind(order);
-  const kindLabel =
-    kind === "refverify"
-      ? t(locale, "adminOrderRefVerify")
-      : kind === "demo"
-        ? t(locale, "adminOrderDemo")
-        : kind === "grant"
-          ? t(locale, "adminOrderGrant")
-          : null;
+  const kindLabel = kind === "refverify" ? t(locale, "adminOrderRefVerify") : null;
 
   return (
     <div>

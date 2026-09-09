@@ -127,14 +127,7 @@ function OrderRef({
 }) {
   const publicNo = order ? publicOrderNo(order) : null;
   const kind = order ? adminOrderKind(order) : "customer";
-  const badge =
-    kind === "refverify"
-      ? t(locale, "adminOrderRefVerify")
-      : kind === "demo"
-        ? t(locale, "adminOrderDemo")
-        : kind === "grant"
-          ? t(locale, "adminOrderGrant")
-          : null;
+  const badge = kind === "refverify" ? t(locale, "adminOrderRefVerify") : null;
 
   if (publicNo) {
     return (

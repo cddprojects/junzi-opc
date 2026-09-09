@@ -49,10 +49,7 @@ export function AdminOrdersTable({ orders }: { orders: AdminOrder[] }) {
   }
 
   function kindLabel(order: AdminOrder) {
-    const kind = adminOrderKind(order);
-    if (kind === "refverify") return t("adminOrderRefVerify");
-    if (kind === "demo") return t("adminOrderDemo");
-    if (kind === "grant") return t("adminOrderGrant");
+    if (adminOrderKind(order) === "refverify") return t("adminOrderRefVerify");
     return null;
   }
 
