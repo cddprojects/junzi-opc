@@ -82,7 +82,7 @@
     display: flex;
     width: 230px;
     height: 100dvh;
-    overflow: hidden;
+    overflow: visible;
     transition: width 240ms ease;
   }
 
@@ -98,7 +98,6 @@
 
   .admin-frame.is-collapsed .admin-side {
     width: 72px;
-    overflow: visible;
   }
 
   .admin-frame.is-collapsed .admin-main {
@@ -109,15 +108,6 @@
     padding: 28px 8px 10px;
     text-align: center;
     font-size: 18px;
-  }
-
-  .admin-frame.is-collapsed .admin-side-collapse {
-    margin: 18px auto 0;
-  }
-
-  .admin-frame.is-collapsed .admin-side-head {
-    flex-direction: column;
-    align-items: center;
   }
 
   .admin-frame.is-collapsed .admin-nav-group {
@@ -141,6 +131,7 @@
   color: var(--paper-text);
 }
 
+.admin-side-scroll,
 .admin-nav {
   display: flex;
   flex: 1;
@@ -212,7 +203,7 @@
 .admin-nav a:focus-visible,
 .admin-side-foot a:focus-visible,
 .admin-side-foot button:focus-visible,
-.admin-side-collapse:focus-visible,
+.admin-side-toggle:focus-visible,
 .admin-nav-toggle:focus-visible,
 .admin-hamburger:focus-visible,
 .jx-comm-sum:focus-visible,
@@ -228,8 +219,9 @@
   padding: 10px 8px;
 }
 
-.admin-side-head,
-.admin-side-foot {
+.admin-side-brand,
+.admin-side-foot,
+.admin-side-head {
   flex-shrink: 0;
 }
 
@@ -240,7 +232,34 @@
   gap: 8px;
 }
 
-.admin-side-collapse,
+.admin-side-toggle {
+  position: absolute;
+  top: 18px;
+  right: 0;
+  z-index: 45;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--ink-line);
+  border-radius: 6px;
+  background: var(--ink);
+  color: var(--paper-mute);
+  transform: translateX(50%);
+}
+
+@media (min-width: 768px) {
+  .admin-side-toggle {
+    display: inline-flex;
+  }
+}
+
+.admin-side-toggle:hover {
+  color: var(--paper-text);
+  background: #262c28;
+}
+
 .admin-drawer-close,
 .admin-hamburger {
   display: inline-flex;
@@ -255,7 +274,6 @@
   color: var(--paper-mute);
 }
 
-.admin-side-collapse:hover,
 .admin-drawer-close:hover,
 .admin-hamburger:hover {
   color: var(--paper-text);
@@ -348,6 +366,7 @@
 @media (prefers-reduced-motion: reduce) {
   .admin-side,
   .admin-main,
+  .admin-side-toggle,
   .admin-nav-toggle,
   .admin-nav-chevron,
   .admin-nav-items,

@@ -173,7 +173,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
 
   function renderNav(compact: boolean) {
     return (
-      <nav className="admin-nav">
+      <nav className="admin-nav admin-side-scroll">
         <Link
           href="/admin"
           aria-label={compact ? t("adminOverview") : undefined}
@@ -223,19 +223,20 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
     <div className="admin-app">
       <div className={cn("admin-frame", sideCollapsed && "is-collapsed")}>
         <aside className="admin-side">
-          <div className="admin-side-head">
+          <button
+            type="button"
+            className="admin-side-toggle"
+            onClick={toggleSide}
+            aria-label={sideCollapsed ? t("adminSideExpand") : t("adminSideCollapse")}
+            title={sideCollapsed ? t("adminSideExpand") : t("adminSideCollapse")}
+          >
+            {sideCollapsed ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}
+          </button>
+          <div className="admin-side-brand">
             <p className="admin-brand">{sideCollapsed ? "雅" : t("adminBrand")}</p>
-            <button
-              type="button"
-              className="admin-side-collapse"
-              onClick={toggleSide}
-              title={sideCollapsed ? t("adminSideExpand") : t("adminSideCollapse")}
-            >
-              {sideCollapsed ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}
-            </button>
           </div>
           {renderNav(sideCollapsed)}
-          <div className="admin-side-foot">
+          <div className="admin-side-foot admin-side-footer">
             {!sideCollapsed ? <LocaleSwitcher /> : null}
             <Link
               href="/"
@@ -256,17 +257,6 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
               <LogOut size={16} strokeWidth={1.75} />
               {!sideCollapsed && <span>{t("adminLogout")}</span>}
             </button>
-            {sideCollapsed ? (
-              <button
-                type="button"
-                className="admin-side-reopen is-icon"
-                onClick={toggleSide}
-                aria-label={t("adminSideExpand")}
-                data-tip={t("adminSideExpand")}
-              >
-                <PanelLeftOpen size={16} />
-              </button>
-            ) : null}
           </div>
         </aside>
 
