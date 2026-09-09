@@ -491,6 +491,15 @@ export function listAllOrders() {
         userAccount: user ? maskAccount(user) : "已删除用户",
         userEmail: user?.email,
         userPhone: user?.phone,
+        referralSettled: order.referralSettled
+          ? {
+              ...order.referralSettled,
+              genealogy:
+                order.referralSettled.genealogy && order.referralSettled.genealogy.length > 0
+                  ? order.referralSettled.genealogy
+                  : walkFullUpline(store.users, user),
+            }
+          : order.referralSettled,
       };
     });
 }
