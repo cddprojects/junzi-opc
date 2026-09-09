@@ -568,7 +568,7 @@
 .admin-locale-pop {
   box-sizing: border-box;
   width: 160px;
-  padding: 6px;
+  padding: 10px;
   border: 1px solid rgb(232 220 196 / 12%);
   border-radius: 12px;
   background: #121614;
