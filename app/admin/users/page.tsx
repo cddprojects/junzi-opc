@@ -1,5 +1,8 @@
 import Link from "next/link";
 import { listCustomers } from "@/lib/user-store";
+import { formatMyrSen } from "@/lib/referral";
+import { getRequestLocale } from "@/lib/i18n-server";
+import { t } from "@/lib/messages";
 
 export const dynamic = "force-dynamic";
 
@@ -8,6 +11,7 @@ export default async function AdminUsersPage({
 }: {
   searchParams: Promise<{ q?: string }>;
 }) {
+  const locale = await getRequestLocale();
   const { q = "" } = await searchParams;
   const users = listCustomers(q);
 
@@ -32,9 +36,12 @@ export default async function AdminUsersPage({
             <tr>
               <th>姓名</th>
               <th>账号</th>
+              <th>{t(locale, "adminReferralCode")}</th>
+              <th>{t(locale, "adminReferrer")}</th>
               <th>状态</th>
               <th>会员</th>
               <th>订单</th>
+              <th>{t(locale, "referralBalance")}</th>
               <th>注册时间</th>
               <th></th>
             </tr>
@@ -42,13 +49,23 @@ export default async function AdminUsersPage({
           <tbody>
             {users.length === 0 ? (
               <tr>
-                <td colSpan={7}>没有匹配的学员</td>
+                <td colSpan={10}>没有匹配的学员</td>
               </tr>
             ) : (
               users.map((user) => (
                 <tr key={user.id}>
                   <td>{user.name}</td>
                   <td>{user.email || user.phone}</td>
+                  <td className="jx-serif">{user.referralCode || "—"}</td>
+                  <td>
+                    {user.referrerId ? (
+                      <Link href={`/admin/users/${user.referrerId}`} className="jx-link">
+                        {user.referrerName || user.referrerId}
+                      </Link>
+                    ) : (
+                      "—"
+                    )}
+                  </td>
                   <td>
                     <span className={user.status === "disabled" ? "jx-chip jx-chip-wait" : "jx-chip jx-chip-ok"}>
                       {user.status === "disabled" ? "已停用" : "正常"}
@@ -56,6 +73,7 @@ export default async function AdminUsersPage({
                   </td>
                   <td>{user.memberActive ? "已开通" : "未开通"}</td>
                   <td>{user.orderCount}</td>
+                  <td className="jx-price">{formatMyrSen(user.commissionBalanceSen || 0)}</td>
                   <td>{new Date(user.createdAt).toLocaleString("zh-CN")}</td>
                   <td>
                     <Link href={`/admin/users/${user.id}`} className="jx-link">

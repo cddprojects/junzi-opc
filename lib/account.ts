@@ -1,4 +1,5 @@
 import { membership, type Product } from "@/lib/data";
+import type { OrderReferralSettled } from "@/lib/referral";
 
 export const USER_COOKIE = "opc_user_session";
 export const SESSION_DAYS = 14;
@@ -15,6 +16,9 @@ export type Customer = {
   createdAt: string;
   memberUntil?: string;
   status?: CustomerStatus;
+  referralCode?: string;
+  referrerId?: string;
+  commissionBalanceSen?: number;
 };
 
 export type PublicCustomer = {
@@ -55,6 +59,7 @@ export type Order = {
   billplzUrl?: string;
   amountMyr?: number;
   amountSen?: number;
+  referralSettled?: OrderReferralSettled;
 };
 
 export function isOrderPaid(order?: Order | null) {

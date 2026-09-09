@@ -15,6 +15,8 @@ const LINKS: { href: string; key: MessageKey }[] = [
   { href: "/admin/videos", key: "adminVideos" },
   { href: "/admin/orders", key: "adminOrders" },
   { href: "/admin/users", key: "adminUsers" },
+  { href: "/admin/referral", key: "adminReferral" },
+  { href: "/admin/commission", key: "adminCommission" },
   { href: "/admin/currency", key: "adminCurrency" },
   { href: "/admin/billplz", key: "adminBillplz" },
 ];
@@ -30,6 +32,8 @@ function titleKey(pathname: string): MessageKey {
   if (pathname.startsWith("/admin/videos")) return "adminVideos";
   if (pathname.startsWith("/admin/orders")) return "adminOrders";
   if (pathname.startsWith("/admin/users")) return "adminUsers";
+  if (pathname.startsWith("/admin/referral")) return "adminReferral";
+  if (pathname.startsWith("/admin/commission")) return "adminCommission";
   if (pathname.startsWith("/admin/currency")) return "adminCurrency";
   if (pathname.startsWith("/admin/billplz")) return "adminBillplz";
   return "adminOverview";

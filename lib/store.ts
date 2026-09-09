@@ -22,6 +22,15 @@ import {
 import { type Customer, type Order, type UserSession } from "@/lib/account";
 import { generateVerifySecret } from "@/lib/security";
 import { DEFAULT_SETTINGS, normalizeSettings, type StoreSettings } from "@/lib/currency";
+import {
+  DEFAULT_REFERRAL_PLAN,
+  normalizeReferralCode,
+  normalizeReferralPlan,
+  type CommissionEntry,
+  type ReferralPlan,
+  type Withdrawal,
+} from "@/lib/referral";
+import { randomBytes } from "crypto";
 
 export type AppStore = {
   version: number;
@@ -33,12 +42,15 @@ export type AppStore = {
   orders: Order[];
   verifySecret: string;
   settings: StoreSettings;
+  referralPlan: ReferralPlan;
+  commissionLedger: CommissionEntry[];
+  withdrawals: Withdrawal[];
 };
 
 const DATA_DIR = path.join(process.cwd(), "data");
 const STORE_PATH = path.join(DATA_DIR, "store.json");
 export const UPLOAD_DIR = path.join(DATA_DIR, "uploads");
-const STORE_VERSION = 10;
+const STORE_VERSION = 11;
 
 let storeCache: { mtimeMs: number; store: AppStore } | null = null;
 
@@ -106,6 +118,33 @@ function seedStore(): AppStore {
     orders: [],
     verifySecret: generateVerifySecret(),
     settings: { ...DEFAULT_SETTINGS, fx: { ...DEFAULT_SETTINGS.fx } },
+    referralPlan: { ...DEFAULT_REFERRAL_PLAN, tiers: DEFAULT_REFERRAL_PLAN.tiers.map((tier) => ({ ...tier })) },
+    commissionLedger: [],
+    withdrawals: [],
+  };
+}
+
+function generateReferralCode(taken: Set<string>) {
+  for (let i = 0; i < 24; i += 1) {
+    const code = normalizeReferralCode(`R${randomBytes(5).toString("hex").slice(0, 7).toUpperCase()}`);
+    if (!taken.has(code)) {
+      taken.add(code);
+      return code;
+    }
+  }
+  const fallback = normalizeReferralCode(`R${Date.now().toString(36).toUpperCase()}`);
+  taken.add(fallback);
+  return fallback;
+}
+
+export function ensureCustomerReferral(user: Customer, taken: Set<string>): Customer {
+  const code = normalizeReferralCode(user.referralCode) || generateReferralCode(taken);
+  taken.add(code);
+  return {
+    ...user,
+    referralCode: code,
+    commissionBalanceSen: Math.max(0, Math.round(user.commissionBalanceSen || 0)),
+    referrerId: user.referrerId || undefined,
   };
 }
 
@@ -223,10 +262,16 @@ function migrateStore(parsed: AppStore): AppStore {
     return mergeSeededEnglish(next);
   });
   const now = Date.now();
-  const users = (parsed.users ?? []).map((user) => ({
-    ...user,
-    status: (user.status === "disabled" ? "disabled" : "active") as Customer["status"],
-  }));
+  const taken = new Set<string>();
+  const users = (parsed.users ?? []).map((user) =>
+    ensureCustomerReferral(
+      {
+        ...user,
+        status: (user.status === "disabled" ? "disabled" : "active") as Customer["status"],
+      },
+      taken,
+    ),
+  );
   return {
     version: STORE_VERSION,
     products,
@@ -261,6 +306,9 @@ function migrateStore(parsed: AppStore): AppStore {
     })),
     verifySecret: parsed.verifySecret || generateVerifySecret(),
     settings: normalizeSettings(parsed.settings),
+    referralPlan: normalizeReferralPlan(parsed.referralPlan),
+    commissionLedger: parsed.commissionLedger ?? [],
+    withdrawals: parsed.withdrawals ?? [],
   };
 }
 
@@ -295,11 +343,17 @@ export function writeStore(store: AppStore) {
     ...store,
     version: STORE_VERSION,
     products: store.products.map(ensureProductDetail),
-    users: store.users ?? [],
+    users: (() => {
+      const taken = new Set<string>();
+      return (store.users ?? []).map((user) => ensureCustomerReferral(user, taken));
+    })(),
     sessions: store.sessions ?? [],
     orders: store.orders ?? [],
     verifySecret: store.verifySecret || generateVerifySecret(),
     settings: normalizeSettings(store.settings),
+    referralPlan: normalizeReferralPlan(store.referralPlan),
+    commissionLedger: store.commissionLedger ?? [],
+    withdrawals: store.withdrawals ?? [],
   };
   writeFileSync(STORE_PATH, JSON.stringify(next, null, 2), "utf8");
   rememberStore(next);
@@ -323,6 +377,17 @@ export function getCatalog() {
 
 export function getSettings() {
   return normalizeSettings(readStore().settings);
+}
+
+export function getReferralPlan() {
+  return normalizeReferralPlan(readStore().referralPlan);
+}
+
+export function updateReferralPlan(patch: Partial<ReferralPlan>) {
+  const store = readStore();
+  store.referralPlan = normalizeReferralPlan({ ...store.referralPlan, ...patch, tiers: patch.tiers ?? store.referralPlan?.tiers });
+  writeStore(store);
+  return store.referralPlan;
 }
 
 export function updateSettings(patch: Partial<StoreSettings>) {

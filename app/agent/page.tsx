@@ -1,8 +1,11 @@
-import { SimplePlaceholder } from "@/components/simple-page";
-import { getRequestLocale } from "@/lib/i18n-server";
-import { t } from "@/lib/messages";
+import { ReferralCenter } from "@/components/referral-center";
 
-export default async function AgentPage() {
-  const locale = await getRequestLocale();
-  return <SimplePlaceholder title={t(locale, "agentTitle")} body={t(locale, "agentBody")} />;
+export const dynamic = "force-dynamic";
+
+export default function AgentPage() {
+  return (
+    <div className="px-3 py-4 md:px-0">
+      <ReferralCenter />
+    </div>
+  );
 }

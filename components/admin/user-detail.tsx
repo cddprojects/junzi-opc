@@ -5,7 +5,9 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import type { Product } from "@/lib/data";
 import { formatMoneyAmount, type Currency } from "@/lib/currency";
+import { formatMyrSen } from "@/lib/referral";
 import type { getCustomerAdmin } from "@/lib/user-store";
+import { useLocale } from "@/components/locale-provider";
 
 type AdminUser = NonNullable<ReturnType<typeof getCustomerAdmin>>;
 
@@ -17,6 +19,7 @@ export function AdminUserDetail({
   products: Product[];
 }) {
   const router = useRouter();
+  const { t } = useLocale();
   const [error, setError] = useState("");
   const [saved, setSaved] = useState("");
   const [busy, setBusy] = useState(false);
@@ -27,6 +30,8 @@ export function AdminUserDetail({
     setError("");
     setSaved("");
     const form = new FormData(event.currentTarget);
+    const referrerCode = String(form.get("referrerCode") || "").trim();
+    const clearReferrer = form.get("clearReferrer") === "on";
     const res = await fetch(`/api/admin/users/${user.id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
@@ -36,6 +41,7 @@ export function AdminUserDetail({
         phone: String(form.get("phone") || ""),
         status: String(form.get("status") || "active"),
         memberUntil: String(form.get("memberUntil") || "") || null,
+        ...(clearReferrer ? { referrerCode: "" } : referrerCode ? { referrerCode } : {}),
       }),
     });
     const data = (await res.json()) as { error?: string };
@@ -154,6 +160,46 @@ export function AdminUserDetail({
             defaultValue={user.memberUntil ? user.memberUntil.slice(0, 10) : ""}
             className="mt-1 h-9 w-full rounded-md border px-3"
           />
+        </label>
+        <p className="text-[13px] text-[var(--mute)]">
+          {t("adminReferralCode")}: <span className="jx-serif text-[var(--ink)]">{user.referralCode || "—"}</span>
+          {" · "}
+          {t("referralBalance")}: <span className="jx-price">{formatMyrSen(user.commissionBalanceSen || 0)}</span>
+        </p>
+        <div>
+          <p className="text-[13px] text-[var(--mute)]">{t("adminUpline")}</p>
+          {user.upline?.some((slot) => slot.userId) ? (
+            <ol className="mt-1 space-y-1 text-[13px]">
+              {user.upline.map((slot) => (
+                <li key={slot.tier}>
+                  {t("referralTierN", { n: slot.tier })}:{" "}
+                  {slot.userId ? (
+                    <Link href={`/admin/users/${slot.userId}`} className="jx-link">
+                      {slot.name} ({slot.code})
+                      {slot.status === "disabled" ? ` · ${t("adminReasonInactive")}` : ""}
+                    </Link>
+                  ) : (
+                    <span>{t("adminNoUpline")}</span>
+                  )}
+                </li>
+              ))}
+            </ol>
+          ) : (
+            <p className="mt-1 text-[13px]">{t("adminNoUpline")}</p>
+          )}
+        </div>
+        <label className="block text-[13px]">
+          {t("adminRebindReferrer")}
+          <input
+            name="referrerCode"
+            defaultValue=""
+            placeholder={user.referrerName ? `${user.referrerName} / ${t("adminRebindPlaceholder")}` : t("adminRebindPlaceholder")}
+            className="mt-1 h-9 w-full rounded-md border px-3 uppercase"
+          />
+        </label>
+        <label className="flex items-center gap-2 text-[13px] text-[var(--mute)]">
+          <input type="checkbox" name="clearReferrer" />
+          {t("adminNoUpline")}
         </label>
         <button type="submit" disabled={busy} className="jx-btn">
           保存资料

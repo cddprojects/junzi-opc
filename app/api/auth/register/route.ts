@@ -7,12 +7,14 @@ export async function POST(request: Request) {
     name?: string;
     account?: string;
     password?: string;
+    referralCode?: string;
   } | null;
   try {
     const result = registerCustomer({
       name: body?.name || "",
       account: body?.account || "",
       password: body?.password || "",
+      referralCode: body?.referralCode || "",
     });
     await setUserCookie(result.token);
     return NextResponse.json({ user: result.user });

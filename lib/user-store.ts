@@ -24,8 +24,20 @@ import {
   makeVerifyCode,
   newId,
 } from "@/lib/security";
-import { getSettings, getStoreProduct, readStore, writeStore } from "@/lib/store";
+import { ensureCustomerReferral, getSettings, getStoreProduct, readStore, writeStore } from "@/lib/store";
 import { fromCny, parseCurrency } from "@/lib/currency";
+import {
+  computeTierPayouts,
+  findCustomerByReferralCode,
+  isPayableEarn,
+  normalizeReferralCode,
+  normalizeReferralPlan,
+  visiblePlanTiers,
+  walkReferralChain,
+  wouldCreateReferralCycle,
+  type CommissionEntry,
+  type Withdrawal,
+} from "@/lib/referral";
 
 export function verifySecret() {
   return process.env.VERIFY_SECRET || readStore().verifySecret;
@@ -53,6 +65,7 @@ export function registerCustomer(input: {
   name: string;
   account: string;
   password: string;
+  referralCode?: string;
 }) {
   const name = input.name.trim();
   if (name.length < 1 || name.length > 24) throw new Error("请填写 1–24 字昵称");
@@ -70,16 +83,34 @@ export function registerCustomer(input: {
     throw new Error("该账号已注册");
   }
   const { salt, hash } = hashPassword(input.password);
-  const user: Customer = {
-    id: newId("usr"),
-    name,
-    email: account.email,
-    phone: account.phone,
-    passwordSalt: salt,
-    passwordHash: hash,
-    createdAt: new Date().toISOString(),
-    status: "active",
-  };
+  const wanted = normalizeReferralCode(input.referralCode);
+  let referrerId: string | undefined;
+  if (wanted) {
+    const referrer = findCustomerByReferralCode(store.users, wanted);
+    if (!referrer) throw new Error("推荐码无效");
+    referrerId = referrer.id;
+  }
+  const taken = new Set(
+    store.users.map((item) => normalizeReferralCode(item.referralCode)).filter(Boolean),
+  );
+  const user = ensureCustomerReferral(
+    {
+      id: newId("usr"),
+      name,
+      email: account.email,
+      phone: account.phone,
+      passwordSalt: salt,
+      passwordHash: hash,
+      createdAt: new Date().toISOString(),
+      status: "active",
+      referrerId,
+      commissionBalanceSen: 0,
+    },
+    taken,
+  );
+  if (user.referrerId && wouldCreateReferralCycle(store.users.concat(user), user.id, user.referrerId)) {
+    throw new Error("推荐码无效");
+  }
   store.users.push(user);
   const session = createSessionRecord(user.id);
   store.sessions.push(session);
@@ -232,8 +263,48 @@ function fulfillOrderInStore(store: ReturnType<typeof readStore>, order: Order, 
       const base = isMemberActive(user) && user.memberUntil ? Date.parse(user.memberUntil) : Date.now();
       user.memberUntil = new Date(base + 365 * 24 * 60 * 60 * 1000).toISOString();
     }
+    if ((order.payMethod || payMethod) === "billplz") {
+      creditReferralInStore(store, order);
+    }
   }
   return true;
+}
+
+function creditReferralInStore(store: ReturnType<typeof readStore>, order: Order) {
+  if (store.commissionLedger.some((row) => row.kind === "earn" && row.orderId === order.id)) {
+    return;
+  }
+  const buyer = store.users.find((item) => item.id === order.userId);
+  const plan = normalizeReferralPlan(store.referralPlan);
+  const baseSen = Math.max(0, Math.round(order.amountSen || Math.round((order.amountMyr || 0) * 100)));
+  const chain = walkReferralChain(store.users, buyer, plan.compression);
+  const tiers = computeTierPayouts({ plan, baseSen, chain });
+  const now = new Date().toISOString();
+  order.referralSettled = { baseSen, compression: plan.compression, tiers };
+  for (const slot of tiers) {
+    const entry: CommissionEntry = {
+      id: newId("cms"),
+      kind: "earn",
+      userId: slot.userId || "",
+      orderId: order.id,
+      buyerId: order.userId,
+      buyerName: buyer?.name,
+      tier: slot.tier,
+      ratePercent: slot.ratePercent,
+      baseSen,
+      amountSen: slot.amountSen,
+      paid: slot.paid,
+      reason: slot.reason,
+      createdAt: now,
+    };
+    store.commissionLedger.push(entry);
+    if (slot.paid && slot.userId && slot.amountSen > 0) {
+      const earner = store.users.find((item) => item.id === slot.userId);
+      if (earner) {
+        earner.commissionBalanceSen = Math.max(0, Math.round(earner.commissionBalanceSen || 0)) + slot.amountSen;
+      }
+    }
+  }
 }
 
 export function checkoutOrders(
@@ -387,7 +458,7 @@ export function listCustomers(query = "") {
   return store.users
     .filter((user) => {
       if (!q) return true;
-      return [user.name, user.email ?? "", user.phone ?? "", user.id]
+      return [user.name, user.email ?? "", user.phone ?? "", user.id, user.referralCode ?? ""]
         .some((field) => field.toLowerCase().includes(q));
     })
     .map((user) => ({
@@ -397,6 +468,12 @@ export function listCustomers(query = "") {
       phone: user.phone,
       orderCount: store.orders.filter((order) => order.userId === user.id).length,
       createdAt: user.createdAt,
+      referralCode: user.referralCode,
+      referrerId: user.referrerId,
+      referrerName: user.referrerId
+        ? store.users.find((item) => item.id === user.referrerId)?.name
+        : undefined,
+      commissionBalanceSen: user.commissionBalanceSen || 0,
     }))
     .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
 }
@@ -405,13 +482,187 @@ export function getCustomerAdmin(userId: string) {
   const store = readStore();
   const user = store.users.find((item) => item.id === userId);
   if (!user) return null;
+  const plan = normalizeReferralPlan(store.referralPlan);
+  const chain = walkReferralChain(store.users, user, false).map((slot) => ({
+    tier: slot.tier,
+    userId: slot.user?.id,
+    name: slot.user?.name,
+    code: slot.user?.referralCode,
+    status: slot.user?.status,
+    email: slot.user?.email,
+    phone: slot.user?.phone,
+  }));
+  const downline = store.users
+    .filter((item) => item.referrerId === user.id)
+    .map((item) => ({
+      id: item.id,
+      name: item.name,
+      referralCode: item.referralCode,
+      createdAt: item.createdAt,
+      status: item.status === "disabled" ? "disabled" : "active",
+    }));
   return {
     ...publicCustomer(user),
     email: user.email,
     phone: user.phone,
     createdAt: user.createdAt,
+    referralCode: user.referralCode,
+    referrerId: user.referrerId,
+    referrerName: user.referrerId ? store.users.find((item) => item.id === user.referrerId)?.name : undefined,
+    commissionBalanceSen: user.commissionBalanceSen || 0,
+    upline: chain,
+    downline,
+    earnings: store.commissionLedger
+      .filter((row) => row.userId === user.id && row.kind === "earn")
+      .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt)),
+    plan,
     orders: ordersForUser(userId),
   };
+}
+
+export function setCustomerReferrer(userId: string, referralCode: string | null) {
+  const store = readStore();
+  const user = store.users.find((item) => item.id === userId);
+  if (!user) throw new Error("用户不存在");
+  if (!referralCode || !normalizeReferralCode(referralCode)) {
+    user.referrerId = undefined;
+    writeStore(store);
+    return publicCustomer(user);
+  }
+  const referrer = findCustomerByReferralCode(store.users, referralCode);
+  if (!referrer) throw new Error("推荐码无效");
+  if (referrer.id === user.id) throw new Error("不能填写自己的推荐码");
+  if (wouldCreateReferralCycle(store.users, user.id, referrer.id)) throw new Error("推荐关系会形成循环");
+  user.referrerId = referrer.id;
+  writeStore(store);
+  return publicCustomer(user);
+}
+
+export function getReferralDashboard(userId: string) {
+  const store = readStore();
+  const user = store.users.find((item) => item.id === userId);
+  if (!user) throw new Error("请先登录");
+  const plan = normalizeReferralPlan(store.referralPlan);
+  const pendingSen = store.withdrawals
+    .filter((row) => row.userId === userId && row.status === "requested")
+    .reduce((sum, row) => sum + row.amountSen, 0);
+  const balanceSen = Math.max(0, Math.round(user.commissionBalanceSen || 0));
+  const earnings = store.commissionLedger
+    .filter((row) => row.userId === userId && isPayableEarn(row, plan))
+    .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
+  const downline = store.users
+    .filter((item) => item.referrerId === user.id)
+    .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt))
+    .map((item) => ({
+      id: item.id,
+      name: item.name,
+      createdAt: item.createdAt,
+    }));
+  return {
+    referralCode: user.referralCode || "",
+    balanceSen,
+    pendingSen,
+    availableSen: Math.max(0, balanceSen - pendingSen),
+    tiers: visiblePlanTiers(plan),
+    earnings,
+    downline,
+    withdrawals: store.withdrawals
+      .filter((row) => row.userId === userId)
+      .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt)),
+  };
+}
+
+export function requestWithdrawal(userId: string, amountSen: number) {
+  const store = readStore();
+  const user = store.users.find((item) => item.id === userId);
+  if (!user) throw new Error("请先登录");
+  if (user.status === "disabled") throw new Error("账号已被停用");
+  const amount = Math.round(amountSen);
+  if (!Number.isFinite(amount) || amount < 1) throw new Error("提现金额无效");
+  const pendingSen = store.withdrawals
+    .filter((row) => row.userId === userId && row.status === "requested")
+    .reduce((sum, row) => sum + row.amountSen, 0);
+  const available = Math.max(0, Math.round(user.commissionBalanceSen || 0) - pendingSen);
+  if (amount > available) throw new Error("余额不足");
+  const row: Withdrawal = {
+    id: newId("wd"),
+    userId,
+    amountSen: amount,
+    status: "requested",
+    createdAt: new Date().toISOString(),
+  };
+  store.withdrawals.push(row);
+  writeStore(store);
+  return row;
+}
+
+export function listCommissionDesk() {
+  const store = readStore();
+  const usersById = new Map(store.users.map((user) => [user.id, user]));
+  const ordersById = new Map(store.orders.map((order) => [order.id, order]));
+  const earnings = [...store.commissionLedger]
+    .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt))
+    .map((row) => ({
+      ...row,
+      userName: row.userId ? usersById.get(row.userId)?.name : undefined,
+      userAccount: row.userId && usersById.get(row.userId) ? maskAccount(usersById.get(row.userId)!) : undefined,
+      orderTitle: row.orderId ? ordersById.get(row.orderId)?.productTitle : undefined,
+      chain: row.orderId ? ordersById.get(row.orderId)?.referralSettled : undefined,
+    }));
+  const withdrawals = [...store.withdrawals]
+    .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt))
+    .map((row) => ({
+      ...row,
+      userName: usersById.get(row.userId)?.name,
+      userAccount: usersById.get(row.userId) ? maskAccount(usersById.get(row.userId)!) : undefined,
+      balanceSen: usersById.get(row.userId)?.commissionBalanceSen || 0,
+    }));
+  const accruedSen = store.commissionLedger
+    .filter((row) => row.kind === "earn" && row.paid)
+    .reduce((sum, row) => sum + row.amountSen, 0);
+  const pendingWithdrawSen = store.withdrawals
+    .filter((row) => row.status === "requested")
+    .reduce((sum, row) => sum + row.amountSen, 0);
+  return {
+    plan: normalizeReferralPlan(store.referralPlan),
+    earnings,
+    withdrawals,
+    accruedSen,
+    pendingWithdrawSen,
+  };
+}
+
+export function settleWithdrawal(id: string, action: "settle" | "reject", note?: string) {
+  const store = readStore();
+  const row = store.withdrawals.find((item) => item.id === id);
+  if (!row) throw new Error("提现记录不存在");
+  if (row.status !== "requested") throw new Error("该提现已处理");
+  if (action === "reject") {
+    row.status = "rejected";
+    row.settledAt = new Date().toISOString();
+    row.note = note || row.note;
+    writeStore(store);
+    return row;
+  }
+  const user = store.users.find((item) => item.id === row.userId);
+  if (!user) throw new Error("用户不存在");
+  const balance = Math.max(0, Math.round(user.commissionBalanceSen || 0));
+  if (row.amountSen > balance) throw new Error("余额不足");
+  user.commissionBalanceSen = balance - row.amountSen;
+  row.status = "settled";
+  row.settledAt = new Date().toISOString();
+  row.note = note || row.note;
+  store.commissionLedger.push({
+    id: newId("cms"),
+    kind: "payout",
+    userId: user.id,
+    amountSen: row.amountSen,
+    paid: true,
+    createdAt: row.settledAt,
+    note: `withdrawal:${row.id}`,
+  });
+  writeStore(store);
+  return row;
 }
 
 export function setCustomerStatus(userId: string, status: "active" | "disabled") {

@@ -13,6 +13,7 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
   const router = useRouter();
   const params = useSearchParams();
   const next = params.get("next") || "/mine";
+  const refPrefill = params.get("ref") || "";
   const { refresh } = useAuth();
   const { locale, t } = useLocale();
   const [error, setError] = useState("");
@@ -29,6 +30,7 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
             name: String(form.get("name") || ""),
             account: String(form.get("account") || ""),
             password: String(form.get("password") || ""),
+            referralCode: String(form.get("referralCode") || ""),
           }
         : {
             account: String(form.get("account") || ""),
@@ -74,10 +76,22 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
         <Input name="password" type="password" required minLength={6} className="mt-1 h-10" placeholder={t("authPasswordPlaceholder")} />
       </label>
       {mode === "register" && (
-        <label className="block text-[13px]">
-          {t("authConfirm")}
-          <Input name="confirm" type="password" required minLength={6} className="mt-1 h-10" />
-        </label>
+        <>
+          <label className="block text-[13px]">
+            {t("authConfirm")}
+            <Input name="confirm" type="password" required minLength={6} className="mt-1 h-10" />
+          </label>
+          <label className="block text-[13px]">
+            {t("authReferral")}
+            <Input
+              name="referralCode"
+              defaultValue={refPrefill}
+              className="mt-1 h-10 uppercase"
+              placeholder={t("authReferralPlaceholder")}
+              autoComplete="off"
+            />
+          </label>
+        </>
       )}
       {error && <p className="text-[13px] text-[#fa3534]">{error}</p>}
       <Button type="submit" disabled={busy} className="h-10 w-full bg-[#8a5a20] text-white hover:bg-[#6f4818]">

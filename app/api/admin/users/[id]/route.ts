@@ -1,6 +1,12 @@
 import { NextResponse } from "next/server";
 import { assertAdmin } from "@/lib/auth";
-import { getCustomerAdmin, setCustomerMembership, setCustomerStatus, updateCustomerProfile } from "@/lib/user-store";
+import {
+  getCustomerAdmin,
+  setCustomerMembership,
+  setCustomerReferrer,
+  setCustomerStatus,
+  updateCustomerProfile,
+} from "@/lib/user-store";
 
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -27,12 +33,16 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     phone?: string;
     status?: "active" | "disabled";
     memberUntil?: string | null;
+    referrerCode?: string | null;
   } | null;
   try {
     if (body?.status) setCustomerStatus(id, body.status);
     if (body && ("memberUntil" in body)) setCustomerMembership(id, body.memberUntil);
     if (body?.name || body?.email !== undefined || body?.phone !== undefined) {
       updateCustomerProfile(id, { name: body.name, email: body.email, phone: body.phone });
+    }
+    if (body && "referrerCode" in body) {
+      setCustomerReferrer(id, body.referrerCode ?? null);
     }
     const user = getCustomerAdmin(id);
     return NextResponse.json({ user });

@@ -15,6 +15,7 @@ import {
 import { mineBlocks } from "@/lib/data";
 import { useAuth } from "@/components/auth-provider";
 import { useT } from "@/components/locale-provider";
+import { ReferralSummary } from "@/components/referral-center";
 import type { MessageKey } from "@/lib/messages";
 
 const MINE_LABELS: Record<string, MessageKey> = {
@@ -77,6 +78,8 @@ export default function MinePage() {
           </Link>
         )}
       </div>
+
+      {user ? <ReferralSummary /> : null}
 
       <section className="bg-white px-3 pt-4 pb-5 md:px-8">
         <h2 className="mb-4 text-[15px] font-medium">{t("minePersonal")}</h2>

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getCatalog } from "@/lib/store";
-import { listAllOrders, listCustomers } from "@/lib/user-store";
+import { listAllOrders, listCommissionDesk, listCustomers } from "@/lib/user-store";
+import { formatMyrSen } from "@/lib/referral";
 import { isBillplzConfigured } from "@/lib/billplz";
 import { isOrderPaid } from "@/lib/account";
 import { formatMoneyAmount } from "@/lib/currency";
@@ -18,6 +19,7 @@ export default async function AdminHomePage() {
   const paid = orders.filter(isOrderPaid);
   const pending = orders.length - paid.length;
   const myr = paid.reduce((sum, order) => sum + (order.amountMyr ?? 0), 0);
+  const commission = listCommissionDesk();
 
   return (
     <div>
@@ -63,6 +65,10 @@ export default async function AdminHomePage() {
         <Link href="/admin/billplz" className="jx-panel jx-ledger-card">
           <p className="jx-ledger-label">{t(locale, "adminBillplz")}</p>
           <p className={`jx-ledger-value ${billplzReady ? "" : "is-seal"}`}>{billplzReady ? "ON" : "OFF"}</p>
+        </Link>
+        <Link href="/admin/commission" className="jx-panel jx-ledger-card">
+          <p className="jx-ledger-label">{t(locale, "adminCommissionAccrued")}</p>
+          <p className="jx-ledger-value is-seal">{formatMyrSen(commission.accruedSen)}</p>
         </Link>
       </div>
 
