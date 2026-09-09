@@ -58,8 +58,7 @@ export function ReferralSummary() {
     <section className="border-t border-[#f3eee4] bg-[#fffdf8] px-3 py-4 md:px-8">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h2 className="font-serif text-[15px]">{t("referralTitle")}</h2>
-          <p className="mt-1 text-[12px] text-[#777]">{t("referralCodeLabel")}</p>
+          <p className="text-[12px] text-[#777]">{t("referralCodeLabel")}</p>
           <p className="font-serif text-[20px] tracking-wide text-[#3a2c10]">{data.referralCode}</p>
         </div>
         <div className="text-right">
@@ -68,9 +67,6 @@ export function ReferralSummary() {
         </div>
       </div>
       <CopyShare code={data.referralCode} />
-      <Link href="/agent" className="mt-3 inline-block text-[13px] text-[#8a5a20]">
-        {t("mineAgent")} →
-      </Link>
     </section>
   );
 }
