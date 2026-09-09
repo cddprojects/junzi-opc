@@ -100,6 +100,7 @@ function titleKey(pathname: string): MessageKey {
   if (pathname.startsWith("/admin/products")) return "adminProducts";
   if (pathname.startsWith("/admin/posters")) return "adminPosters";
   if (pathname.startsWith("/admin/videos")) return "adminVideos";
+  if (pathname.startsWith("/admin/orders/") && pathname !== "/admin/orders") return "adminOrderDetail";
   if (pathname.startsWith("/admin/orders")) return "adminOrders";
   if (pathname.startsWith("/admin/users")) return "adminUsers";
   if (pathname.startsWith("/admin/network")) return "adminNetwork";

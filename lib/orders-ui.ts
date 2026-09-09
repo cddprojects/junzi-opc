@@ -26,7 +26,7 @@ export function formatOrderTime(iso: string) {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
-export function displayOrderNo(order: Order) {
+export function displayOrderNo(order: Pick<Order, "id" | "createdAt">) {
   const date = new Date(order.createdAt);
   const pad = (value: number) => String(value).padStart(2, "0");
   const stamp = Number.isNaN(date.getTime())
@@ -34,6 +34,48 @@ export function displayOrderNo(order: Order) {
     : `${date.getFullYear()}${pad(date.getMonth() + 1)}${pad(date.getDate())}${pad(date.getHours())}${pad(date.getMinutes())}`;
   const tail = order.id.replace(/^ord_/, "").replace(/-/g, "").slice(-6).toUpperCase();
   return `GO${stamp}${tail}`;
+}
+
+/** Hand-named fixture in local store data (chk_refverify / bill_refverify). Not created by checkout. */
+export function isRefVerifyOrder(order: { id?: string; checkoutId?: string; billplzBillId?: string }) {
+  const id = order.id || "";
+  return (
+    id.startsWith("ord_refverify_") ||
+    order.checkoutId === "chk_refverify" ||
+    order.billplzBillId === "bill_refverify"
+  );
+}
+
+export function publicOrderNo(order: Pick<Order, "id" | "createdAt"> & { checkoutId?: string; billplzBillId?: string }) {
+  if (isRefVerifyOrder(order)) return null;
+  return displayOrderNo(order);
+}
+
+export function adminOrderKind(
+  order: Pick<Order, "id" | "payMethod"> & { checkoutId?: string; billplzBillId?: string },
+): "customer" | "refverify" | "demo" | "grant" {
+  if (isRefVerifyOrder(order)) return "refverify";
+  if (order.payMethod === "demo") return "demo";
+  if (order.payMethod === "grant") return "grant";
+  return "customer";
+}
+
+export function orderSearchBlob(order: Pick<Order, "id" | "createdAt" | "productTitle" | "verifyCode"> & {
+  userName?: string;
+  billplzBillId?: string;
+  checkoutId?: string;
+}) {
+  return [
+    order.id,
+    displayOrderNo(order),
+    order.productTitle,
+    order.userName || "",
+    order.verifyCode || "",
+    order.billplzBillId || "",
+    order.checkoutId || "",
+  ]
+    .join(" ")
+    .toLowerCase();
 }
 
 export function filterOrders(orders: Order[], tab: OrderTabId) {

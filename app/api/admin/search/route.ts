@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { assertAdmin } from "@/lib/auth";
 import { getCatalog } from "@/lib/store";
+import { orderSearchBlob, publicOrderNo } from "@/lib/orders-ui";
 import { listAllOrders, listCustomers } from "@/lib/user-store";
 
 export const dynamic = "force-dynamic";
@@ -32,12 +33,11 @@ export async function GET(request: Request) {
     }
   }
   for (const order of orders) {
-    const blob = `${order.productTitle} ${order.userName} ${order.verifyCode || ""} ${order.billplzBillId || ""}`.toLowerCase();
-    if (blob.includes(q)) {
+    if (orderSearchBlob(order).includes(q)) {
       items.push({
-        href: `/admin/users/${order.userId}`,
-        title: order.productTitle,
-        hint: order.userName || order.id,
+        href: `/admin/orders/${order.id}`,
+        title: publicOrderNo(order) || order.productTitle,
+        hint: `${order.productTitle} · ${order.userName || order.id}`,
       });
     }
   }

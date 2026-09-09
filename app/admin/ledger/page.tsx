@@ -1,8 +1,11 @@
 import Link from "next/link";
-import { listCommissionDesk } from "@/lib/user-store";
+import { listAllOrders, listCommissionDesk } from "@/lib/user-store";
 import { formatMyrSen, formatTierRateLabel, MAX_COMMISSION_LEVELS } from "@/lib/referral";
+import type { Order } from "@/lib/account";
 import { getRequestLocale } from "@/lib/i18n-server";
+import type { Locale } from "@/lib/i18n";
 import { t, type MessageKey } from "@/lib/messages";
+import { adminOrderKind, publicOrderNo } from "@/lib/orders-ui";
 import {
   COMMISSION_STATUS_KEY,
   commissionStatusClass,
@@ -14,6 +17,7 @@ export const dynamic = "force-dynamic";
 export default async function AdminLedgerPage() {
   const locale = await getRequestLocale();
   const desk = listCommissionDesk();
+  const ordersById = new Map(listAllOrders().map((order) => [order.id, order]));
   const earns = desk.earnings.filter(
     (row) => row.kind === "earn" && (!row.tier || row.tier <= MAX_COMMISSION_LEVELS),
   );
@@ -72,9 +76,11 @@ export default async function AdminLedgerPage() {
                             {new Date(row.createdAt).toLocaleDateString(locale === "en" ? "en-MY" : "zh-CN")}
                           </p>
                           {row.orderId ? (
-                            <p className="jx-buyer-meta jx-mono jx-order-id" title={row.orderId}>
-                              {t(locale, "adminOrderId")} {row.orderId}
-                            </p>
+                            <OrderRef
+                              locale={locale}
+                              orderId={row.orderId}
+                              order={ordersById.get(row.orderId)}
+                            />
                           ) : null}
                         </td>
                       ) : null}
@@ -107,5 +113,45 @@ export default async function AdminLedgerPage() {
         </table>
       </div>
     </div>
+  );
+}
+
+function OrderRef({
+  locale,
+  orderId,
+  order,
+}: {
+  locale: Locale;
+  orderId: string;
+  order?: Order;
+}) {
+  const publicNo = order ? publicOrderNo(order) : null;
+  const kind = order ? adminOrderKind(order) : "customer";
+  const badge =
+    kind === "refverify"
+      ? t(locale, "adminOrderRefVerify")
+      : kind === "demo"
+        ? t(locale, "adminOrderDemo")
+        : kind === "grant"
+          ? t(locale, "adminOrderGrant")
+          : null;
+
+  if (publicNo) {
+    return (
+      <p className="jx-buyer-meta">
+        <Link href={`/admin/orders/${orderId}`} className="jx-link">
+          {t(locale, "adminOrderShort")} {publicNo}
+        </Link>
+        {badge ? <span className="jx-chip ml-2">{badge}</span> : null}
+      </p>
+    );
+  }
+
+  return (
+    <p className="jx-buyer-meta">
+      <Link href={`/admin/orders/${orderId}`} className="jx-link">
+        {badge || t(locale, "adminOrderDetail")}
+      </Link>
+    </p>
   );
 }

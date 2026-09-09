@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { publicOrderNo } from "@/lib/orders-ui";
 
 type Result = {
   valid: boolean;
@@ -53,7 +54,9 @@ export function AdminVerifyForm() {
             {result.user.phone ? ` · ${result.user.phone}` : ""}
           </p>
           {result.user.id && <p>用户 ID：{result.user.id}</p>}
-          <p>订单：{result.order.id}</p>
+          <p>
+            订单号：{publicOrderNo(result.order) || "推荐验证"}
+          </p>
           <p>时间：{new Date(result.order.createdAt).toLocaleString("zh-CN")}</p>
         </div>
       )}

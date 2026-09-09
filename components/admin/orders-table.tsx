@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { isOrderPaid, type Order } from "@/lib/account";
@@ -20,7 +20,7 @@ import {
   payMethodLabel,
 } from "@/lib/commission-ui";
 import { ReferralChainDrawer } from "@/components/admin/referral-chain-drawer";
-import { displayOrderNo } from "@/lib/orders-ui";
+import { adminOrderKind, isRefVerifyOrder, publicOrderNo } from "@/lib/orders-ui";
 import { useT } from "@/components/locale-provider";
 import { cn } from "@/lib/utils";
 import type { MessageKey } from "@/lib/messages";
@@ -30,23 +30,58 @@ type AdminOrder = Order & {
   userAccount?: string;
 };
 
+type Filter = "all" | "customer" | "internal";
+
 export function AdminOrdersTable({ orders }: { orders: AdminOrder[] }) {
   const t = useT();
   const [openIds, setOpenIds] = useState<string[]>([]);
   const [chain, setChain] = useState<AdminOrder | null>(null);
+  const [filter, setFilter] = useState<Filter>("all");
+
+  const visible = useMemo(() => {
+    if (filter === "internal") return orders.filter((order) => isRefVerifyOrder(order));
+    if (filter === "customer") return orders.filter((order) => !isRefVerifyOrder(order));
+    return orders;
+  }, [filter, orders]);
 
   function toggle(id: string) {
     setOpenIds((current) => (current.includes(id) ? current.filter((item) => item !== id) : [...current, id]));
   }
 
+  function kindLabel(order: AdminOrder) {
+    const kind = adminOrderKind(order);
+    if (kind === "refverify") return t("adminOrderRefVerify");
+    if (kind === "demo") return t("adminOrderDemo");
+    if (kind === "grant") return t("adminOrderGrant");
+    return null;
+  }
+
   return (
     <>
-      <div className="jx-panel mt-6 overflow-x-auto">
+      <div className="jx-order-filters">
+        {(
+          [
+            ["all", "adminOrderFilterAll"],
+            ["customer", "adminOrderFilterCustomer"],
+            ["internal", "adminOrderFilterInternal"],
+          ] as const
+        ).map(([id, key]) => (
+          <button
+            key={id}
+            type="button"
+            className={cn("jx-chip", filter === id && "is-on")}
+            aria-pressed={filter === id}
+            onClick={() => setFilter(id)}
+          >
+            {t(key)}
+          </button>
+        ))}
+      </div>
+      <div className="jx-panel mt-4 overflow-x-auto">
         <table className="jx-table">
           <thead>
             <tr>
-              <th>{t("adminOrderId")}</th>
-              <th>课程</th>
+              <th>{t("adminOrderCourse")}</th>
               <th>学员</th>
               <th>金额</th>
               <th>状态</th>
@@ -56,25 +91,36 @@ export function AdminOrdersTable({ orders }: { orders: AdminOrder[] }) {
             </tr>
           </thead>
           <tbody>
-            {orders.length === 0 ? (
+            {visible.length === 0 ? (
               <tr>
-                <td colSpan={8}>暂无订单。</td>
+                <td colSpan={7}>暂无订单。</td>
               </tr>
             ) : (
-              orders.flatMap((order) => {
+              visible.flatMap((order) => {
                 const summary = orderCommissionSummary(order);
                 const expanded = openIds.includes(order.id);
                 const payTiers = (order.referralSettled?.tiers || []).filter(
                   (slot) => slot.tier <= MAX_COMMISSION_LEVELS,
                 );
                 const canExpand = isOrderPaid(order) && payTiers.length > 0;
+                const publicNo = publicOrderNo(order);
+                const badge = kindLabel(order);
                 const rows = [
                   <tr key={order.id} className={expanded ? "is-open-order" : undefined}>
                     <td>
-                      <p className="jx-mono jx-order-id">{order.id}</p>
-                      <p className="mt-1 text-[12px] text-[var(--mute)]">{displayOrderNo(order)}</p>
+                      {publicNo ? (
+                        <Link href={`/admin/orders/${order.id}`} className="jx-order-public">
+                          {publicNo}
+                        </Link>
+                      ) : (
+                        <Link href={`/admin/orders/${order.id}`} className="jx-order-public">
+                          {badge}
+                        </Link>
+                      )}
+                      {badge && publicNo ? <span className="jx-chip ml-2 align-middle">{badge}</span> : null}
+                      <p className="jx-order-course">{order.productTitle}</p>
+                      {!publicNo ? <p className="jx-order-tech">{order.id}</p> : null}
                     </td>
-                    <td>{order.productTitle}</td>
                     <td>
                       <Link href={`/admin/users/${order.userId}`} className="jx-link">
                         {order.userName}
@@ -118,7 +164,7 @@ export function AdminOrdersTable({ orders }: { orders: AdminOrder[] }) {
                 if (canExpand && order.referralSettled) {
                   rows.push(
                     <tr key={`${order.id}-detail`} className="jx-order-detail">
-                      <td colSpan={8}>
+                      <td colSpan={7}>
                         <div className={cn("jx-expand", expanded && "is-open")}>
                         <div className="jx-expand-inner">
                         <table className="jx-mini">
