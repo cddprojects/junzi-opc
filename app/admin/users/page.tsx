@@ -88,7 +88,7 @@ export default async function AdminUsersPage({
                     </td>
                     <td className="jx-num">
                       <span>{user.orderCount}</span>
-                      {user.orderCount === 0 ? null : user.paidOrderCount > 0 && user.billplzPaidCount === 0 ? (
+                      {user.orderCount === 0 ? null : user.paidOrderCount > 0 && user.billplzPaidCount === 0 && user.accruedOrderCount === 0 ? (
                         <span className="block text-[11px] font-normal text-[var(--faint)]">
                           {t(locale, "adminOrdersNoCommission")}
                         </span>

@@ -268,7 +268,7 @@ function fulfillOrderInStore(store: ReturnType<typeof readStore>, order: Order, 
     }
     const method = order.payMethod || payMethod;
     if (method === "billplz") {
-      creditReferralInStore(store, order);
+      creditReferralInStore(store, order, "billplz");
     } else {
       order.referralSkip = { reason: method === "grant" ? "grant" : method === "demo" ? "demo" : "not_billplz" };
     }
@@ -276,7 +276,11 @@ function fulfillOrderInStore(store: ReturnType<typeof readStore>, order: Order, 
   return true;
 }
 
-function creditReferralInStore(store: ReturnType<typeof readStore>, order: Order) {
+function creditReferralInStore(
+  store: ReturnType<typeof readStore>,
+  order: Order,
+  accruedBy: "billplz" | "admin" = "billplz",
+) {
   if (store.commissionLedger.some((row) => row.kind === "earn" && row.orderId === order.id)) {
     return;
   }
@@ -287,7 +291,8 @@ function creditReferralInStore(store: ReturnType<typeof readStore>, order: Order
   const tiers = computeTierPayouts({ plan, baseSen, chain });
   const genealogy = walkFullUpline(store.users, buyer);
   const now = new Date().toISOString();
-  order.referralSettled = { baseSen, compression: plan.compression, tiers, genealogy };
+  delete order.referralSkip;
+  order.referralSettled = { baseSen, compression: plan.compression, tiers, genealogy, accruedBy };
   for (const slot of tiers) {
     const entry: CommissionEntry = {
       id: newId("cms"),
@@ -478,6 +483,11 @@ export function listCustomers(query = "") {
       billplzPaidCount: store.orders.filter(
         (order) => order.userId === user.id && isOrderPaid(order) && order.payMethod === "billplz",
       ).length,
+      accruedOrderCount: store.orders.filter(
+        (order) =>
+          order.userId === user.id &&
+          Boolean(order.referralSettled?.tiers.some((tier) => tier.paid && tier.amountSen > 0)),
+      ).length,
       createdAt: user.createdAt,
       referralCode: user.referralCode,
       referrerId: user.referrerId,
@@ -637,6 +647,7 @@ export function listCommissionDesk() {
         amountMyr: order.amountMyr,
         createdAt: order.createdAt,
         reason,
+        canAccrue: !order.referralSettled,
       };
     })
     .filter((row): row is NonNullable<typeof row> => Boolean(row))
@@ -718,7 +729,12 @@ export function setCustomerMembership(userId: string, memberUntil?: string | nul
   return publicCustomer(user);
 }
 
-export function grantCourse(userId: string, productSlug: string, currencyInput?: string) {
+export function grantCourse(
+  userId: string,
+  productSlug: string,
+  currencyInput?: string,
+  options?: { accrueCommission?: boolean },
+) {
   const item =
     productSlug === membership.slug
       ? { slug: membership.slug, title: membership.title, price: membership.campPrice, qty: 1 }
@@ -727,7 +743,25 @@ export function grantCourse(userId: string, productSlug: string, currencyInput?:
           if (!product) throw new Error("课程不存在");
           return { slug: product.slug, title: product.title, price: product.price, qty: 1 };
         })();
-  return checkoutOrders(userId, [item], currencyInput, "grant");
+  const created = checkoutOrders(userId, [item], currencyInput, "grant");
+  if (!options?.accrueCommission) return created;
+  return created.map((order) => accrueCommissionForOrder(order.id));
+}
+
+export function accrueCommissionForOrder(orderId: string) {
+  const store = readStore();
+  const order = store.orders.find((item) => item.id === orderId);
+  if (!order) throw new Error("订单不存在");
+  if (!isOrderPaid(order)) throw new Error("订单未支付，不能计提");
+  const baseSen = Math.max(0, Math.round(order.amountSen || Math.round((order.amountMyr || 0) * 100)));
+  if (baseSen <= 0) throw new Error("订单没有实收令吉，无法计佣");
+  order.amountSen = order.amountSen || baseSen;
+  order.amountMyr = order.amountMyr ?? baseSen / 100;
+  const already = store.commissionLedger.some((row) => row.kind === "earn" && row.orderId === order.id);
+  if (already && order.referralSettled) return order;
+  creditReferralInStore(store, order, order.payMethod === "billplz" ? "billplz" : "admin");
+  writeStore(store);
+  return order;
 }
 
 export function revokeOrder(userId: string, orderId: string) {

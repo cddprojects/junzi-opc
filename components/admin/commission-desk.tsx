@@ -32,6 +32,7 @@ type Desk = {
     amountMyr?: number;
     createdAt: string;
     reason: "grant" | "demo" | "not_billplz" | "no_upline";
+    canAccrue?: boolean;
   }[];
 };
 
@@ -65,6 +66,23 @@ export function CommissionDesk() {
       .then((data: Desk) => setDesk(data))
       .catch(() => setError(t("errorGeneric")));
   }, [t]);
+
+  async function accrue(orderId: string) {
+    setBusy("accrue" + orderId);
+    setError("");
+    const res = await fetch("/api/admin/commission/accrue", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ orderId }),
+    });
+    const data = (await res.json()) as Desk & { error?: string };
+    setBusy("");
+    if (!res.ok) {
+      setError(data.error || t("errorGeneric"));
+      return;
+    }
+    setDesk(data);
+  }
 
   async function act(id: string, action: "settle" | "reject") {
     setBusy(id + action);
@@ -121,6 +139,7 @@ export function CommissionDesk() {
                 <th>{t("referralOrder")}</th>
                 <th className="jx-num">{t("adminColPaidAmount")}</th>
                 <th>{t("adminColSkipReason")}</th>
+                <th></th>
               </tr>
             </thead>
             <tbody>
@@ -141,6 +160,18 @@ export function CommissionDesk() {
                       : "—"}
                   </td>
                   <td className="text-[13px] text-[var(--mute)]">{skipLabel(row.reason, t)}</td>
+                  <td>
+                    {row.canAccrue ? (
+                      <button
+                        type="button"
+                        className="jx-btn-ghost"
+                        disabled={Boolean(busy)}
+                        onClick={() => accrue(row.id)}
+                      >
+                        {t("adminBackfill")}
+                      </button>
+                    ) : null}
+                  </td>
                 </tr>
               ))}
             </tbody>

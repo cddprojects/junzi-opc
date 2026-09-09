@@ -81,6 +81,7 @@ export type OrderReferralSettled = {
   compression: boolean;
   tiers: ReferralChainSlot[];
   genealogy?: GenealogyPerson[];
+  accruedBy?: "billplz" | "admin";
 };
 
 export const DEFAULT_REFERRAL_PLAN: ReferralPlan = {
@@ -343,14 +344,14 @@ export function commissionSkipReason(order: {
   referralSkip?: { reason?: string };
 }): CommissionSkipReason | null {
   if ((order.status ?? "paid") === "pending") return "pending";
-  const method = order.payMethod || order.referralSkip?.reason || "demo";
-  if (method === "grant") return "grant";
-  if (method === "demo") return "demo";
-  if (method !== "billplz") return "not_billplz";
   if (order.referralSettled) {
     const paid = order.referralSettled.tiers.some((tier) => tier.paid && tier.amountSen > 0);
     return paid ? null : "no_upline";
   }
+  const method = order.payMethod || order.referralSkip?.reason || "demo";
+  if (method === "grant") return "grant";
+  if (method === "demo") return "demo";
+  if (method !== "billplz") return "not_billplz";
   return "no_upline";
 }
 

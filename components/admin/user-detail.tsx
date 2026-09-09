@@ -88,6 +88,7 @@ export function AdminUserDetail({
       body: JSON.stringify({
         productSlug: String(form.get("productSlug") || ""),
         currency: "CNY",
+        accrueCommission: form.get("accrueCommission") === "on",
       }),
     });
     const data = (await res.json()) as { error?: string };
@@ -96,7 +97,28 @@ export function AdminUserDetail({
       setError(data.error || "授权失败");
       return;
     }
-    setSaved("已授权课程并生成课程码");
+    setSaved(
+      form.get("accrueCommission") === "on" ? "已授权课程，并按实收补计提" : "已授权课程并生成课程码",
+    );
+    router.refresh();
+  }
+
+  async function accrueOrder(orderId: string) {
+    setBusy(true);
+    setError("");
+    setSaved("");
+    const res = await fetch("/api/admin/commission/accrue", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ orderId }),
+    });
+    const data = (await res.json()) as { error?: string };
+    setBusy(false);
+    if (!res.ok) {
+      setError(data.error || t("errorGeneric"));
+      return;
+    }
+    setSaved(t("adminBackfillHint"));
     router.refresh();
   }
 
@@ -252,9 +274,13 @@ export function AdminUserDetail({
                   {order.payMethod === "billplz"
                     ? " · Billplz 计佣"
                     : order.payMethod === "grant"
-                      ? " · 后台授权，不计佣"
+                      ? order.referralSettled
+                        ? ` · ${t("adminGrantAccrued")}`
+                        : " · 后台授权，不计佣"
                       : order.payMethod === "demo"
-                        ? " · 演示支付，不计佣"
+                        ? order.referralSettled
+                          ? ` · ${t("adminDemoAccrued")}`
+                          : " · 演示支付，不计佣"
                         : ""}
                   {order.billplzBillId ? ` · ${order.billplzBillId}` : ""}
                 </p>
@@ -263,14 +289,26 @@ export function AdminUserDetail({
                 ) : (
                   <p className="mt-1 text-[12px] text-[#999]">付款成功后发放课程码</p>
                 )}
-                <button type="button" className="mt-2 text-[12px] text-[#888]" onClick={() => revoke(order.id)}>
-                  撤销课程与课程码
-                </button>
+                <div className="mt-2 flex flex-wrap gap-3">
+                  {!order.referralSettled && order.status !== "pending" && (order.amountSen || order.amountMyr) ? (
+                    <button
+                      type="button"
+                      className="text-[12px] text-[var(--gold)]"
+                      disabled={busy}
+                      onClick={() => accrueOrder(order.id)}
+                    >
+                      {t("adminBackfill")}
+                    </button>
+                  ) : null}
+                  <button type="button" className="text-[12px] text-[#888]" onClick={() => revoke(order.id)}>
+                    撤销课程与课程码
+                  </button>
+                </div>
               </li>
             ))}
           </ul>
         )}
-        <form onSubmit={grant} className="mt-4 flex flex-wrap gap-2">
+        <form onSubmit={grant} className="mt-4 flex flex-wrap items-center gap-3">
           <select name="productSlug" className="h-9 rounded-md border bg-white px-2 text-[13px]">
             {products.map((product) => (
               <option key={product.slug} value={product.slug}>
@@ -279,6 +317,10 @@ export function AdminUserDetail({
             ))}
             <option value="member">君子小雅OPC年度会员</option>
           </select>
+          <label className="flex items-center gap-1.5 text-[12px] text-[var(--mute)]">
+            <input type="checkbox" name="accrueCommission" />
+            {t("adminGrantAccrue")}
+          </label>
           <button type="submit" disabled={busy} className="jx-btn">
             授权课程并生成课程码
           </button>

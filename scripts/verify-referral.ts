@@ -121,6 +121,14 @@ assert.equal(dingBuy[0]?.paid, true);
 assert.equal(dingBuy[1]?.paid, false);
 assert.equal(dingBuy[2]?.paid, false);
 
+assert.equal(
+  commissionSkipReason({
+    status: "paid",
+    payMethod: "grant",
+    referralSettled: { baseSen: 604, compression: false, tiers: dingBuy, accruedBy: "admin" },
+  }),
+  null,
+);
 assert.equal(commissionSkipReason({ status: "paid", payMethod: "grant" }), "grant");
 assert.equal(commissionSkipReason({ status: "paid", payMethod: "demo" }), "demo");
 assert.equal(commissionSkipReason({ status: "pending", payMethod: "billplz" }), "pending");
