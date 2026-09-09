@@ -193,7 +193,7 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
           >
             {result ? (
               <>
-                <h2 className="text-[16px] font-medium">{t("paySuccess")}</h2>
+                <h2 className="font-serif text-[16px] font-medium">{t("paySuccess")}</h2>
                 <p className="mt-2 text-[13px] text-[#666]">{t("paySuccessBody")}</p>
                 <div className="mt-3 space-y-3">
                   {result.map((order) => (
@@ -247,7 +247,7 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
                         <span>
                           {localized(locale, item.title, item.titleEn)} × {item.qty || 1}
                         </span>
-                        <span className="shrink-0 text-[#8a5a20]">
+                        <span className="opc-price shrink-0 text-[#8a5a20]">
                           {formatMoneyAmount(
                             Math.round(fromCny(item.price * (item.qty || 1), "MYR", settings.fx) * 100) / 100,
                             "MYR",

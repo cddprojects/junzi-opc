@@ -2,6 +2,7 @@
 
 import { useCurrency } from "@/components/currency-provider";
 import { formatMoneyAmount, type Currency } from "@/lib/currency";
+import { cn } from "@/lib/utils";
 
 export function Money({
   cny,
@@ -15,10 +16,10 @@ export function Money({
   const { format } = useCurrency();
   if (recorded) {
     return (
-      <span className={className}>
+      <span className={cn("opc-price", className)}>
         {formatMoneyAmount(recorded.amount, (recorded.currency as Currency) || "CNY")}
       </span>
     );
   }
-  return <span className={className}>{format(cny)}</span>;
+  return <span className={cn("opc-price", className)}>{format(cny)}</span>;
 }

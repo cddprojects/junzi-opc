@@ -41,7 +41,7 @@ export function VideoBlock({
         />
         <div className="absolute inset-0 bg-black/25" />
         <div className="relative z-10 flex h-full flex-col justify-end p-4">
-          <p className="text-[18px] font-semibold md:text-[22px]">{video.overlay || video.title}</p>
+          <p className="font-serif text-[18px] font-semibold md:text-[22px]">{video.overlay || video.title}</p>
           {video.duration && <p className="mt-2 self-end text-[11px] text-white/80">{video.duration}</p>}
         </div>
         <span className="absolute top-1/2 left-1/2 flex size-11 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-white/25 text-lg text-white">

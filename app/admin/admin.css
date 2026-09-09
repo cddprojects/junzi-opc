@@ -15,8 +15,8 @@
   --faint: #a79f8b;
   --paper-text: #ede7d8;
   --paper-mute: #a9a392;
-  --admin-sans: "Noto Sans SC", var(--font-sans), -apple-system, sans-serif;
-  --admin-serif: "Noto Serif SC", var(--font-serif), serif;
+  --admin-sans: "Noto Sans SC", var(--font-noto-sans), -apple-system, sans-serif;
+  --admin-serif: "Noto Serif SC", var(--font-noto-serif), serif;
   min-height: 100dvh;
   background: var(--paper);
   color: var(--text);
@@ -90,6 +90,7 @@
     min-height: 100dvh;
     overflow-x: hidden;
     overflow-y: auto;
+    overscroll-behavior: contain;
   }
 }
 

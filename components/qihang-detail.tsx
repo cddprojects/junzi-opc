@@ -59,7 +59,7 @@ export function QihangDetail({ product, video }: { product: Product; video?: Cat
           <span className="text-[12px] text-[#999]">已售 {product.sales} 件</span>
         </div>
         <div className="mt-3 flex items-start justify-between gap-3">
-          <h1 className="text-[18px] leading-7 font-semibold">{product.title}</h1>
+          <h1 className="font-serif text-[18px] leading-7 font-semibold">{product.title}</h1>
           <div className="flex shrink-0 gap-3 text-center text-[10px] text-[#888]">
             <button type="button" className="flex flex-col items-center gap-0.5">
               <Share2 className="size-4" />

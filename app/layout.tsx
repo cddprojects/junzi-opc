@@ -9,15 +9,17 @@ import { getSettings } from "@/lib/store";
 import "./globals.css";
 
 const sans = Noto_Sans_SC({
-  variable: "--font-sans",
+  variable: "--font-noto-sans",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+  weight: ["400", "500", "600"],
+  display: "swap",
 });
 
 const serif = Noto_Serif_SC({
-  variable: "--font-serif",
+  variable: "--font-noto-serif",
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -36,6 +38,10 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       className={`${sans.variable} ${serif.variable} h-full antialiased`}
       suppressHydrationWarning
     >
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+      </head>
       <body className="min-h-full font-sans">
         <Providers
           locale={locale}

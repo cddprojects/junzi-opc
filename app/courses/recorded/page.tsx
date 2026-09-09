@@ -32,7 +32,7 @@ export default async function RecordedCoursesPage() {
               >
                 <CoverArt theme={product.cover} image={product.coverImage} showVideoBadge />
                 <div className="px-4 py-3">
-                  <h2 className="text-[16px] font-medium">{locProductTitle(product, locale)}</h2>
+                  <h2 className="font-serif text-[16px] font-medium">{locProductTitle(product, locale)}</h2>
                   <p className="mt-1 text-[12px] text-[#888]">
                     {t(locale, "recordedMeta", { n: count, sales: product.sales || 0 })}
                   </p>

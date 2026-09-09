@@ -84,7 +84,7 @@ export function ProductRow({
         />
       </span>
       <div className="min-w-0 flex-1">
-        <p className="text-[15px] leading-6 font-medium">{title}</p>
+        <p className="font-serif text-[15px] leading-6 font-medium">{title}</p>
         <div className="mt-5 flex items-end justify-between">
           <div>
             <p className="text-[18px] leading-none font-semibold text-[#fa3534]">
@@ -133,7 +133,7 @@ export function CourseListCard({
     >
       <CoverArt theme={cover} showVideoBadge />
       <div className="px-3 py-2.5">
-        <h3 className="text-[15px] leading-6 font-medium">{title}</h3>
+        <h3 className="font-serif text-[15px] leading-6 font-medium">{title}</h3>
         <CourseLearners count={learners} />
       </div>
     </Link>
@@ -230,7 +230,7 @@ export function ProductCard({ product }: { product: Product }) {
         priceLabel={format(product.price)}
       />
       <div className="p-4">
-        <p className="text-[16px] leading-6 font-medium">{title}</p>
+        <p className="font-serif text-[16px] leading-6 font-medium">{title}</p>
         {subtitle && <p className="mt-1 line-clamp-2 text-[13px] text-[#777]">{subtitle}</p>}
         <div className="mt-4 flex items-end justify-between">
           <div>
@@ -311,7 +311,7 @@ export function HomeCarousel({
 
 export function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
-    <h2 className="px-4 pt-6 pb-2 text-[16px] font-semibold tracking-tight text-[#3a2c10] md:px-0 md:pt-8 md:text-[20px]">
+    <h2 className="opc-section-title px-4 pt-6 pb-2 text-[16px] font-semibold tracking-tight text-[#3a2c10] md:px-0 md:pt-8 md:text-[20px]">
       {children}
     </h2>
   );

@@ -18,7 +18,7 @@ export default async function LiveCoursesPage() {
         >
           <CoverArt theme={course.cover} className="rounded-none" />
           <div className="px-3 py-3">
-            <h3 className="text-[15px] leading-6 font-medium">{localized(locale, course.title, course.titleEn)}</h3>
+            <h3 className="font-serif text-[15px] leading-6 font-medium">{localized(locale, course.title, course.titleEn)}</h3>
             <p className="mt-1 text-[12px] text-[#999]">{t(locale, "learnersCount", { n: course.learners })}</p>
           </div>
         </Link>

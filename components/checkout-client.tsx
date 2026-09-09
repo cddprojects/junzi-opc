@@ -116,10 +116,12 @@ export function CheckoutClient({
                 <span>
                   {localized(locale, item.title, item.titleEn)} × {item.qty || 1}
                 </span>
-                        {formatMoneyAmount(
-                          Math.round(fromCny(item.price * (item.qty || 1), "MYR", settings.fx) * 100) / 100,
-                          "MYR",
-                        )}
+                        <span className="opc-price shrink-0">
+                          {formatMoneyAmount(
+                            Math.round(fromCny(item.price * (item.qty || 1), "MYR", settings.fx) * 100) / 100,
+                            "MYR",
+                          )}
+                        </span>
               </li>
             ))}
           </ul>

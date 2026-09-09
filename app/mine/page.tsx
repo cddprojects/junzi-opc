@@ -50,7 +50,7 @@ export default function MinePage() {
             <p className="text-[16px]">{t("loading")}</p>
           ) : user ? (
             <>
-              <p className="truncate text-[16px] font-medium">{user.name}</p>
+              <p className="truncate font-serif text-[16px] font-medium">{user.name}</p>
               <p className="mt-0.5 text-[13px] text-white/80">{user.email || user.phone}</p>
               <p className="mt-1 text-[12px] text-white/70">
                 {user.memberActive ? t("mineMemberOn") : t("mineMemberOff")}
@@ -58,7 +58,7 @@ export default function MinePage() {
             </>
           ) : (
             <>
-              <p className="text-[16px] font-medium">{t("mineGuest")}</p>
+              <p className="font-serif text-[16px] font-medium">{t("mineGuest")}</p>
               <p className="mt-0.5 text-[13px] text-white/80">{t("mineGuestHint")}</p>
               <div className="mt-2 flex gap-3 text-[13px]">
                 <Link href="/login?next=/mine" className="underline">

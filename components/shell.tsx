@@ -42,7 +42,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const isProduct = pathname.startsWith("/product/");
 
   return (
-    <div className="min-h-dvh bg-[#f4f0e6] text-[#2b2418]">
+    <div className="storefront min-h-dvh bg-[#f4f0e6] text-[#2b2418]">
       <DesktopHeader />
       <div className="md:hidden">
         <MobileHeader />

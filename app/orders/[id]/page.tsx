@@ -49,7 +49,7 @@ export default async function OrderDetailPage({
         <Link href="/orders" className="text-[13px] text-[#8a5a20]">
           ← {t(locale, "ordersList")}
         </Link>
-        <h1 className="mt-2 text-center text-[17px] font-medium md:text-left md:font-serif md:text-[24px]">
+        <h1 className="mt-2 text-center font-serif text-[17px] font-medium md:text-left md:text-[24px]">
           {t(locale, "ordersDetail")}
         </h1>
 
@@ -61,7 +61,7 @@ export default async function OrderDetailPage({
           {paid ? <Row label={t(locale, "orderPayTime")} value={paidAt} /> : null}
           {order.billplzBillId ? <Row label={t(locale, "billplzBillId")} value={order.billplzBillId} copy={order.billplzBillId} /> : null}
           {order.amountMyr != null ? (
-            <Row label={t(locale, "billplzCharge")} value={formatMoneyAmount(order.amountMyr, "MYR")} />
+            <Row label={t(locale, "billplzCharge")} value={formatMoneyAmount(order.amountMyr, "MYR")} price />
           ) : null}
         </section>
 
@@ -105,7 +105,7 @@ export default async function OrderDetailPage({
               <CoverArt theme={product?.cover || "qihang"} image={product?.coverImage} compact />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-[15px] leading-6 font-medium">
+              <p className="font-serif text-[15px] leading-6 font-medium">
                 {product ? locProductTitle(product, locale) : order.productTitle}
               </p>
               <p className="mt-2 text-[13px] text-[#888]">{t(locale, "qtyLabel", { n: order.qty })}</p>
@@ -150,17 +150,29 @@ function Row({
   value,
   copy,
   strong,
+  price,
 }: {
   label: string;
   value: string;
   copy?: string;
   strong?: boolean;
+  price?: boolean;
 }) {
   return (
     <div className="flex items-start justify-between gap-3">
       <span className="shrink-0 text-[#888]">{label}</span>
       <span className="flex min-w-0 items-center justify-end gap-2 text-right">
-        <span className={strong ? "font-medium text-[#222]" : "break-all text-[#222]"}>{value}</span>
+        <span
+          className={
+            price
+              ? "opc-price font-medium text-[#222]"
+              : strong
+                ? "font-medium text-[#222]"
+                : "break-all text-[#222]"
+          }
+        >
+          {value}
+        </span>
         {copy ? <CopyChip text={copy} /> : null}
       </span>
     </div>

@@ -45,7 +45,7 @@ export function SimpleProductDetail({
           </p>
         ) : null}
         <div className="mt-3 flex items-start justify-between gap-3">
-          <h1 className="text-[18px] leading-7 font-semibold">{product.title}</h1>
+          <h1 className="font-serif text-[18px] leading-7 font-semibold">{product.title}</h1>
           <div className="flex shrink-0 gap-3 text-center text-[10px] text-[#888]">
             <span className="flex flex-col items-center gap-0.5">
               <Share2 className="size-4" />

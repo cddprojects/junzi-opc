@@ -346,7 +346,7 @@ export function CaseCover() {
       <div className="absolute right-[14%] bottom-[8%] h-24 w-20 rounded-t-full bg-[#f4eee6]" />
       <div className="relative z-10 flex h-full flex-col justify-center p-4">
         <p className="text-[10px] text-white/70">{t("coverCaseKicker")}</p>
-        <h3 className="mt-2 max-w-[70%] text-[16px] leading-6 font-semibold">{t("coverCaseTitle")}</h3>
+        <h3 className="mt-2 max-w-[70%] font-serif text-[16px] leading-6 font-semibold">{t("coverCaseTitle")}</h3>
         <p className="mt-1 text-[12px] text-white/80">{t("coverCaseSub")}</p>
         <div className="mt-auto flex items-center justify-between text-[11px] text-white/80">
           <span>{t("coverCaseDuration")}</span>
@@ -368,7 +368,7 @@ export function IntroCover() {
       <div className="absolute top-[18%] right-[16%] h-[58%] w-[28%] rounded-t-[80px] bg-[#d7c3a6]" />
       <div className="absolute right-[10%] bottom-[10%] h-16 w-28 rounded-sm bg-[#111]" />
       <div className="relative z-10 flex h-full flex-col justify-end p-4">
-        <p className="text-[20px] font-semibold">{t("coverIntroLine")}</p>
+        <p className="font-serif text-[20px] font-semibold">{t("coverIntroLine")}</p>
         <p className="mt-2 self-end text-[11px] text-white/80">05:16</p>
       </div>
       <span className="absolute top-1/2 left-1/2 flex size-11 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-white/25 text-lg text-white">
@@ -388,7 +388,7 @@ export function QihangHeroCover() {
         <p className="text-[11px] text-white/75">{t("coverHeroCourse")}</p>
         <p className="text-[11px] text-white/60">{t("coverHeroKicker")}</p>
         <div className="mt-6">
-          <h2 className="text-[28px] leading-none font-semibold">{t("coverHeroOverlay")}</h2>
+          <h2 className="font-serif text-[28px] leading-none font-semibold">{t("coverHeroOverlay")}</h2>
           <p className="mt-2 text-sm text-white/80">{t("coverHeroSub")}</p>
         </div>
         <p className="mt-auto text-[12px]">{t("taughtBy", { name: "邓晓" })}</p>

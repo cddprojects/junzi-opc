@@ -4,6 +4,8 @@
 
 收款走 **Billplz**（FPX / 银行卡）。Billplz 只收令吉（MYR）：前台仍可按 CNY / MYR / USD / SGD 浏览标价，下单时按后台汇率折成 RM 再创建账单。
 
+前台与后台共用同一套字体：**Noto Sans SC**（正文、导航、按钮，约 14px）和 **Noto Serif SC**（标题、品牌、价格）。中英文都走这套，不再用 Geist / Inter。
+
 ## 本地运行
 
 需要 Node.js 18 或更新版本。

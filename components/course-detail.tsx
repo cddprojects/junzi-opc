@@ -73,7 +73,7 @@ export function CourseDetailView({
             <span className="text-[12px] text-[#999]">{t("soldCount", { n: product.sales })}</span>
           </div>
           <div className="mt-3 flex items-start justify-between gap-3">
-            <h1 className="text-[18px] leading-7 font-semibold md:text-[26px]">{view.title}</h1>
+            <h1 className="font-serif text-[18px] leading-7 font-semibold md:text-[26px]">{view.title}</h1>
             <div className="relative z-20 flex shrink-0 gap-3 text-center text-[10px] text-[#888]">
               <button
                 type="button"
@@ -141,7 +141,7 @@ function Hero({
         {(detail.heroOverlay || detail.lecturer) && (
           <div className="absolute inset-0 flex flex-col justify-end bg-black/20 p-4 text-white">
             {detail.heroKicker && <p className="text-[11px] text-white/75">{detail.heroKicker}</p>}
-            {detail.heroOverlay && <p className="text-[22px] font-semibold">{detail.heroOverlay}</p>}
+            {detail.heroOverlay && <p className="font-serif text-[22px] font-semibold">{detail.heroOverlay}</p>}
             {detail.heroSub && <p className="text-sm text-white/80">{detail.heroSub}</p>}
             {detail.lecturer && <HeroTaughtBy name={detail.lecturer} />}
           </div>

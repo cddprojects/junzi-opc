@@ -41,7 +41,7 @@ export default async function OrdersPage({
   return (
     <div className="px-4 py-5 md:px-0 md:py-2">
       <div className="mx-auto max-w-2xl md:rounded-2xl md:bg-white md:px-6 md:py-6">
-        <h1 className="text-center text-[17px] font-medium md:text-left md:font-serif md:text-[24px]">{t(locale, "ordersList")}</h1>
+        <h1 className="text-center font-serif text-[17px] font-medium md:text-left md:text-[24px]">{t(locale, "ordersList")}</h1>
 
         <nav className="-mx-1 mt-3 flex gap-1 overflow-x-auto px-1 text-[13px] md:mt-5 md:gap-4">
           {ORDER_TABS.map((item) => {
@@ -98,7 +98,7 @@ export default async function OrdersPage({
                       />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="text-[15px] leading-6 font-medium">
+                      <p className="font-serif text-[15px] leading-6 font-medium">
                         {product ? locProductTitle(product, locale) : order.productTitle}
                       </p>
                       <div className="mt-2 flex items-end justify-between">

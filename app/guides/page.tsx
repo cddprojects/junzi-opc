@@ -14,10 +14,10 @@ export default async function GuidesPage() {
         <Link key={guide.slug} href={guide.href} className="block border-t border-[#f0f0f0]">
           <CoverArt theme={guide.cover} showVideoBadge className="mx-3 mt-3 rounded-sm" />
           <div className="px-3 pt-2 pb-3">
-            <h3 className="text-[15px] leading-6">{localized(locale, guide.title, guide.titleEn)}</h3>
+            <h3 className="font-serif text-[15px] leading-6">{localized(locale, guide.title, guide.titleEn)}</h3>
             <div className="mt-2 flex items-center justify-between text-[12px]">
               <span className="text-[#999]">{t(locale, "learnersCount", { n: guide.learners })}</span>
-              <span className="text-[#fa3534]">{localized(locale, guide.priceLabel, guide.priceLabelEn)}</span>
+              <span className="opc-price text-[#fa3534]">{localized(locale, guide.priceLabel, guide.priceLabelEn)}</span>
             </div>
           </div>
         </Link>

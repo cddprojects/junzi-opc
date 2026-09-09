@@ -25,7 +25,7 @@ export default function CartPage() {
                 <CoverArt theme={row.product.cover} image={row.product.coverImage} compact />
               </Link>
               <div className="min-w-0 flex-1">
-                <Link href={row.product.href} className="block text-[14px] font-medium">
+                <Link href={row.product.href} className="block font-serif text-[14px] font-medium">
                   {locProductTitle(row.product, locale)}
                 </Link>
                 <p className="mt-2 text-[15px] text-[#fa3534]">

@@ -45,7 +45,7 @@ export function GenericProductDetail({
             </p>
           ) : null}
           <div className="mt-3 flex items-start justify-between gap-3">
-            <h1 className="text-[18px] leading-7 font-semibold md:text-[26px]">{product.title}</h1>
+            <h1 className="font-serif text-[18px] leading-7 font-semibold md:text-[26px]">{product.title}</h1>
             <button
               type="button"
               onClick={() => toggleFavorite(product.slug)}
@@ -64,13 +64,13 @@ export function GenericProductDetail({
       <div className="space-y-3 px-3 pb-4 md:px-0">
         {product.description && (
           <section className="rounded-md bg-white px-3 py-4 md:rounded-xl md:px-5">
-            <h2 className="text-[15px] font-semibold">课程介绍</h2>
+            <h2 className="font-serif text-[15px] font-semibold">课程介绍</h2>
             <p className="mt-2 text-[13px] leading-6 text-[#555] whitespace-pre-wrap">{product.description}</p>
           </section>
         )}
         {lessons.length > 0 && (
           <section className="rounded-md bg-white px-3 py-4 md:rounded-xl md:px-5">
-            <h2 className="text-[15px] font-semibold">课程大纲</h2>
+            <h2 className="font-serif text-[15px] font-semibold">课程大纲</h2>
             <ol className="mt-3 space-y-2 text-[13px] text-[#444]">
               {lessons.map((lesson) => (
                 <li key={lesson}>{lesson}</li>

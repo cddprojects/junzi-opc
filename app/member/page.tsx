@@ -44,7 +44,7 @@ export default function MemberPage() {
       <div className="mx-3 mt-3 flex items-center justify-between rounded-xl border border-[#e8d7b0] bg-[#f8f1de] px-3 py-3 md:mx-6">
         <span className="text-[14px]">{title}</span>
         <span className="text-right text-[#8a5a20]">
-          <span className="text-[20px] font-semibold">{membership.priceLabel}</span>
+          <span className="opc-price text-[20px] font-semibold">{membership.priceLabel}</span>
           <span className="ml-0.5 text-[12px]">{localized(locale, membership.currency, membership.currencyEn)}</span>
           <p className="mt-0.5 text-[12px] text-[#8a5a20]/80">
             {t("demoSettle")} <Money cny={membership.campPrice} />

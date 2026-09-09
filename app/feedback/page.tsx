@@ -16,7 +16,7 @@ export default function FeedbackPage() {
       }}
     >
       <div className="rounded-lg bg-white px-4 py-5">
-        <h2 className="text-[17px] font-semibold">{t("feedbackTitle")}</h2>
+        <h2 className="font-serif text-[17px] font-semibold">{t("feedbackTitle")}</h2>
         <p className="mt-2 text-[13px] text-[#666]">{t("feedbackHint")}</p>
         <Input className="mt-4 h-10" placeholder={t("feedbackPlaceholder")} name="note" />
         <Button type="submit" className="mt-4 w-full bg-[#8a5a20] text-white hover:bg-[#6f4818]">
