@@ -19,6 +19,7 @@ export type Customer = {
   referralCode?: string;
   referrerId?: string;
   commissionBalanceSen?: number;
+  topUpBalanceSen?: number;
 };
 
 export type PublicCustomer = {
@@ -38,7 +39,7 @@ export type UserSession = {
 };
 
 export type OrderStatus = "pending" | "paid";
-export type PayMethod = "billplz" | "demo" | "grant";
+export type PayMethod = "billplz" | "demo" | "grant" | "wallet";
 
 export type Order = {
   id: string;

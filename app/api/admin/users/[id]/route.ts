@@ -34,6 +34,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     status?: "active" | "disabled";
     memberUntil?: string | null;
     referrerCode?: string | null;
+    confirmReferrerChange?: boolean;
   } | null;
   try {
     if (body?.status) setCustomerStatus(id, body.status);
@@ -42,6 +43,9 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       updateCustomerProfile(id, { name: body.name, email: body.email, phone: body.phone });
     }
     if (body && "referrerCode" in body) {
+      if (!body.confirmReferrerChange) {
+        return NextResponse.json({ error: "请确认：只影响未来订单" }, { status: 400 });
+      }
       setCustomerReferrer(id, body.referrerCode ?? null);
     }
     const user = getCustomerAdmin(id);

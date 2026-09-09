@@ -3,6 +3,7 @@ import { listAllOrders, listCustomers } from "@/lib/user-store";
 import { isOrderPaid } from "@/lib/account";
 import { formatMoneyAmount, type Currency } from "@/lib/currency";
 import { AdminVerifyForm } from "@/components/admin/verify-form";
+import { CommissionChain } from "@/components/admin/commission-chain";
 
 export const dynamic = "force-dynamic";
 
@@ -69,9 +70,18 @@ export default function AdminOrdersPage() {
                           ? "演示"
                           : "—"}
                     {order.referralSettled?.tiers.some((tier) => tier.paid && tier.amountSen > 0) ? (
-                      <span className="block text-[12px]">已计佣</span>
+                      <span className="block text-[12px]">已入账</span>
                     ) : isOrderPaid(order) && order.payMethod ? (
                       <span className="block text-[12px]">未计提</span>
+                    ) : null}
+                    {order.referralSettled ? (
+                      <details className="mt-1">
+                        <summary className="cursor-pointer text-[12px] text-[var(--gold)]">T1–T3+</summary>
+                        <CommissionChain
+                          tiers={order.referralSettled.tiers}
+                          genealogy={order.referralSettled.genealogy}
+                        />
+                      </details>
                     ) : null}
                   </td>
                   <td className="font-mono text-[12px] text-[var(--gold)]">{order.verifyCode || "—"}</td>

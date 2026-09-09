@@ -22,6 +22,7 @@ const MINE_LABELS: Record<string, MessageKey> = {
   "/orders": "mineOrders",
   "/member": "mineMember",
   "/agent": "mineAgent",
+  "/wallet": "mineWallet",
   "/learning": "mineLearning",
   "/verify": "mineVerify",
   "/profile": "mineProfile",
@@ -29,7 +30,7 @@ const MINE_LABELS: Record<string, MessageKey> = {
   "/feedback": "mineFeedback",
 };
 
-const personalIcons = [ReceiptText, CreditCard, KeyRound];
+const personalIcons = [ReceiptText, CreditCard, KeyRound, CreditCard];
 const serviceIcons = [Play, CircleHelp, Settings, Smile, UserRound];
 
 export default function MinePage() {

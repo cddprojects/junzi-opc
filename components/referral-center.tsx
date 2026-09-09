@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { formatMyrSen, formatTierRateLabel, senToMyr, type CommissionEntry, type ReferralTierPlan, type Withdrawal } from "@/lib/referral";
+import { normalizeWithdrawalStatus } from "@/lib/wallet";
 import { useAuth } from "@/components/auth-provider";
 import { useLocale } from "@/components/locale-provider";
 import { translateApiError } from "@/lib/messages";
@@ -144,6 +145,11 @@ export function ReferralCenter() {
         <p className="mt-4 text-[12px] text-[#777]">{t("referralCodeLabel")}</p>
         <p className="font-serif text-[28px] tracking-wide text-[#3a2c10]">{data.referralCode}</p>
         <CopyShare code={data.referralCode} />
+        <p className="mt-3 text-[13px]">
+          <Link href="/wallet" className="text-[#8a5a20] underline">
+            {t("pageWallet")}
+          </Link>
+        </p>
         <div className="mt-4 grid grid-cols-2 gap-3">
           <div className="rounded-xl bg-[#faf6ee] px-3 py-3">
             <p className="text-[12px] text-[#777]">{t("referralBalance")}</p>
@@ -212,11 +218,7 @@ export function ReferralCenter() {
               <li key={row.id} className="flex justify-between gap-3 border-t border-[#f3eee4] pt-2">
                 <span>
                   {formatMyrSen(row.amountSen)} ·{" "}
-                  {row.status === "settled"
-                    ? t("referralStatusSettled")
-                    : row.status === "rejected"
-                      ? t("referralStatusRejected")
-                      : t("referralStatusRequested")}
+                  {withdrawalLabel(normalizeWithdrawalStatus(row.status), t)}
                 </span>
                 <span className="text-[#999]">{new Date(row.createdAt).toLocaleDateString(locale === "en" ? "en-MY" : "zh-CN")}</span>
               </li>
@@ -272,6 +274,16 @@ export function ReferralCenter() {
       </section>
     </div>
   );
+}
+
+function withdrawalLabel(
+  status: "pending" | "approved" | "paid" | "rejected",
+  t: (key: "adminWdPending" | "adminWdApproved" | "adminWdPaid" | "adminWdRejected") => string,
+) {
+  if (status === "paid") return t("adminWdPaid");
+  if (status === "approved") return t("adminWdApproved");
+  if (status === "rejected") return t("adminWdRejected");
+  return t("adminWdPending");
 }
 
 function CopyShare({ code }: { code: string }) {

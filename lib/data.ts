@@ -625,6 +625,7 @@ export const mineBlocks = {
     { label: "学习订单", href: "/orders" },
     { label: "年度会员", href: "/member" },
     { label: "代理中心", href: "/agent" },
+    { label: "我的钱包", href: "/wallet" },
   ],
   services: [
     { label: "我的学习", href: "/learning" },

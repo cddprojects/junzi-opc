@@ -1,6 +1,9 @@
 import type { Customer } from "@/lib/account";
+import type { WithdrawalPayout } from "@/lib/wallet";
 
-export const PAY_DEPTH = 3;
+/** Single source of truth: commission pays only the nearest N ancestors of the buyer. */
+export const MAX_COMMISSION_LEVELS = 3;
+export const PAY_DEPTH = MAX_COMMISSION_LEVELS;
 export const REFERRAL_TIERS = [1, 2, 3] as const;
 export type ReferralTier = (typeof REFERRAL_TIERS)[number];
 
@@ -55,9 +58,14 @@ export type CommissionEntry = {
   reason?: string;
   createdAt: string;
   note?: string;
+  relationshipSnapshot?: {
+    buyerReferrerId?: string;
+    earnerId?: string;
+    depth: number;
+  };
 };
 
-export type WithdrawalStatus = "requested" | "settled" | "rejected";
+export type WithdrawalStatus = "pending" | "approved" | "paid" | "rejected";
 
 export type Withdrawal = {
   id: string;
@@ -66,7 +74,11 @@ export type Withdrawal = {
   status: WithdrawalStatus;
   createdAt: string;
   settledAt?: string;
+  approvedAt?: string;
+  paidAt?: string;
+  rejectedAt?: string;
   note?: string;
+  payout?: WithdrawalPayout;
 };
 
 export type ReferralChainSlot = {

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { readRedirectBill, verifyRedirectSignature } from "@/lib/billplz";
-import { fulfillOrdersByBillId, orderForUser, ordersByBillId } from "@/lib/user-store";
+import { fulfillBillplzPayment, orderForUser, ordersByBillId, topUpByBillId } from "@/lib/user-store";
+import { formatMyrSen } from "@/lib/wallet";
 import { getCurrentUser } from "@/lib/user-auth";
 import { isOrderPaid } from "@/lib/account";
 import { getRequestLocale } from "@/lib/i18n-server";
@@ -20,19 +21,34 @@ export default async function PayReturnPage({
   const signed = Boolean(bill.id) && verifyRedirectSignature(params);
   let paid = false;
   let orderId = "";
+  let topUpCredited = false;
+  let topUpSen = 0;
 
   if (signed && bill.paid && bill.id) {
     try {
-      const orders = fulfillOrdersByBillId(bill.id, bill.paidAt);
-      orderId = orders[0]?.id || "";
-      paid = orders.some((order) => isOrderPaid(order));
+      const result = fulfillBillplzPayment(bill.id, bill.paidAt);
+      if (result.kind === "topup" && result.topUp) {
+        topUpCredited = result.topUp.status === "credited";
+        topUpSen = result.topUp.amountSen;
+        paid = topUpCredited;
+      } else {
+        orderId = result.orders[0]?.id || "";
+        paid = result.orders.some((order) => isOrderPaid(order));
+      }
     } catch {
       paid = false;
     }
   } else if (bill.id) {
-    const existing = ordersByBillId(bill.id);
-    orderId = existing[0]?.id || "";
-    paid = existing.some((order) => isOrderPaid(order));
+    const existingTopUp = topUpByBillId(bill.id);
+    if (existingTopUp) {
+      topUpCredited = existingTopUp.status === "credited";
+      topUpSen = existingTopUp.amountSen;
+      paid = topUpCredited;
+    } else {
+      const existing = ordersByBillId(bill.id);
+      orderId = existing[0]?.id || "";
+      paid = existing.some((order) => isOrderPaid(order));
+    }
   }
 
   const user = await getCurrentUser();
@@ -51,14 +67,22 @@ export default async function PayReturnPage({
           <p className="mt-4 text-[15px] text-[#8a5a20]">
             {t(locale, "billplzChargeLine", { amount: formatMoneyAmount(order.amountMyr, "MYR") })}
           </p>
+        ) : topUpSen ? (
+          <p className="mt-4 text-[15px] text-[#8a5a20]">{formatMyrSen(topUpSen)}</p>
         ) : null}
         <div className="mt-6 flex flex-col gap-2">
-          <Link
-            href={order ? `/orders/${order.id}` : "/orders"}
-            className="rounded-md bg-[#8a5a20] py-2.5 text-[14px] text-white"
-          >
-            {t(locale, "viewOrderKami")}
-          </Link>
+          {topUpSen ? (
+            <Link href="/wallet" className="rounded-md bg-[#8a5a20] py-2.5 text-[14px] text-white">
+              {t(locale, "pageWallet")}
+            </Link>
+          ) : (
+            <Link
+              href={order ? `/orders/${order.id}` : "/orders"}
+              className="rounded-md bg-[#8a5a20] py-2.5 text-[14px] text-white"
+            >
+              {t(locale, "viewOrderKami")}
+            </Link>
+          )}
           <Link href="/learning" className="rounded-md bg-[#f3ead8] py-2.5 text-[14px] text-[#8a5a20]">
             {t(locale, "pageLearning")}
           </Link>

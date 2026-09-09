@@ -29,6 +29,7 @@ export function CheckoutClient({
   const { locale, t } = useLocale();
   const router = useRouter();
   const [payConfig, setPayConfig] = useState<PayConfig | null>(null);
+  const [topUpSen, setTopUpSen] = useState(0);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
@@ -56,9 +57,13 @@ export function CheckoutClient({
       .then((res) => res.json())
       .then((data: PayConfig) => setPayConfig(data))
       .catch(() => setPayConfig({ billplz: false, demo: false }));
+    fetch("/api/wallet/me")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data: { topUpBalanceSen?: number } | null) => setTopUpSen(data?.topUpBalanceSen || 0))
+      .catch(() => setTopUpSen(0));
   }, []);
 
-  async function confirmPay() {
+  async function confirmPay(payWith?: "wallet") {
     if (!user) {
       router.push(`/login?next=${encodeURIComponent("/checkout")}`);
       return;
@@ -67,7 +72,7 @@ export function CheckoutClient({
       setError(t("pickCourse"));
       return;
     }
-    if (payConfig && !payConfig.billplz && !payConfig.demo) {
+    if (payWith !== "wallet" && payConfig && !payConfig.billplz && !payConfig.demo) {
       setError(t("billplzNotConfigured"));
       return;
     }
@@ -76,7 +81,7 @@ export function CheckoutClient({
     const res = await fetch("/api/orders/checkout", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ items, currency }),
+      body: JSON.stringify({ items, currency, payWith }),
     });
     const data = (await res.json()) as {
       error?: string;
@@ -151,10 +156,22 @@ export function CheckoutClient({
               </Link>
             </>
           ) : (
+            <>
+            {topUpSen > 0 ? (
+              <button
+                type="button"
+                disabled={busy || loading || !items.length || Math.round(chargeMyr * 100) > topUpSen}
+                onClick={() => confirmPay("wallet")}
+                className="rounded-md border border-[#8a5a20] bg-[#f7efe3] py-2.5 text-[14px] text-[#8a5a20] disabled:opacity-60"
+              >
+                {t("payWithWallet")}
+              </button>
+            ) : null}
+            <p className="text-[12px] text-[#888]">{t("walletSpendNote")}</p>
             <button
               type="button"
               disabled={busy || loading || !items.length || (payConfig != null && !canPay)}
-              onClick={confirmPay}
+              onClick={() => confirmPay()}
               className="rounded-md bg-[#fa3534] py-2.5 text-[14px] text-white disabled:opacity-60"
             >
               {payConfig?.billplz
@@ -167,6 +184,7 @@ export function CheckoutClient({
                     : t("confirmDemoBuy")
                   : t("payWithBillplz")}
             </button>
+            </>
           )}
           {product ? (
             <Link href={`/product/${product.slug}`} className="py-2 text-center text-[13px] text-[#8a5a20]">

@@ -1,7 +1,7 @@
-import { CommissionDesk } from "@/components/admin/commission-desk";
+import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
 export default function AdminCommissionPage() {
-  return <CommissionDesk />;
+  redirect("/admin/finance");
 }

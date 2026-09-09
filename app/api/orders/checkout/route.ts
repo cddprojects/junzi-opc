@@ -10,6 +10,7 @@ import {
 import {
   attachBillToCheckout,
   checkoutOrders,
+  checkoutWithWallet,
   createPendingCheckout,
   deleteCheckout,
 } from "@/lib/user-store";
@@ -51,9 +52,17 @@ export async function POST(request: Request) {
   const body = (await request.json().catch(() => null)) as {
     items?: CheckoutItem[];
     currency?: string;
+    payWith?: "wallet" | "billplz";
   } | null;
 
   try {
+    if (body?.payWith === "wallet") {
+      const orders = checkoutWithWallet(user.id, body?.items || [], body?.currency);
+      return NextResponse.json({
+        mode: "wallet",
+        orders: orders.map(publicOrder),
+      });
+    }
     if (isBillplzConfigured()) {
       const pending = createPendingCheckout(user.id, body?.items || [], body?.currency);
       const origin = appBaseUrl(request);

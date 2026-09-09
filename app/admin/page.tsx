@@ -66,7 +66,7 @@ export default async function AdminHomePage() {
           <p className="jx-ledger-label">{t(locale, "adminBillplz")}</p>
           <p className={`jx-ledger-value ${billplzReady ? "" : "is-seal"}`}>{billplzReady ? "ON" : "OFF"}</p>
         </Link>
-        <Link href="/admin/commission" className="jx-panel jx-ledger-card">
+        <Link href="/admin/finance" className="jx-panel jx-ledger-card">
           <p className="jx-ledger-label">{t(locale, "adminCommissionAccrued")}</p>
           <p className="jx-ledger-value is-seal">{formatMyrSen(commission.accruedSen)}</p>
         </Link>

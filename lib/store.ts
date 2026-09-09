@@ -30,6 +30,13 @@ import {
   type ReferralPlan,
   type Withdrawal,
 } from "@/lib/referral";
+import {
+  alreadyHasSource,
+  asNonNegSen,
+  normalizeWithdrawalStatus,
+  type TopUpRecord,
+  type WalletTransaction,
+} from "@/lib/wallet";
 import { randomBytes } from "crypto";
 
 export type AppStore = {
@@ -45,12 +52,14 @@ export type AppStore = {
   referralPlan: ReferralPlan;
   commissionLedger: CommissionEntry[];
   withdrawals: Withdrawal[];
+  walletTransactions: WalletTransaction[];
+  topUps: TopUpRecord[];
 };
 
 const DATA_DIR = path.join(process.cwd(), "data");
 const STORE_PATH = path.join(DATA_DIR, "store.json");
 export const UPLOAD_DIR = path.join(DATA_DIR, "uploads");
-const STORE_VERSION = 11;
+const STORE_VERSION = 12;
 
 let storeCache: { mtimeMs: number; store: AppStore } | null = null;
 
@@ -121,6 +130,8 @@ function seedStore(): AppStore {
     referralPlan: { ...DEFAULT_REFERRAL_PLAN, tiers: DEFAULT_REFERRAL_PLAN.tiers.map((tier) => ({ ...tier })) },
     commissionLedger: [],
     withdrawals: [],
+    walletTransactions: [],
+    topUps: [],
   };
 }
 
@@ -143,7 +154,8 @@ export function ensureCustomerReferral(user: Customer, taken: Set<string>): Cust
   return {
     ...user,
     referralCode: code,
-    commissionBalanceSen: Math.max(0, Math.round(user.commissionBalanceSen || 0)),
+    commissionBalanceSen: asNonNegSen(user.commissionBalanceSen),
+    topUpBalanceSen: asNonNegSen(user.topUpBalanceSen),
     referrerId: user.referrerId || undefined,
   };
 }
@@ -308,8 +320,67 @@ function migrateStore(parsed: AppStore): AppStore {
     settings: normalizeSettings(parsed.settings),
     referralPlan: normalizeReferralPlan(parsed.referralPlan),
     commissionLedger: parsed.commissionLedger ?? [],
-    withdrawals: parsed.withdrawals ?? [],
+    withdrawals: migrateWithdrawals(parsed.withdrawals ?? []),
+    walletTransactions: backfillWalletTransactions(
+      parsed.walletTransactions ?? [],
+      parsed.commissionLedger ?? [],
+      migrateWithdrawals(parsed.withdrawals ?? []),
+    ),
+    topUps: parsed.topUps ?? [],
   };
+}
+
+function migrateWithdrawals(rows: Withdrawal[]): Withdrawal[] {
+  return rows.map((row) => {
+    const status = normalizeWithdrawalStatus(row.status);
+    return {
+      ...row,
+      status,
+      paidAt: row.paidAt || (status === "paid" ? row.settledAt : undefined),
+      rejectedAt: row.rejectedAt || (status === "rejected" ? row.settledAt : undefined),
+    };
+  });
+}
+
+function backfillWalletTransactions(
+  existing: WalletTransaction[],
+  ledger: CommissionEntry[],
+  withdrawals: Withdrawal[],
+): WalletTransaction[] {
+  const next = [...existing];
+  for (const row of ledger) {
+    if (row.kind !== "earn" || !row.paid || !row.userId || row.amountSen <= 0) continue;
+    if (alreadyHasSource(next, "commission", row.id, "commission_earn")) continue;
+    next.push({
+      id: `wtx_mig_${row.id}`,
+      userId: row.userId,
+      amountSen: asNonNegSen(row.amountSen),
+      bucket: "commission",
+      kind: "commission_earn",
+      sourceType: "commission",
+      sourceId: row.id,
+      note: "migrated_earn",
+      createdAt: row.createdAt,
+      balanceAfterSen: 0,
+    });
+  }
+  for (const row of withdrawals) {
+    if (row.status !== "paid") continue;
+    if (alreadyHasSource(next, "withdrawal", row.id, "withdrawal_paid")) continue;
+    next.push({
+      id: `wtx_mig_${row.id}`,
+      userId: row.userId,
+      amountSen: -asNonNegSen(row.amountSen),
+      bucket: "commission",
+      kind: "withdrawal_paid",
+      sourceType: "withdrawal",
+      sourceId: row.id,
+      note: "migrated_payout",
+      createdAt: row.paidAt || row.settledAt || row.createdAt,
+      balanceAfterSen: 0,
+    });
+  }
+  return next;
 }
 
 export function readStore(): AppStore {
@@ -353,7 +424,9 @@ export function writeStore(store: AppStore) {
     settings: normalizeSettings(store.settings),
     referralPlan: normalizeReferralPlan(store.referralPlan),
     commissionLedger: store.commissionLedger ?? [],
-    withdrawals: store.withdrawals ?? [],
+    withdrawals: migrateWithdrawals(store.withdrawals ?? []),
+    walletTransactions: store.walletTransactions ?? [],
+    topUps: store.topUps ?? [],
   };
   writeFileSync(STORE_PATH, JSON.stringify(next, null, 2), "utf8");
   rememberStore(next);

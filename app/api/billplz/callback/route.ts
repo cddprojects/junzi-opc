@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { formToParams, verifyCallbackSignature } from "@/lib/billplz";
-import { fulfillOrdersByBillId } from "@/lib/user-store";
+import { fulfillBillplzPayment } from "@/lib/user-store";
+import { asSen } from "@/lib/wallet";
 
 export async function POST(request: Request) {
   const raw = await request.text();
@@ -11,7 +12,8 @@ export async function POST(request: Request) {
   const paid = /^(true|1)$/i.test(params.paid || "");
   if (paid && params.id) {
     try {
-      fulfillOrdersByBillId(params.id, params.paid_at);
+      const reported = params.amount != null ? asSen(params.amount) : null;
+      fulfillBillplzPayment(params.id, params.paid_at, reported);
     } catch (error) {
       console.error("[billplz-callback]", error);
       return NextResponse.json({ error: "订单处理失败" }, { status: 500 });

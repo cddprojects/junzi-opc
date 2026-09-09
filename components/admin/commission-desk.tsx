@@ -10,6 +10,7 @@ import {
   type OrderReferralSettled,
   type Withdrawal,
 } from "@/lib/referral";
+import { normalizeWithdrawalStatus } from "@/lib/wallet";
 import { useLocale } from "@/components/locale-provider";
 
 type Desk = {
@@ -201,11 +202,13 @@ export function CommissionDesk() {
                   <td>
                     <span className="jx-price">{formatMyrSen(row.amountSen)}</span>
                     <p className="text-[12px] text-[var(--mute)]">
-                      {row.status === "settled"
-                        ? t("referralStatusSettled")
-                        : row.status === "rejected"
-                          ? t("referralStatusRejected")
-                          : t("referralStatusRequested")}
+                      {normalizeWithdrawalStatus(row.status) === "paid"
+                        ? t("adminWdPaid")
+                        : normalizeWithdrawalStatus(row.status) === "rejected"
+                          ? t("adminWdRejected")
+                          : normalizeWithdrawalStatus(row.status) === "approved"
+                            ? t("adminWdApproved")
+                            : t("adminWdPending")}
                       · {new Date(row.createdAt).toLocaleString(locale === "en" ? "en-MY" : "zh-CN")}
                     </p>
                   </td>
@@ -217,7 +220,8 @@ export function CommissionDesk() {
                   </td>
                   <td>{formatMyrSen(row.balanceSen || 0)}</td>
                   <td>
-                    {row.status === "requested" ? (
+                    {normalizeWithdrawalStatus(row.status) === "pending" ||
+                    normalizeWithdrawalStatus(row.status) === "approved" ? (
                       <div className="flex flex-wrap gap-2">
                         <button
                           type="button"

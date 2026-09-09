@@ -5,6 +5,7 @@ import {
   computeTierPayouts,
   countDownlineByPayDepth,
   DEFAULT_REFERRAL_PLAN,
+  MAX_COMMISSION_LEVELS,
   walkFullUpline,
   walkReferralChain,
   wouldCreateReferralCycle,
@@ -98,7 +99,8 @@ const payOnly = computeTierPayouts({
   baseSen: 10000,
   chain: walkReferralChain(deepUsers, deepBuyer, false),
 });
-assert.equal(payOnly.length, 3);
+assert.equal(MAX_COMMISSION_LEVELS, 3);
+assert.equal(payOnly.length, MAX_COMMISSION_LEVELS);
 assert.equal(payOnly[0]?.userId, "u1");
 assert.equal(payOnly[2]?.userId, "u3");
 

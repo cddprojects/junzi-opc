@@ -39,8 +39,23 @@ import {
   walkReferralChain,
   wouldCreateReferralCycle,
   type CommissionEntry,
-  type Withdrawal,
 } from "@/lib/referral";
+import {
+  applyAdminAdjust,
+  applyApproveWithdrawal,
+  applyCommissionEarnTx,
+  applyCreditTopUp,
+  applyDebitTopUpPurchase,
+  applyPayWithdrawal,
+  applyRejectWithdrawal,
+  applyRequestWithdrawal,
+  asNonNegSen,
+  computeWalletBuckets,
+  isWithdrawalHeld,
+  type TopUpRecord,
+  type WalletBucket,
+  type WithdrawalPayout,
+} from "@/lib/wallet";
 
 export function verifySecret() {
   return process.env.VERIFY_SECRET || readStore().verifySecret;
@@ -108,6 +123,7 @@ export function registerCustomer(input: {
       status: "active",
       referrerId,
       commissionBalanceSen: 0,
+      topUpBalanceSen: 0,
     },
     taken,
   );
@@ -310,12 +326,25 @@ function creditReferralInStore(
       paid: slot.paid,
       reason: slot.reason,
       createdAt: now,
+      relationshipSnapshot: {
+        buyerReferrerId: buyer?.referrerId,
+        earnerId: slot.userId,
+        depth: slot.tier,
+      },
     };
     store.commissionLedger.push(entry);
     if (slot.paid && slot.userId && slot.amountSen > 0) {
       const earner = store.users.find((item) => item.id === slot.userId);
       if (earner) {
-        earner.commissionBalanceSen = Math.max(0, Math.round(earner.commissionBalanceSen || 0)) + slot.amountSen;
+        earner.commissionBalanceSen = asNonNegSen(earner.commissionBalanceSen) + slot.amountSen;
+        applyCommissionEarnTx(store, {
+          userId: earner.id,
+          amountSen: slot.amountSen,
+          sourceId: entry.id,
+          note: `order:${order.id}`,
+          createdAt: now,
+          newId,
+        });
       }
     }
   }
@@ -497,6 +526,7 @@ export function listCustomers(query = "") {
         ? store.users.find((item) => item.id === user.referrerId)?.name
         : undefined,
       commissionBalanceSen: user.commissionBalanceSen || 0,
+      topUpBalanceSen: user.topUpBalanceSen || 0,
     }))
     .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
 }
@@ -517,10 +547,21 @@ export function getCustomerAdmin(userId: string) {
     referrerId: user.referrerId,
     referrerName: user.referrerId ? store.users.find((item) => item.id === user.referrerId)?.name : undefined,
     commissionBalanceSen: user.commissionBalanceSen || 0,
+    topUpBalanceSen: user.topUpBalanceSen || 0,
+    wallet: computeWalletBuckets(user, store.withdrawals),
     upline,
     downline,
     earnings: store.commissionLedger
       .filter((row) => row.userId === user.id && row.kind === "earn")
+      .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt)),
+    withdrawals: store.withdrawals
+      .filter((row) => row.userId === user.id)
+      .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt)),
+    walletTransactions: store.walletTransactions
+      .filter((row) => row.userId === user.id)
+      .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt)),
+    topUps: store.topUps
+      .filter((row) => row.userId === user.id)
       .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt)),
     plan,
     orders: ordersForUser(userId),
@@ -550,10 +591,9 @@ export function getReferralDashboard(userId: string) {
   const user = store.users.find((item) => item.id === userId);
   if (!user) throw new Error("请先登录");
   const plan = normalizeReferralPlan(store.referralPlan);
-  const pendingSen = store.withdrawals
-    .filter((row) => row.userId === userId && row.status === "requested")
-    .reduce((sum, row) => sum + row.amountSen, 0);
-  const balanceSen = Math.max(0, Math.round(user.commissionBalanceSen || 0));
+  const wallet = computeWalletBuckets(user, store.withdrawals);
+  const pendingSen = wallet.pendingWithdrawalSen;
+  const balanceSen = wallet.commissionBalanceSen;
   const earnings = store.commissionLedger
     .filter((row) => row.userId === userId && isPayableEarn(row, plan))
     .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt))
@@ -577,7 +617,8 @@ export function getReferralDashboard(userId: string) {
     referralCode: user.referralCode || "",
     balanceSen,
     pendingSen,
-    availableSen: Math.max(0, balanceSen - pendingSen),
+    availableSen: wallet.availableToWithdrawSen,
+    wallet,
     tiers: visiblePlanTiers(plan),
     earnings,
     team,
@@ -588,26 +629,13 @@ export function getReferralDashboard(userId: string) {
   };
 }
 
-export function requestWithdrawal(userId: string, amountSen: number) {
+export function requestWithdrawal(userId: string, amountSen: number, payout?: WithdrawalPayout) {
   const store = readStore();
+  store.walletTransactions ||= [];
+  store.topUps ||= [];
   const user = store.users.find((item) => item.id === userId);
   if (!user) throw new Error("请先登录");
-  if (user.status === "disabled") throw new Error("账号已被停用");
-  const amount = Math.round(amountSen);
-  if (!Number.isFinite(amount) || amount < 1) throw new Error("提现金额无效");
-  const pendingSen = store.withdrawals
-    .filter((row) => row.userId === userId && row.status === "requested")
-    .reduce((sum, row) => sum + row.amountSen, 0);
-  const available = Math.max(0, Math.round(user.commissionBalanceSen || 0) - pendingSen);
-  if (amount > available) throw new Error("余额不足");
-  const row: Withdrawal = {
-    id: newId("wd"),
-    userId,
-    amountSen: amount,
-    status: "requested",
-    createdAt: new Date().toISOString(),
-  };
-  store.withdrawals.push(row);
+  const row = applyRequestWithdrawal(store, { userId, amountSen, payout, newId });
   writeStore(store);
   return row;
 }
@@ -640,8 +668,20 @@ export function listCommissionDesk() {
     .filter((row) => row.kind === "earn" && row.paid)
     .reduce((sum, row) => sum + row.amountSen, 0);
   const pendingWithdrawSen = store.withdrawals
-    .filter((row) => row.status === "requested")
+    .filter((row) => isWithdrawalHeld(row.status))
     .reduce((sum, row) => sum + row.amountSen, 0);
+  const paidWithdrawSen = store.withdrawals
+    .filter((row) => row.status === "paid")
+    .reduce((sum, row) => sum + row.amountSen, 0);
+  const commissionBalanceSen = store.users.reduce((sum, user) => sum + asNonNegSen(user.commissionBalanceSen), 0);
+  const topUpBalanceSen = store.users.reduce((sum, user) => sum + asNonNegSen(user.topUpBalanceSen), 0);
+  const monthStart = new Date();
+  monthStart.setDate(1);
+  monthStart.setHours(0, 0, 0, 0);
+  const monthCommissionSen = store.commissionLedger
+    .filter((row) => row.kind === "earn" && row.paid && Date.parse(row.createdAt) >= monthStart.getTime())
+    .reduce((sum, row) => sum + row.amountSen, 0);
+  const roots = store.users.filter((user) => !user.referrerId).length;
   const skippedOrders = store.orders
     .filter((order) => isOrderPaid(order))
     .map((order) => {
@@ -669,41 +709,220 @@ export function listCommissionDesk() {
     withdrawals,
     accruedSen,
     pendingWithdrawSen,
+    paidWithdrawSen,
+    commissionBalanceSen,
+    topUpBalanceSen,
+    monthCommissionSen,
+    referralRoots: roots,
+    referralCount: store.users.filter((user) => Boolean(user.referrerId)).length,
     skippedOrders,
   };
 }
 
-export function settleWithdrawal(id: string, action: "settle" | "reject", note?: string) {
+export function settleWithdrawal(id: string, action: "settle" | "reject" | "approve" | "pay", note?: string) {
   const store = readStore();
-  const row = store.withdrawals.find((item) => item.id === id);
-  if (!row) throw new Error("提现记录不存在");
-  if (row.status !== "requested") throw new Error("该提现已处理");
   if (action === "reject") {
-    row.status = "rejected";
-    row.settledAt = new Date().toISOString();
-    row.note = note || row.note;
+    const row = applyRejectWithdrawal(store, { id, note, newId });
     writeStore(store);
     return row;
   }
-  const user = store.users.find((item) => item.id === row.userId);
-  if (!user) throw new Error("用户不存在");
-  const balance = Math.max(0, Math.round(user.commissionBalanceSen || 0));
-  if (row.amountSen > balance) throw new Error("余额不足");
-  user.commissionBalanceSen = balance - row.amountSen;
-  row.status = "settled";
-  row.settledAt = new Date().toISOString();
-  row.note = note || row.note;
-  store.commissionLedger.push({
-    id: newId("cms"),
-    kind: "payout",
-    userId: user.id,
-    amountSen: row.amountSen,
-    paid: true,
-    createdAt: row.settledAt,
-    note: `withdrawal:${row.id}`,
-  });
+  if (action === "approve") {
+    const row = applyApproveWithdrawal(store, id);
+    writeStore(store);
+    return row;
+  }
+  const row = applyPayWithdrawal(store, { id, note, newId });
+  const already = store.commissionLedger.some(
+    (item) => item.kind === "payout" && item.note === `withdrawal:${id}`,
+  );
+  if (!already) {
+    store.commissionLedger.push({
+      id: newId("cms"),
+      kind: "payout",
+      userId: row.userId,
+      amountSen: row.amountSen,
+      paid: true,
+      createdAt: row.paidAt || new Date().toISOString(),
+      note: `withdrawal:${row.id}`,
+    });
+  }
   writeStore(store);
   return row;
+}
+
+export function getWalletDashboard(userId: string) {
+  const store = readStore();
+  const user = store.users.find((item) => item.id === userId);
+  if (!user) throw new Error("请先登录");
+  const wallet = computeWalletBuckets(user, store.withdrawals);
+  return {
+    ...wallet,
+    transactions: store.walletTransactions
+      .filter((row) => row.userId === userId)
+      .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt))
+      .slice(0, 40),
+    topUps: store.topUps
+      .filter((row) => row.userId === userId)
+      .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt))
+      .slice(0, 20),
+    withdrawals: store.withdrawals
+      .filter((row) => row.userId === userId)
+      .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt))
+      .slice(0, 20),
+  };
+}
+
+export function createPendingTopUp(userId: string, amountSen: number) {
+  const store = readStore();
+  const user = store.users.find((item) => item.id === userId);
+  if (!user) throw new Error("请先登录");
+  if (user.status === "disabled") throw new Error("账号已被停用");
+  if (!user.email?.trim()) throw new Error("请先在个人资料填写邮箱后再付款");
+  const amount = asNonNegSen(amountSen);
+  if (amount < 100) throw new Error("充值金额无效");
+  const row: TopUpRecord = {
+    id: newId("tup"),
+    userId,
+    amountSen: amount,
+    status: "pending",
+    createdAt: new Date().toISOString(),
+  };
+  store.topUps.push(row);
+  writeStore(store);
+  return { topUp: row, user };
+}
+
+export function attachBillToTopUp(topUpId: string, bill: { id: string; url: string }) {
+  const store = readStore();
+  const row = store.topUps.find((item) => item.id === topUpId);
+  if (!row) throw new Error("充值单不存在");
+  row.billplzBillId = bill.id;
+  row.billplzUrl = bill.url;
+  writeStore(store);
+  return row;
+}
+
+export function deletePendingTopUp(topUpId: string) {
+  const store = readStore();
+  store.topUps = store.topUps.filter((row) => row.id !== topUpId || row.status === "credited");
+  writeStore(store);
+}
+
+export function creditTopUpByBillId(billId: string, reportedAmountSen?: number | null, paidAt?: string) {
+  const store = readStore();
+  const row = store.topUps.find((item) => item.billplzBillId === billId);
+  if (!row) return null;
+  applyCreditTopUp(store, {
+    topUpId: row.id,
+    reportedAmountSen,
+    paidAt,
+    newId,
+  });
+  writeStore(store);
+  return store.topUps.find((item) => item.id === row.id) || row;
+}
+
+export function topUpByBillId(billId: string) {
+  return readStore().topUps.find((item) => item.billplzBillId === billId);
+}
+
+export function fulfillBillplzPayment(billId: string, paidAt?: string, reportedAmountSen?: number | null) {
+  const credited = creditTopUpByBillId(billId, reportedAmountSen, paidAt);
+  if (credited) return { kind: "topup" as const, topUp: credited, orders: [] };
+  const orders = fulfillOrdersByBillId(billId, paidAt);
+  return { kind: "order" as const, topUp: null, orders };
+}
+
+export function checkoutWithWallet(userId: string, items: CheckoutItem[], currencyInput?: string) {
+  if (!items.length) throw new Error("没有可结算的商品");
+  const store = readStore();
+  const user = store.users.find((item) => item.id === userId);
+  if (!user) throw new Error("请先登录");
+  if (user.status === "disabled") throw new Error("账号已被停用");
+  const settings = getSettings();
+  const currency = parseCurrency(currencyInput, settings.defaultCurrency);
+  const checkoutId = newId("chk");
+  const created: Order[] = [];
+  let totalSen = 0;
+  for (const raw of items) {
+    const order = buildPendingOrder(userId, raw, currency, settings.fx, checkoutId);
+    order.payMethod = "wallet";
+    created.push(order);
+    totalSen += order.amountSen || 0;
+  }
+  applyDebitTopUpPurchase(store, {
+    userId,
+    amountSen: totalSen,
+    sourceId: checkoutId,
+    note: "wallet_purchase_topup_only",
+    newId,
+  });
+  for (const order of created) {
+    fulfillOrderInStore(store, order, "wallet");
+    store.orders.push(order);
+  }
+  writeStore(store);
+  return created;
+}
+
+export function adjustUserWallet(
+  userId: string,
+  input: { bucket: WalletBucket; amountSen: number; reason: string },
+) {
+  const store = readStore();
+  const wallet = applyAdminAdjust(store, { ...input, userId, newId });
+  if (input.bucket === "commission") {
+    store.commissionLedger.push({
+      id: newId("cms"),
+      kind: "adjust",
+      userId,
+      amountSen: asNonNegSen(Math.abs(input.amountSen)),
+      paid: input.amountSen > 0,
+      createdAt: new Date().toISOString(),
+      note: input.reason,
+    });
+  }
+  writeStore(store);
+  return wallet;
+}
+
+export function listReferralNetwork(rootId?: string) {
+  const store = readStore();
+  const roots = rootId
+    ? store.users.filter((user) => user.id === rootId)
+    : store.users.filter((user) => !user.referrerId);
+  return {
+    plan: normalizeReferralPlan(store.referralPlan),
+    trees: roots.map((root) => ({
+      userId: root.id,
+      name: root.name,
+      code: root.referralCode,
+      status: root.status,
+      children: buildDownlineTree(store.users, root.id),
+    })),
+    users: store.users.map((user) => ({
+      id: user.id,
+      name: user.name,
+      code: user.referralCode,
+      referrerId: user.referrerId,
+      status: user.status,
+    })),
+  };
+}
+
+export function getOrderAdmin(orderId: string) {
+  const store = readStore();
+  const order = store.orders.find((item) => item.id === orderId);
+  if (!order) return null;
+  const buyer = store.users.find((item) => item.id === order.userId);
+  const genealogy = order.referralSettled?.genealogy || walkFullUpline(store.users, buyer);
+  return {
+    ...order,
+    userName: buyer?.name,
+    userAccount: buyer ? maskAccount(buyer) : undefined,
+    genealogy,
+    earnings: store.commissionLedger.filter((row) => row.orderId === order.id),
+  };
 }
 
 export function setCustomerStatus(userId: string, status: "active" | "disabled") {

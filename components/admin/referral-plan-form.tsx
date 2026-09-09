@@ -54,7 +54,7 @@ export function ReferralPlanForm() {
 
   return (
     <form onSubmit={onSubmit} className="max-w-2xl space-y-4">
-      <h1>{t("adminReferral")}</h1>
+      <h1>{t("adminRules")}</h1>
       <p className="jx-lede">{t("adminReferralIntro")}</p>
       {error ? <p className="text-[13px] text-[var(--seal)]">{error}</p> : null}
       {saved ? <p className="text-[13px] text-[var(--green)]">{t("saved")}</p> : null}
