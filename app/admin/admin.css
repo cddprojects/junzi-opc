@@ -56,7 +56,8 @@
 
 .admin-side {
   display: none;
-  width: 222px;
+  box-sizing: border-box;
+  width: 230px;
   flex-shrink: 0;
   flex-direction: column;
   background: var(--ink);
@@ -79,18 +80,20 @@
     left: 0;
     z-index: 40;
     display: flex;
+    width: 230px;
     height: 100dvh;
-    overflow-x: hidden;
-    overflow-y: auto;
+    overflow: hidden;
+    transition: width 240ms ease;
   }
 
   .admin-main {
-    margin-left: 222px;
+    margin-left: 230px;
     height: 100dvh;
     min-height: 100dvh;
     overflow-x: hidden;
     overflow-y: auto;
     overscroll-behavior: contain;
+    transition: margin-left 240ms ease;
   }
 
   .admin-frame.is-collapsed .admin-side {
@@ -122,6 +125,11 @@
     padding-bottom: 8px;
     border-bottom: 1px solid rgb(255 255 255 / 6%);
   }
+
+  .admin-frame.is-collapsed .admin-nav {
+    overflow: visible;
+    scrollbar-gutter: auto;
+  }
 }
 
 .admin-brand {
@@ -138,7 +146,26 @@
   flex: 1;
   flex-direction: column;
   gap: 2px;
+  min-height: 0;
   padding: 8px 12px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  scrollbar-color: rgb(237 231 216 / 22%) transparent;
+}
+
+.admin-nav::-webkit-scrollbar {
+  width: 8px;
+}
+
+.admin-nav::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.admin-nav::-webkit-scrollbar-thumb {
+  background: rgb(237 231 216 / 22%);
+  border-radius: 99px;
 }
 
 .admin-nav-group {
@@ -201,6 +228,11 @@
   padding: 10px 8px;
 }
 
+.admin-side-head,
+.admin-side-foot {
+  flex-shrink: 0;
+}
+
 .admin-side-head {
   display: flex;
   align-items: flex-start;
@@ -240,20 +272,96 @@
   border: 0;
   background: none;
   color: #8d9488;
-  font-size: 12.5px;
+  font-size: 14.5px;
   letter-spacing: 0.02em;
   cursor: pointer;
+  transition: font-size 220ms ease, color 180ms ease;
+}
+
+.admin-nav-group.is-open .admin-nav-toggle {
+  font-size: 12.5px;
 }
 
 .admin-nav-toggle:hover {
   color: var(--paper-mute);
 }
 
-.admin-nav-items,
+.admin-nav-chevron {
+  display: inline-flex;
+  flex-shrink: 0;
+  width: 1em;
+  justify-content: center;
+  transform-origin: 50% 50%;
+  transition: transform 220ms ease;
+}
+
+.admin-nav-group.is-open .admin-nav-chevron {
+  transform: rotate(90deg);
+}
+
 .admin-nav-icons {
   display: flex;
   flex-direction: column;
   gap: 2px;
+}
+
+.admin-nav-items {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 240ms ease;
+}
+
+.admin-nav-group.is-open .admin-nav-items {
+  grid-template-rows: 1fr;
+}
+
+.admin-nav-items-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.admin-nav-items a {
+  opacity: 0;
+  transform: translateY(-3px);
+  transition:
+    opacity 180ms ease,
+    transform 180ms ease,
+    color 150ms ease,
+    background-color 150ms ease;
+}
+
+.admin-nav-group.is-open .admin-nav-items a {
+  opacity: 1;
+  transform: none;
+}
+
+.admin-nav-group.is-open .admin-nav-items a:nth-child(1) { transition-delay: 20ms; }
+.admin-nav-group.is-open .admin-nav-items a:nth-child(2) { transition-delay: 40ms; }
+.admin-nav-group.is-open .admin-nav-items a:nth-child(3) { transition-delay: 60ms; }
+.admin-nav-group.is-open .admin-nav-items a:nth-child(4) { transition-delay: 80ms; }
+.admin-nav-group.is-open .admin-nav-items a:nth-child(5) { transition-delay: 100ms; }
+.admin-nav-group.is-open .admin-nav-items a:nth-child(6) { transition-delay: 120ms; }
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-side,
+  .admin-main,
+  .admin-nav-toggle,
+  .admin-nav-chevron,
+  .admin-nav-items,
+  .admin-nav-items a {
+    transition: none;
+  }
+
+  .admin-nav-items a {
+    transform: none;
+  }
+
+  .admin-nav-group:not(.is-open) .admin-nav-items a {
+    opacity: 0;
+  }
 }
 
 .admin-side-foot {

@@ -202,10 +202,14 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
                   >
                     <span>{t(group.label)}</span>
                     <span className="admin-nav-chevron" aria-hidden>
-                      {expanded ? "–" : "+"}
+                      ▸
                     </span>
                   </button>
-                  {expanded ? <div className="admin-nav-items">{group.links.map((link) => renderLink(link, false))}</div> : null}
+                  <div className="admin-nav-items" aria-hidden={!expanded} inert={!expanded || undefined}>
+                    <div className="admin-nav-items-inner">
+                      {group.links.map((link) => renderLink(link, false))}
+                    </div>
+                  </div>
                 </>
               )}
             </div>
