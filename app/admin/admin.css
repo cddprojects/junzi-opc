@@ -479,7 +479,7 @@
   transition: transform var(--motion-base) var(--ease-standard);
 }
 
-.admin-locale.is-segmented[data-locale="zh"] .admin-locale-thumb {
+.admin-locale.is-segmented[data-locale="en"] .admin-locale-thumb {
   transform: translateX(100%);
 }
 

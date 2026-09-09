@@ -7,7 +7,7 @@ import { useLocale } from "@/components/locale-provider";
 import { MotionPresence } from "@/components/motion-presence";
 import { cn } from "@/lib/utils";
 
-const ORDER: Locale[] = ["en", "zh"];
+const ORDER: Locale[] = ["zh", "en"];
 const SEGMENT_LABEL: Record<Locale, string> = { en: "EN", zh: "中文" };
 
 export function AdminLocaleSwitch({ variant = "segmented" }: { variant?: "segmented" | "rail" }) {
