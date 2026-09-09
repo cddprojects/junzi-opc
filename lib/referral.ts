@@ -81,7 +81,7 @@ export type OrderReferralSettled = {
   compression: boolean;
   tiers: ReferralChainSlot[];
   genealogy?: GenealogyPerson[];
-  accruedBy?: "billplz" | "admin";
+  accruedBy?: "billplz" | "admin" | "demo";
 };
 
 export const DEFAULT_REFERRAL_PLAN: ReferralPlan = {

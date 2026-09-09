@@ -88,7 +88,6 @@ export function AdminUserDetail({
       body: JSON.stringify({
         productSlug: String(form.get("productSlug") || ""),
         currency: "CNY",
-        accrueCommission: form.get("accrueCommission") === "on",
       }),
     });
     const data = (await res.json()) as { error?: string };
@@ -97,9 +96,7 @@ export function AdminUserDetail({
       setError(data.error || "授权失败");
       return;
     }
-    setSaved(
-      form.get("accrueCommission") === "on" ? "已授权课程，并按实收补计提" : "已授权课程并生成课程码",
-    );
+    setSaved("已授权课程并按实收计提");
     router.refresh();
   }
 
@@ -272,15 +269,17 @@ export function AdminUserDetail({
                 <p className="mt-1 text-[12px] text-[#555]">
                   {order.status === "pending" ? "待付款" : "已支付"}
                   {order.payMethod === "billplz"
-                    ? " · Billplz 计佣"
+                    ? order.referralSettled
+                      ? " · Billplz 计佣"
+                      : " · Billplz"
                     : order.payMethod === "grant"
                       ? order.referralSettled
                         ? ` · ${t("adminGrantAccrued")}`
-                        : " · 后台授权，不计佣"
+                        : " · 后台授权，未计提"
                       : order.payMethod === "demo"
                         ? order.referralSettled
                           ? ` · ${t("adminDemoAccrued")}`
-                          : " · 演示支付，不计佣"
+                          : " · 演示支付，未计提"
                         : ""}
                   {order.billplzBillId ? ` · ${order.billplzBillId}` : ""}
                 </p>
@@ -317,10 +316,6 @@ export function AdminUserDetail({
             ))}
             <option value="member">君子小雅OPC年度会员</option>
           </select>
-          <label className="flex items-center gap-1.5 text-[12px] text-[var(--mute)]">
-            <input type="checkbox" name="accrueCommission" />
-            {t("adminGrantAccrue")}
-          </label>
           <button type="submit" disabled={busy} className="jx-btn">
             授权课程并生成课程码
           </button>

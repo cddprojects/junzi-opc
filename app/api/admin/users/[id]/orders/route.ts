@@ -12,12 +12,9 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   const body = (await request.json().catch(() => null)) as {
     productSlug?: string;
     currency?: string;
-    accrueCommission?: boolean;
   } | null;
   try {
-    const orders = grantCourse(id, body?.productSlug || "", body?.currency || "CNY", {
-      accrueCommission: Boolean(body?.accrueCommission),
-    });
+    const orders = grantCourse(id, body?.productSlug || "", body?.currency || "CNY");
     return NextResponse.json({ orders });
   } catch (error) {
     return NextResponse.json({ error: error instanceof Error ? error.message : "授权失败" }, { status: 400 });

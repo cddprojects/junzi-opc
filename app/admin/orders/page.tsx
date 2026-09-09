@@ -68,8 +68,10 @@ export default function AdminOrdersPage() {
                         : order.payMethod === "demo"
                           ? "演示"
                           : "—"}
-                    {order.payMethod && order.payMethod !== "billplz" ? (
-                      <span className="block text-[12px]">不计佣</span>
+                    {order.referralSettled?.tiers.some((tier) => tier.paid && tier.amountSen > 0) ? (
+                      <span className="block text-[12px]">已计佣</span>
+                    ) : isOrderPaid(order) && order.payMethod ? (
+                      <span className="block text-[12px]">未计提</span>
                     ) : null}
                   </td>
                   <td className="font-mono text-[12px] text-[var(--gold)]">{order.verifyCode || "—"}</td>

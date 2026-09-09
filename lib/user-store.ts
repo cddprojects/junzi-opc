@@ -266,12 +266,12 @@ function fulfillOrderInStore(store: ReturnType<typeof readStore>, order: Order, 
       const base = isMemberActive(user) && user.memberUntil ? Date.parse(user.memberUntil) : Date.now();
       user.memberUntil = new Date(base + 365 * 24 * 60 * 60 * 1000).toISOString();
     }
-    const method = order.payMethod || payMethod;
-    if (method === "billplz") {
-      creditReferralInStore(store, order, "billplz");
-    } else {
-      order.referralSkip = { reason: method === "grant" ? "grant" : method === "demo" ? "demo" : "not_billplz" };
+    if (!order.amountSen && order.amountMyr != null) {
+      order.amountSen = Math.round(order.amountMyr * 100);
     }
+    const method = order.payMethod || payMethod;
+    const source = method === "billplz" ? "billplz" : method === "demo" ? "demo" : "admin";
+    creditReferralInStore(store, order, source);
   }
   return true;
 }
@@ -279,7 +279,7 @@ function fulfillOrderInStore(store: ReturnType<typeof readStore>, order: Order, 
 function creditReferralInStore(
   store: ReturnType<typeof readStore>,
   order: Order,
-  accruedBy: "billplz" | "admin" = "billplz",
+  accruedBy: "billplz" | "admin" | "demo" = "billplz",
 ) {
   if (store.commissionLedger.some((row) => row.kind === "earn" && row.orderId === order.id)) {
     return;
@@ -729,12 +729,7 @@ export function setCustomerMembership(userId: string, memberUntil?: string | nul
   return publicCustomer(user);
 }
 
-export function grantCourse(
-  userId: string,
-  productSlug: string,
-  currencyInput?: string,
-  options?: { accrueCommission?: boolean },
-) {
+export function grantCourse(userId: string, productSlug: string, currencyInput?: string) {
   const item =
     productSlug === membership.slug
       ? { slug: membership.slug, title: membership.title, price: membership.campPrice, qty: 1 }
@@ -743,9 +738,7 @@ export function grantCourse(
           if (!product) throw new Error("课程不存在");
           return { slug: product.slug, title: product.title, price: product.price, qty: 1 };
         })();
-  const created = checkoutOrders(userId, [item], currencyInput, "grant");
-  if (!options?.accrueCommission) return created;
-  return created.map((order) => accrueCommissionForOrder(order.id));
+  return checkoutOrders(userId, [item], currencyInput, "grant");
 }
 
 export function accrueCommissionForOrder(orderId: string) {
@@ -759,7 +752,9 @@ export function accrueCommissionForOrder(orderId: string) {
   order.amountMyr = order.amountMyr ?? baseSen / 100;
   const already = store.commissionLedger.some((row) => row.kind === "earn" && row.orderId === order.id);
   if (already && order.referralSettled) return order;
-  creditReferralInStore(store, order, order.payMethod === "billplz" ? "billplz" : "admin");
+  const source =
+    order.payMethod === "billplz" ? "billplz" : order.payMethod === "demo" ? "demo" : "admin";
+  creditReferralInStore(store, order, source);
   writeStore(store);
   return order;
 }
