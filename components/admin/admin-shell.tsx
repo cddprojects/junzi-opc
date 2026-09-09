@@ -258,29 +258,31 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
               key={sideCollapsed ? "rail" : "segmented"}
               variant={sideCollapsed ? "rail" : "segmented"}
             />
-            <Link
-              href="/"
-              aria-label={t("adminFront")}
-              data-tip={sideCollapsed ? t("adminFront") : undefined}
-              onMouseEnter={sideCollapsed ? pinRailTip : undefined}
-              onFocus={sideCollapsed ? pinRailTip : undefined}
-              className={cn(sideCollapsed && "is-icon")}
-            >
-              <Home size={sideCollapsed ? 20 : 16} strokeWidth={1.75} />
-              {!sideCollapsed && <span>{t("adminFront")}</span>}
-            </Link>
-            <button
-              type="button"
-              onClick={logout}
-              aria-label={t("adminLogout")}
-              data-tip={sideCollapsed ? t("adminLogout") : undefined}
-              onMouseEnter={sideCollapsed ? pinRailTip : undefined}
-              onFocus={sideCollapsed ? pinRailTip : undefined}
-              className={cn(sideCollapsed && "is-icon")}
-            >
-              <LogOut size={sideCollapsed ? 20 : 16} strokeWidth={1.75} />
-              {!sideCollapsed && <span>{t("adminLogout")}</span>}
-            </button>
+            <div className="admin-side-actions">
+              <Link
+                href="/"
+                aria-label={t("adminFront")}
+                data-tip={sideCollapsed ? t("adminFront") : undefined}
+                onMouseEnter={sideCollapsed ? pinRailTip : undefined}
+                onFocus={sideCollapsed ? pinRailTip : undefined}
+                className={cn(sideCollapsed && "is-icon")}
+              >
+                <Home size={sideCollapsed ? 20 : 16} strokeWidth={1.75} />
+                {!sideCollapsed && <span>{t("adminFront")}</span>}
+              </Link>
+              <button
+                type="button"
+                onClick={logout}
+                aria-label={t("adminLogout")}
+                data-tip={sideCollapsed ? t("adminLogout") : undefined}
+                onMouseEnter={sideCollapsed ? pinRailTip : undefined}
+                onFocus={sideCollapsed ? pinRailTip : undefined}
+                className={cn(sideCollapsed && "is-icon")}
+              >
+                <LogOut size={sideCollapsed ? 20 : 16} strokeWidth={1.75} />
+                {!sideCollapsed && <span>{t("adminLogout")}</span>}
+              </button>
+            </div>
           </div>
         </aside>
 
