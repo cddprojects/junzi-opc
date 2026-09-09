@@ -1,7 +1,9 @@
 import assert from "node:assert/strict";
 import {
+  buildDownlineTree,
   computeTierPayouts,
   DEFAULT_REFERRAL_PLAN,
+  walkFullUpline,
   walkReferralChain,
   wouldCreateReferralCycle,
   type WalkedReferrer,
@@ -72,5 +74,35 @@ const offPlan = {
 const off = computeTierPayouts({ plan: offPlan, baseSen: 10000, chain: chain as WalkedReferrer[] });
 assert.equal(off[2]?.reason, "tier_off");
 assert.equal(off[2]?.paid, false);
+
+const l5 = user({ id: "u5", name: "E", referralCode: "RE" });
+const l4 = user({ id: "u4", name: "D", referralCode: "RD", referrerId: "u5" });
+const deepBuyer = user({ id: "ud", name: "Deep", referralCode: "RDEEP", referrerId: "u1" });
+const deepUsers = [
+  l5,
+  l4,
+  { ...t3, referrerId: "u4" },
+  t2,
+  t1,
+  deepBuyer,
+];
+const full = walkFullUpline(deepUsers, deepBuyer);
+assert.equal(full.map((row) => row.userId).join(","), "u1,u2,u3,u4,u5");
+assert.equal(full.filter((row) => row.payable).length, 3);
+assert.equal(full[3]?.payable, false);
+assert.equal(full[4]?.payable, false);
+const payOnly = computeTierPayouts({
+  plan: DEFAULT_REFERRAL_PLAN,
+  baseSen: 10000,
+  chain: walkReferralChain(deepUsers, deepBuyer, false),
+});
+assert.equal(payOnly.length, 3);
+assert.equal(payOnly[0]?.userId, "u1");
+assert.equal(payOnly[2]?.userId, "u3");
+
+const tree = buildDownlineTree(deepUsers, "u5");
+assert.equal(tree[0]?.userId, "u4");
+assert.equal(tree[0]?.children[0]?.userId, "u3");
+assert.ok(tree[0]?.children[0]?.children[0]?.children.some((row) => row.userId === "u1"));
 
 console.log("referral rules ok");

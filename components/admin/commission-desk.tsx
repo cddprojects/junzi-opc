@@ -2,7 +2,13 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { formatMyrSen, type CommissionEntry, type OrderReferralSettled, type Withdrawal } from "@/lib/referral";
+import {
+  formatMyrSen,
+  type CommissionEntry,
+  type GenealogyPerson,
+  type OrderReferralSettled,
+  type Withdrawal,
+} from "@/lib/referral";
 import { useLocale } from "@/components/locale-provider";
 
 type Desk = {
@@ -13,6 +19,7 @@ type Desk = {
     userAccount?: string;
     orderTitle?: string;
     chain?: OrderReferralSettled;
+    genealogy?: GenealogyPerson[];
   })[];
   withdrawals: (Withdrawal & { userName?: string; userAccount?: string; balanceSen?: number })[];
 };
@@ -186,7 +193,23 @@ export function CommissionDesk() {
                   </td>
                   <td>{row.buyerName || row.buyerId}</td>
                   <td>
-                    {row.chain?.tiers?.length ? (
+                    {row.genealogy && row.genealogy.length > 0 ? (
+                      <ol className="text-[12px] text-[var(--mute)]">
+                        {row.genealogy.map((slot) => (
+                          <li key={`${slot.depth}-${slot.userId}`}>
+                            L{slot.depth}{" "}
+                            <Link href={`/admin/users/${slot.userId}`} className="jx-link">
+                              {slot.name}
+                            </Link>{" "}
+                            {slot.payable
+                              ? t("adminPaysTier", {
+                                  n: row.chain?.tiers.find((tier) => tier.tier === slot.depth)?.ratePercent ?? 0,
+                                })
+                              : t("adminNoCommission")}
+                          </li>
+                        ))}
+                      </ol>
+                    ) : row.chain?.tiers?.length ? (
                       <ol className="text-[12px] text-[var(--mute)]">
                         {row.chain.tiers.map((slot) => (
                           <li key={slot.tier}>

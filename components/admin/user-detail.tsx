@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import type { Product } from "@/lib/data";
 import { formatMoneyAmount, type Currency } from "@/lib/currency";
-import { formatMyrSen } from "@/lib/referral";
+import { formatMyrSen, type DownlineNode, type ReferralTierPlan } from "@/lib/referral";
 import type { getCustomerAdmin } from "@/lib/user-store";
 import { useLocale } from "@/components/locale-provider";
 
@@ -166,26 +166,36 @@ export function AdminUserDetail({
           {" · "}
           {t("referralBalance")}: <span className="jx-price">{formatMyrSen(user.commissionBalanceSen || 0)}</span>
         </p>
+        <p className="text-[12px] leading-5 text-[var(--mute)]">{t("adminPayDepthHint")}</p>
         <div>
           <p className="text-[13px] text-[var(--mute)]">{t("adminUpline")}</p>
-          {user.upline?.some((slot) => slot.userId) ? (
+          {user.upline?.length ? (
             <ol className="mt-1 space-y-1 text-[13px]">
               {user.upline.map((slot) => (
-                <li key={slot.tier}>
-                  {t("referralTierN", { n: slot.tier })}:{" "}
-                  {slot.userId ? (
-                    <Link href={`/admin/users/${slot.userId}`} className="jx-link">
-                      {slot.name} ({slot.code})
-                      {slot.status === "disabled" ? ` · ${t("adminReasonInactive")}` : ""}
-                    </Link>
-                  ) : (
-                    <span>{t("adminNoUpline")}</span>
-                  )}
+                <li key={`${slot.depth}-${slot.userId}`}>
+                  L{slot.depth}{" "}
+                  <Link href={`/admin/users/${slot.userId}`} className="jx-link">
+                    {slot.name} ({slot.code})
+                    {slot.status === "disabled" ? ` · ${t("adminReasonInactive")}` : ""}
+                  </Link>
+                  <span className="ml-1 text-[12px] text-[var(--mute)]">
+                    {slot.payable
+                      ? t("adminPaysTier", { n: user.plan?.tiers.find((row) => row.tier === slot.depth)?.ratePercent ?? 0 })
+                      : t("adminNoCommission")}
+                  </span>
                 </li>
               ))}
             </ol>
           ) : (
             <p className="mt-1 text-[13px]">{t("adminNoUpline")}</p>
+          )}
+        </div>
+        <div>
+          <p className="text-[13px] text-[var(--mute)]">{t("adminDownlineTree")}</p>
+          {user.downline?.length ? (
+            <DownlineTree nodes={user.downline} rates={user.plan?.tiers || []} />
+          ) : (
+            <p className="mt-1 text-[13px]">{t("adminNoDownline")}</p>
           )}
         </div>
         <label className="block text-[13px]">
@@ -268,5 +278,32 @@ export function AdminUserDetail({
         </form>
       </div>
     </div>
+  );
+}
+
+function DownlineTree({ nodes, rates }: { nodes: DownlineNode[]; rates: ReferralTierPlan[] }) {
+  const { t } = useLocale();
+  return (
+    <ul className="mt-1 space-y-1 text-[13px]">
+      {nodes.map((node) => (
+        <li key={node.userId}>
+          L{node.depth}{" "}
+          <Link href={`/admin/users/${node.userId}`} className="jx-link">
+            {node.name} ({node.code})
+            {node.status === "disabled" ? ` · ${t("adminReasonInactive")}` : ""}
+          </Link>
+          <span className="ml-1 text-[12px] text-[var(--mute)]">
+            {node.payable
+              ? t("adminPaysTier", { n: rates.find((row) => row.tier === node.depth)?.ratePercent ?? 0 })
+              : t("adminNoCommission")}
+          </span>
+          {node.children.length > 0 ? (
+            <div className="ml-4 border-l border-[var(--line)] pl-3">
+              <DownlineTree nodes={node.children} rates={rates} />
+            </div>
+          ) : null}
+        </li>
+      ))}
+    </ul>
   );
 }

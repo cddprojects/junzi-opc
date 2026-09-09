@@ -1,7 +1,24 @@
 import type { Customer } from "@/lib/account";
 
+export const PAY_DEPTH = 3;
 export const REFERRAL_TIERS = [1, 2, 3] as const;
 export type ReferralTier = (typeof REFERRAL_TIERS)[number];
+
+export type GenealogyPerson = {
+  depth: number;
+  userId: string;
+  name: string;
+  code?: string;
+  status?: Customer["status"];
+  email?: string;
+  phone?: string;
+  createdAt?: string;
+  payable: boolean;
+};
+
+export type DownlineNode = GenealogyPerson & {
+  children: DownlineNode[];
+};
 
 export type ReferralTierPlan = {
   tier: ReferralTier;
@@ -63,6 +80,7 @@ export type OrderReferralSettled = {
   baseSen: number;
   compression: boolean;
   tiers: ReferralChainSlot[];
+  genealogy?: GenealogyPerson[];
 };
 
 export const DEFAULT_REFERRAL_PLAN: ReferralPlan = {
@@ -139,6 +157,74 @@ export type WalkedReferrer = {
   tier: ReferralTier;
   user: Customer | null;
 };
+
+export function isPayableDepth(depth: number) {
+  return depth >= 1 && depth <= PAY_DEPTH;
+}
+
+export function walkFullUpline(users: Customer[], start: Customer | undefined): GenealogyPerson[] {
+  const byId = new Map(users.map((user) => [user.id, user]));
+  const out: GenealogyPerson[] = [];
+  const seen = new Set<string>();
+  let current = start;
+  let depth = 0;
+  while (current?.referrerId && depth < 200) {
+    if (seen.has(current.referrerId)) break;
+    seen.add(current.referrerId);
+    const next = byId.get(current.referrerId);
+    if (!next || next.id === start?.id) break;
+    depth += 1;
+    out.push({
+      depth,
+      userId: next.id,
+      name: next.name,
+      code: next.referralCode,
+      status: next.status,
+      email: next.email,
+      phone: next.phone,
+      createdAt: next.createdAt,
+      payable: isPayableDepth(depth),
+    });
+    current = next;
+  }
+  return out;
+}
+
+export function buildDownlineTree(users: Customer[], rootId: string): DownlineNode[] {
+  const childrenOf = new Map<string, Customer[]>();
+  for (const user of users) {
+    if (!user.referrerId || user.id === rootId) continue;
+    const list = childrenOf.get(user.referrerId) || [];
+    list.push(user);
+    childrenOf.set(user.referrerId, list);
+  }
+  const seen = new Set<string>([rootId]);
+
+  function branch(parentId: string, depth: number): DownlineNode[] {
+    if (depth > 200) return [];
+    const kids = (childrenOf.get(parentId) || []).slice().sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
+    const nodes: DownlineNode[] = [];
+    for (const child of kids) {
+      if (seen.has(child.id)) continue;
+      seen.add(child.id);
+      nodes.push({
+        depth,
+        userId: child.id,
+        name: child.name,
+        code: child.referralCode,
+        status: child.status,
+        email: child.email,
+        phone: child.phone,
+        createdAt: child.createdAt,
+        payable: isPayableDepth(depth),
+        children: branch(child.id, depth + 1),
+      });
+    }
+    return nodes;
+  }
+
+  return branch(rootId, 1);
+}
 
 export function walkReferralChain(
   users: Customer[],

@@ -27,12 +27,14 @@ import {
 import { ensureCustomerReferral, getSettings, getStoreProduct, readStore, writeStore } from "@/lib/store";
 import { fromCny, parseCurrency } from "@/lib/currency";
 import {
+  buildDownlineTree,
   computeTierPayouts,
   findCustomerByReferralCode,
   isPayableEarn,
   normalizeReferralCode,
   normalizeReferralPlan,
   visiblePlanTiers,
+  walkFullUpline,
   walkReferralChain,
   wouldCreateReferralCycle,
   type CommissionEntry,
@@ -279,8 +281,9 @@ function creditReferralInStore(store: ReturnType<typeof readStore>, order: Order
   const baseSen = Math.max(0, Math.round(order.amountSen || Math.round((order.amountMyr || 0) * 100)));
   const chain = walkReferralChain(store.users, buyer, plan.compression);
   const tiers = computeTierPayouts({ plan, baseSen, chain });
+  const genealogy = walkFullUpline(store.users, buyer);
   const now = new Date().toISOString();
-  order.referralSettled = { baseSen, compression: plan.compression, tiers };
+  order.referralSettled = { baseSen, compression: plan.compression, tiers, genealogy };
   for (const slot of tiers) {
     const entry: CommissionEntry = {
       id: newId("cms"),
@@ -483,24 +486,8 @@ export function getCustomerAdmin(userId: string) {
   const user = store.users.find((item) => item.id === userId);
   if (!user) return null;
   const plan = normalizeReferralPlan(store.referralPlan);
-  const chain = walkReferralChain(store.users, user, false).map((slot) => ({
-    tier: slot.tier,
-    userId: slot.user?.id,
-    name: slot.user?.name,
-    code: slot.user?.referralCode,
-    status: slot.user?.status,
-    email: slot.user?.email,
-    phone: slot.user?.phone,
-  }));
-  const downline = store.users
-    .filter((item) => item.referrerId === user.id)
-    .map((item) => ({
-      id: item.id,
-      name: item.name,
-      referralCode: item.referralCode,
-      createdAt: item.createdAt,
-      status: item.status === "disabled" ? "disabled" : "active",
-    }));
+  const upline = walkFullUpline(store.users, user);
+  const downline = buildDownlineTree(store.users, user.id);
   return {
     ...publicCustomer(user),
     email: user.email,
@@ -510,7 +497,7 @@ export function getCustomerAdmin(userId: string) {
     referrerId: user.referrerId,
     referrerName: user.referrerId ? store.users.find((item) => item.id === user.referrerId)?.name : undefined,
     commissionBalanceSen: user.commissionBalanceSen || 0,
-    upline: chain,
+    upline,
     downline,
     earnings: store.commissionLedger
       .filter((row) => row.userId === user.id && row.kind === "earn")
@@ -608,6 +595,9 @@ export function listCommissionDesk() {
       userAccount: row.userId && usersById.get(row.userId) ? maskAccount(usersById.get(row.userId)!) : undefined,
       orderTitle: row.orderId ? ordersById.get(row.orderId)?.productTitle : undefined,
       chain: row.orderId ? ordersById.get(row.orderId)?.referralSettled : undefined,
+      genealogy:
+        (row.orderId && ordersById.get(row.orderId)?.referralSettled?.genealogy) ||
+        (row.buyerId ? walkFullUpline(store.users, usersById.get(row.buyerId)) : []),
     }));
   const withdrawals = [...store.withdrawals]
     .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt))
