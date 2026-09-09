@@ -84,7 +84,7 @@ export default function MinePage() {
 
       <section className="bg-white px-3 pt-4 pb-5 md:px-8">
         <h2 className="mb-4 text-[15px] font-medium">{t("minePersonal")}</h2>
-        <div className="grid grid-cols-3">
+        <div className="grid grid-cols-4">
           {mineBlocks.personal.map((item, index) => {
             const Icon = personalIcons[index] || ReceiptText;
             return (
