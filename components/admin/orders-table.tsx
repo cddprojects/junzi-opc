@@ -20,6 +20,7 @@ import {
   payMethodLabel,
 } from "@/lib/commission-ui";
 import { ReferralChainDrawer } from "@/components/admin/referral-chain-drawer";
+import { displayOrderNo } from "@/lib/orders-ui";
 import { useT } from "@/components/locale-provider";
 import { cn } from "@/lib/utils";
 import type { MessageKey } from "@/lib/messages";
@@ -44,6 +45,7 @@ export function AdminOrdersTable({ orders }: { orders: AdminOrder[] }) {
         <table className="jx-table">
           <thead>
             <tr>
+              <th>{t("adminOrderId")}</th>
               <th>课程</th>
               <th>学员</th>
               <th>金额</th>
@@ -56,7 +58,7 @@ export function AdminOrdersTable({ orders }: { orders: AdminOrder[] }) {
           <tbody>
             {orders.length === 0 ? (
               <tr>
-                <td colSpan={7}>暂无订单。</td>
+                <td colSpan={8}>暂无订单。</td>
               </tr>
             ) : (
               orders.flatMap((order) => {
@@ -68,6 +70,10 @@ export function AdminOrdersTable({ orders }: { orders: AdminOrder[] }) {
                 const canExpand = isOrderPaid(order) && payTiers.length > 0;
                 const rows = [
                   <tr key={order.id} className={expanded ? "is-open-order" : undefined}>
+                    <td>
+                      <p className="jx-mono jx-order-id">{order.id}</p>
+                      <p className="mt-1 text-[12px] text-[var(--mute)]">{displayOrderNo(order)}</p>
+                    </td>
                     <td>{order.productTitle}</td>
                     <td>
                       <Link href={`/admin/users/${order.userId}`} className="jx-link">
@@ -112,7 +118,7 @@ export function AdminOrdersTable({ orders }: { orders: AdminOrder[] }) {
                 if (canExpand && order.referralSettled) {
                   rows.push(
                     <tr key={`${order.id}-detail`} className="jx-order-detail">
-                      <td colSpan={7}>
+                      <td colSpan={8}>
                         <div className={cn("jx-expand", expanded && "is-open")}>
                         <div className="jx-expand-inner">
                         <table className="jx-mini">

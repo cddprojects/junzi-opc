@@ -1164,6 +1164,7 @@
   color: var(--mute);
 }
 
+.jx-order-id,
 .jx-buyer-cell .jx-order-id {
   white-space: normal;
   word-break: break-all;
