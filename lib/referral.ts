@@ -20,10 +20,13 @@ export type DownlineNode = GenealogyPerson & {
   children: DownlineNode[];
 };
 
+export type ReferralPayoutType = "percentage" | "fixed";
+
 export type ReferralTierPlan = {
   tier: ReferralTier;
-  type: "percentage";
+  type: ReferralPayoutType;
   ratePercent: number;
+  fixedSen: number;
   active: boolean;
 };
 
@@ -44,6 +47,8 @@ export type CommissionEntry = {
   buyerName?: string;
   tier?: ReferralTier;
   ratePercent?: number;
+  payoutType?: ReferralPayoutType;
+  fixedSen?: number;
   baseSen?: number;
   amountSen: number;
   paid: boolean;
@@ -71,6 +76,8 @@ export type ReferralChainSlot = {
   code?: string;
   status?: Customer["status"];
   ratePercent: number;
+  payoutType: ReferralPayoutType;
+  fixedSen?: number;
   amountSen: number;
   paid: boolean;
   reason?: string;
@@ -88,9 +95,9 @@ export const DEFAULT_REFERRAL_PLAN: ReferralPlan = {
   compression: false,
   maxPayoutSen: null,
   tiers: [
-    { tier: 1, type: "percentage", ratePercent: 10, active: true },
-    { tier: 2, type: "percentage", ratePercent: 5, active: true },
-    { tier: 3, type: "percentage", ratePercent: 2, active: true },
+    { tier: 1, type: "percentage", ratePercent: 10, fixedSen: 0, active: true },
+    { tier: 2, type: "percentage", ratePercent: 5, fixedSen: 0, active: true },
+    { tier: 3, type: "percentage", ratePercent: 2, fixedSen: 0, active: true },
   ],
 };
 
@@ -115,6 +122,12 @@ function clampRate(value: unknown, fallback: number) {
   return Math.min(100, Math.round(n * 100) / 100);
 }
 
+function clampSen(value: unknown, fallback = 0) {
+  const n = Number(value);
+  if (!Number.isFinite(n) || n < 0) return fallback;
+  return Math.round(n);
+}
+
 export function normalizeReferralPlan(input?: Partial<ReferralPlan> | null): ReferralPlan {
   const seed = DEFAULT_REFERRAL_PLAN;
   const incoming = Array.isArray(input?.tiers) ? input.tiers : [];
@@ -122,8 +135,9 @@ export function normalizeReferralPlan(input?: Partial<ReferralPlan> | null): Ref
     const row = incoming.find((item) => Number(item?.tier) === fallback.tier) || incoming[fallback.tier - 1];
     return {
       tier: fallback.tier,
-      type: "percentage" as const,
+      type: row?.type === "fixed" ? ("fixed" as const) : ("percentage" as const),
       ratePercent: clampRate(row?.ratePercent, fallback.ratePercent),
+      fixedSen: clampSen(row?.fixedSen, fallback.fixedSen),
       active: row?.active !== false,
     };
   });
@@ -301,6 +315,8 @@ export function computeTierPayouts(input: {
       code: user?.referralCode,
       status: user?.status,
       ratePercent: spec.ratePercent,
+      payoutType: spec.type,
+      fixedSen: spec.fixedSen,
       amountSen: 0,
       paid: false,
     };
@@ -318,7 +334,11 @@ export function computeTierPayouts(input: {
       return slot;
     }
 
-    let amount = Math.floor((baseSen * spec.ratePercent) / 100);
+    let amount =
+      spec.type === "fixed"
+        ? Math.max(0, Math.round(spec.fixedSen || 0))
+        : Math.floor((baseSen * spec.ratePercent) / 100);
+    amount = Math.min(amount, baseSen);
     if (Number.isFinite(remaining)) {
       amount = Math.min(amount, Math.max(0, remaining));
       remaining -= amount;
@@ -343,6 +363,17 @@ export function myrToSen(myr: number) {
 
 export function formatMyrSen(sen: number) {
   return `RM ${senToMyr(sen).toFixed(2)}`;
+}
+
+export function formatTierRateLabel(spec: {
+  payoutType?: ReferralPayoutType;
+  type?: ReferralPayoutType;
+  ratePercent?: number;
+  fixedSen?: number;
+}) {
+  const kind = spec.payoutType || spec.type || "percentage";
+  if (kind === "fixed") return formatMyrSen(Math.max(0, Math.round(spec.fixedSen || 0)));
+  return `${Number(spec.ratePercent || 0)}%`;
 }
 
 export function visiblePlanTiers(plan: ReferralPlan) {

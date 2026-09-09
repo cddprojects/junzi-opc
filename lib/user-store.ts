@@ -304,6 +304,8 @@ function creditReferralInStore(
       buyerName: buyer?.name,
       tier: slot.tier,
       ratePercent: slot.ratePercent,
+      payoutType: slot.payoutType,
+      fixedSen: slot.fixedSen,
       baseSen,
       amountSen: slot.amountSen,
       paid: slot.paid,

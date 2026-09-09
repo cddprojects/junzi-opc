@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   formatMyrSen,
+  formatTierRateLabel,
   type CommissionEntry,
   type GenealogyPerson,
   type OrderReferralSettled,
@@ -276,7 +277,7 @@ export function CommissionDesk() {
                   </td>
                   <td>
                     <p>
-                      {t("referralTierN", { n: row.tier || 1 })} · {row.ratePercent}%
+                      {t("referralTierN", { n: row.tier || 1 })} · {formatTierRateLabel(row)}
                     </p>
                     <p className={row.paid ? "jx-price" : "text-[var(--mute)]"}>
                       {formatMyrSen(row.amountSen)} · {row.paid ? t("adminPaid") : t("adminUnpaid")}
@@ -294,8 +295,10 @@ export function CommissionDesk() {
                               {slot.name}
                             </Link>{" "}
                             {slot.payable
-                              ? t("adminPaysTier", {
-                                  n: row.chain?.tiers.find((tier) => tier.tier === slot.depth)?.ratePercent ?? 0,
+                              ? t("adminPaysSpec", {
+                                  spec: formatTierRateLabel(
+                                    row.chain?.tiers.find((tier) => tier.tier === slot.depth) || { ratePercent: 0 },
+                                  ),
                                 })
                               : t("adminNoCommission")}
                           </li>

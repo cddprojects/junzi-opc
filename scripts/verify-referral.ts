@@ -147,4 +147,33 @@ assert.equal(
 );
 assert.equal(commissionSkipReason({ status: "paid", payMethod: "billplz" }), "no_upline");
 
+const mixedPlan = {
+  ...DEFAULT_REFERRAL_PLAN,
+  tiers: [
+    { tier: 1 as const, type: "fixed" as const, ratePercent: 10, fixedSen: 100, active: true },
+    { tier: 2 as const, type: "percentage" as const, ratePercent: 5, fixedSen: 0, active: true },
+    { tier: 3 as const, type: "percentage" as const, ratePercent: 2, fixedSen: 0, active: true },
+  ],
+};
+const mixed = computeTierPayouts({ plan: mixedPlan, baseSen: 604, chain: chain as WalkedReferrer[] });
+assert.equal(mixed[0]?.payoutType, "fixed");
+assert.equal(mixed[0]?.amountSen, 100);
+assert.equal(mixed[1]?.amountSen, 30);
+
+const oversized = {
+  ...DEFAULT_REFERRAL_PLAN,
+  tiers: DEFAULT_REFERRAL_PLAN.tiers.map((tier) =>
+    tier.tier === 1 ? { ...tier, type: "fixed" as const, fixedSen: 1000 } : tier,
+  ),
+};
+assert.equal(
+  computeTierPayouts({ plan: oversized, baseSen: 604, chain: chain as WalkedReferrer[] })[0]?.amountSen,
+  604,
+);
+
+const room = { ...mixedPlan, maxPayoutSen: 80 };
+const limited = computeTierPayouts({ plan: room, baseSen: 604, chain: chain as WalkedReferrer[] });
+assert.equal(limited[0]?.amountSen, 80);
+assert.equal(limited[1]?.amountSen, 0);
+
 console.log("referral rules ok");

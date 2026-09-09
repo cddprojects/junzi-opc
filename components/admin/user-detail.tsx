@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import type { Product } from "@/lib/data";
 import { formatMoneyAmount, type Currency } from "@/lib/currency";
-import { formatMyrSen, type DownlineNode, type ReferralTierPlan } from "@/lib/referral";
+import { formatMyrSen, formatTierRateLabel, type DownlineNode, type ReferralTierPlan } from "@/lib/referral";
 import type { getCustomerAdmin } from "@/lib/user-store";
 import { useLocale } from "@/components/locale-provider";
 
@@ -199,7 +199,9 @@ export function AdminUserDetail({
                   </Link>
                   <span className="ml-1 text-[12px] text-[var(--mute)]">
                     {slot.payable
-                      ? t("adminPaysTier", { n: user.plan?.tiers.find((row) => row.tier === slot.depth)?.ratePercent ?? 0 })
+                      ? t("adminPaysSpec", {
+                          spec: formatTierRateLabel(user.plan?.tiers.find((row) => row.tier === slot.depth) || { ratePercent: 0 }),
+                        })
                       : t("adminNoCommission")}
                   </span>
                 </li>
@@ -338,7 +340,9 @@ function DownlineTree({ nodes, rates }: { nodes: DownlineNode[]; rates: Referral
           </Link>
           <span className="ml-1 text-[12px] text-[var(--mute)]">
             {node.payable
-              ? t("adminPaysTier", { n: rates.find((row) => row.tier === node.depth)?.ratePercent ?? 0 })
+              ? t("adminPaysSpec", {
+                  spec: formatTierRateLabel(rates.find((row) => row.tier === node.depth) || { ratePercent: 0 }),
+                })
               : t("adminNoCommission")}
           </span>
           {node.children.length > 0 ? (

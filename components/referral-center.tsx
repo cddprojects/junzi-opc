@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { formatMyrSen, senToMyr, type CommissionEntry, type ReferralTierPlan, type Withdrawal } from "@/lib/referral";
+import { formatMyrSen, formatTierRateLabel, senToMyr, type CommissionEntry, type ReferralTierPlan, type Withdrawal } from "@/lib/referral";
 import { useAuth } from "@/components/auth-provider";
 import { useLocale } from "@/components/locale-provider";
 import { translateApiError } from "@/lib/messages";
@@ -152,7 +152,7 @@ export function ReferralCenter() {
           <div className="mt-2 flex flex-wrap gap-2">
             {data.tiers.map((tier) => (
               <span key={tier.tier} className="rounded-full bg-[#f3ead8] px-3 py-1 text-[12px] text-[#8a5a20]">
-                {t("referralTierN", { n: tier.tier })} · {t("referralTierRate", { n: tier.ratePercent })}
+                {t("referralTierN", { n: tier.tier })} · {formatTierRateLabel(tier)}
               </span>
             ))}
           </div>
@@ -228,7 +228,7 @@ export function ReferralCenter() {
               <li key={row.id} className="flex items-start justify-between gap-3 border-b border-[#f3eee4] pb-3 last:border-0">
                 <div>
                   <p className="font-serif text-[15px] text-[#3a2c10]">
-                    {t("referralTierN", { n: row.tier || 1 })} · {t("referralTierRate", { n: row.ratePercent || 0 })}
+                    {t("referralTierN", { n: row.tier || 1 })} · {formatTierRateLabel(row)}
                   </p>
                   <p className="mt-1 text-[13px] text-[#555]">
                     {row.buyerName || "—"}

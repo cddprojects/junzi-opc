@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { DEFAULT_REFERRAL_PLAN, senToMyr, myrToSen, type ReferralPlan } from "@/lib/referral";
+import { DEFAULT_REFERRAL_PLAN, senToMyr, myrToSen, type ReferralPlan, type ReferralPayoutType } from "@/lib/referral";
 import { useLocale } from "@/components/locale-provider";
 
 export function ReferralPlanForm() {
@@ -46,6 +46,12 @@ export function ReferralPlanForm() {
     setSaved(true);
   }
 
+  function patchTier(index: number, patch: Partial<ReferralPlan["tiers"][number]>) {
+    const next = [...plan.tiers];
+    next[index] = { ...next[index], ...patch };
+    setPlan({ ...plan, tiers: next });
+  }
+
   return (
     <form onSubmit={onSubmit} className="max-w-2xl space-y-4">
       <h1>{t("adminReferral")}</h1>
@@ -59,7 +65,7 @@ export function ReferralPlanForm() {
             <tr>
               <th>{t("adminReferralTier", { n: "#" })}</th>
               <th>{t("adminReferralType")}</th>
-              <th>{t("adminReferralRate")}</th>
+              <th>{t("adminReferralValue")}</th>
               <th>{t("adminReferralActive")}</th>
             </tr>
           </thead>
@@ -70,37 +76,50 @@ export function ReferralPlanForm() {
                 <td>
                   <select
                     value={tier.type}
-                    onChange={() => undefined}
+                    onChange={(event) => {
+                      const type = event.target.value as ReferralPayoutType;
+                      patchTier(index, {
+                        type,
+                        fixedSen: type === "fixed" && !tier.fixedSen ? 100 : tier.fixedSen,
+                      });
+                    }}
                     className="h-9 rounded-md border border-[var(--line)] bg-white px-2"
                   >
                     <option value="percentage">{t("adminReferralPercent")}</option>
+                    <option value="fixed">{t("adminReferralFixed")}</option>
                   </select>
                 </td>
                 <td>
-                  <input
-                    type="number"
-                    min="0"
-                    max="100"
-                    step="0.1"
-                    value={tier.ratePercent}
-                    onChange={(event) => {
-                      const next = [...plan.tiers];
-                      next[index] = { ...tier, ratePercent: Number(event.target.value) };
-                      setPlan({ ...plan, tiers: next });
-                    }}
-                    className="h-9 w-24 rounded-md border border-[var(--line)] px-2"
-                  />
+                  <label className="block text-[12px] text-[var(--mute)]">
+                    {tier.type === "fixed" ? t("adminReferralFixedAmount") : t("adminReferralRate")}
+                    {tier.type === "fixed" ? (
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={senToMyr(tier.fixedSen || 0)}
+                        onChange={(event) => patchTier(index, { fixedSen: myrToSen(Number(event.target.value)) })}
+                        className="mt-1 h-9 w-28 rounded-md border border-[var(--line)] px-2"
+                      />
+                    ) : (
+                      <input
+                        type="number"
+                        min="0"
+                        max="100"
+                        step="0.1"
+                        value={tier.ratePercent}
+                        onChange={(event) => patchTier(index, { ratePercent: Number(event.target.value) })}
+                        className="mt-1 h-9 w-24 rounded-md border border-[var(--line)] px-2"
+                      />
+                    )}
+                  </label>
                 </td>
                 <td>
                   <label className="inline-flex items-center gap-2 text-[13px]">
                     <input
                       type="checkbox"
                       checked={tier.active}
-                      onChange={(event) => {
-                        const next = [...plan.tiers];
-                        next[index] = { ...tier, active: event.target.checked };
-                        setPlan({ ...plan, tiers: next });
-                      }}
+                      onChange={(event) => patchTier(index, { active: event.target.checked })}
                     />
                     {t("adminReferralActive")}
                   </label>
