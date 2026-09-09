@@ -206,6 +206,7 @@
 .admin-side-toggle:focus-visible,
 .admin-nav-toggle:focus-visible,
 .admin-hamburger:focus-visible,
+.admin-locale button:focus-visible,
 .jx-comm-sum:focus-visible,
 .admin-chain-drawer:focus-visible {
   outline: 1px solid var(--gold);
@@ -395,6 +396,54 @@
 .admin-frame.is-collapsed .admin-side-foot {
   align-items: center;
   padding: 16px 8px 24px;
+}
+
+.admin-locale {
+  display: inline-flex;
+  align-items: stretch;
+  overflow: hidden;
+  border: 1px solid #5a635c;
+  border-radius: 999px;
+  background: rgb(0 0 0 / 18%);
+}
+
+.admin-locale button,
+.admin-side-foot .admin-locale button {
+  min-width: 42px;
+  min-height: 28px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--paper-mute);
+  font-size: 12.5px;
+  line-height: 1;
+  text-align: center;
+}
+
+.admin-locale button.is-on,
+.admin-side-foot .admin-locale button.is-on {
+  background: var(--seal);
+  color: var(--paper-text);
+}
+
+.admin-locale button:hover:not(.is-on),
+.admin-side-foot .admin-locale button:hover:not(.is-on) {
+  color: var(--paper-text);
+  background: rgb(255 255 255 / 6%);
+}
+
+.admin-locale.is-compact {
+  flex-direction: column;
+  border-radius: 8px;
+}
+
+.admin-locale.is-compact button,
+.admin-side-foot .admin-locale.is-compact button {
+  min-width: 36px;
+  min-height: 24px;
+  padding: 0 6px;
+  font-size: 11px;
 }
 
 .admin-side-foot a,

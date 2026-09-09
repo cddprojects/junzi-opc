@@ -25,7 +25,7 @@ import {
   Wallet,
   X,
 } from "lucide-react";
-import { LocaleSwitcher } from "@/components/locale-switcher";
+import { AdminLocaleSwitch } from "@/components/admin/admin-locale-switch";
 import { AdminSearch } from "@/components/admin/admin-search";
 import { useT } from "@/components/locale-provider";
 import type { MessageKey } from "@/lib/messages";
@@ -237,7 +237,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           </div>
           {renderNav(sideCollapsed)}
           <div className="admin-side-foot admin-side-footer">
-            {!sideCollapsed ? <LocaleSwitcher /> : null}
+            <AdminLocaleSwitch compact={sideCollapsed} />
             <Link
               href="/"
               aria-label={t("adminFront")}
@@ -277,7 +277,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
               </div>
               {renderNav(false)}
               <div className="admin-side-foot">
-                <LocaleSwitcher />
+                <AdminLocaleSwitch />
                 <Link href="/" onClick={() => setMobileOpen(false)}>
                   {t("adminFront")}
                 </Link>
@@ -296,7 +296,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
             </button>
             <p className="jx-serif text-[17px]">{t("adminBrand")}</p>
             <div className="flex items-center gap-3 text-[13px] text-[var(--paper-mute)]">
-              <LocaleSwitcher compact />
+              <AdminLocaleSwitch compact />
               <Link href="/">{t("adminFrontShort")}</Link>
             </div>
           </div>
