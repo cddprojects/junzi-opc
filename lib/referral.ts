@@ -334,6 +334,26 @@ export function visiblePlanTiers(plan: ReferralPlan) {
   return normalizeReferralPlan(plan).tiers.filter((tier) => tier.active);
 }
 
+export type CommissionSkipReason = "demo" | "grant" | "pending" | "not_billplz" | "no_upline";
+
+export function commissionSkipReason(order: {
+  status?: string;
+  payMethod?: string;
+  referralSettled?: OrderReferralSettled;
+  referralSkip?: { reason?: string };
+}): CommissionSkipReason | null {
+  if ((order.status ?? "paid") === "pending") return "pending";
+  const method = order.payMethod || order.referralSkip?.reason || "demo";
+  if (method === "grant") return "grant";
+  if (method === "demo") return "demo";
+  if (method !== "billplz") return "not_billplz";
+  if (order.referralSettled) {
+    const paid = order.referralSettled.tiers.some((tier) => tier.paid && tier.amountSen > 0);
+    return paid ? null : "no_upline";
+  }
+  return "no_upline";
+}
+
 export function isPayableEarn(entry: CommissionEntry, plan: ReferralPlan) {
   if (entry.kind !== "earn" || !entry.paid || entry.amountSen <= 0) return false;
   if (!entry.tier) return false;

@@ -28,13 +28,14 @@ export default function AdminOrdersPage() {
               <th>学员</th>
               <th>金额</th>
               <th>状态</th>
+              <th>支付</th>
               <th>课程码</th>
             </tr>
           </thead>
           <tbody>
             {orders.length === 0 ? (
               <tr>
-                <td colSpan={5}>暂无订单。</td>
+                <td colSpan={6}>暂无订单。</td>
               </tr>
             ) : (
               orders.map((order) => (
@@ -58,6 +59,18 @@ export default function AdminOrdersPage() {
                     <span className={isOrderPaid(order) ? "jx-chip jx-chip-ok" : "jx-chip jx-chip-wait"}>
                       {isOrderPaid(order) ? "已支付" : "待付款"}
                     </span>
+                  </td>
+                  <td className="whitespace-nowrap text-[13px] text-[var(--mute)]">
+                    {order.payMethod === "billplz"
+                      ? "Billplz"
+                      : order.payMethod === "grant"
+                        ? "后台授权"
+                        : order.payMethod === "demo"
+                          ? "演示"
+                          : "—"}
+                    {order.payMethod && order.payMethod !== "billplz" ? (
+                      <span className="block text-[12px]">不计佣</span>
+                    ) : null}
                   </td>
                   <td className="font-mono text-[12px] text-[var(--gold)]">{order.verifyCode || "—"}</td>
                 </tr>

@@ -28,6 +28,7 @@ import { ensureCustomerReferral, getSettings, getStoreProduct, readStore, writeS
 import { fromCny, parseCurrency } from "@/lib/currency";
 import {
   buildDownlineTree,
+  commissionSkipReason,
   computeTierPayouts,
   findCustomerByReferralCode,
   isPayableEarn,
@@ -265,8 +266,11 @@ function fulfillOrderInStore(store: ReturnType<typeof readStore>, order: Order, 
       const base = isMemberActive(user) && user.memberUntil ? Date.parse(user.memberUntil) : Date.now();
       user.memberUntil = new Date(base + 365 * 24 * 60 * 60 * 1000).toISOString();
     }
-    if ((order.payMethod || payMethod) === "billplz") {
+    const method = order.payMethod || payMethod;
+    if (method === "billplz") {
       creditReferralInStore(store, order);
+    } else {
+      order.referralSkip = { reason: method === "grant" ? "grant" : method === "demo" ? "demo" : "not_billplz" };
     }
   }
   return true;
@@ -470,6 +474,10 @@ export function listCustomers(query = "") {
       email: user.email,
       phone: user.phone,
       orderCount: store.orders.filter((order) => order.userId === user.id).length,
+      paidOrderCount: store.orders.filter((order) => order.userId === user.id && isOrderPaid(order)).length,
+      billplzPaidCount: store.orders.filter(
+        (order) => order.userId === user.id && isOrderPaid(order) && order.payMethod === "billplz",
+      ).length,
       createdAt: user.createdAt,
       referralCode: user.referralCode,
       referrerId: user.referrerId,
@@ -613,12 +621,33 @@ export function listCommissionDesk() {
   const pendingWithdrawSen = store.withdrawals
     .filter((row) => row.status === "requested")
     .reduce((sum, row) => sum + row.amountSen, 0);
+  const skippedOrders = store.orders
+    .filter((order) => isOrderPaid(order))
+    .map((order) => {
+      const reason = commissionSkipReason(order);
+      if (reason !== "grant" && reason !== "demo" && reason !== "not_billplz" && reason !== "no_upline") return null;
+      const buyer = usersById.get(order.userId);
+      return {
+        id: order.id,
+        userId: order.userId,
+        userName: buyer?.name,
+        productTitle: order.productTitle,
+        payMethod: order.payMethod,
+        amountSen: order.amountSen || 0,
+        amountMyr: order.amountMyr,
+        createdAt: order.createdAt,
+        reason,
+      };
+    })
+    .filter((row): row is NonNullable<typeof row> => Boolean(row))
+    .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
   return {
     plan: normalizeReferralPlan(store.referralPlan),
     earnings,
     withdrawals,
     accruedSen,
     pendingWithdrawSen,
+    skippedOrders,
   };
 }
 

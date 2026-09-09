@@ -22,7 +22,28 @@ type Desk = {
     genealogy?: GenealogyPerson[];
   })[];
   withdrawals: (Withdrawal & { userName?: string; userAccount?: string; balanceSen?: number })[];
+  skippedOrders?: {
+    id: string;
+    userId: string;
+    userName?: string;
+    productTitle: string;
+    payMethod?: string;
+    amountSen: number;
+    amountMyr?: number;
+    createdAt: string;
+    reason: "grant" | "demo" | "not_billplz" | "no_upline";
+  }[];
 };
+
+function skipLabel(
+  reason: "grant" | "demo" | "not_billplz" | "no_upline",
+  t: (key: "adminSkipGrant" | "adminSkipDemo" | "adminSkipNotBillplz" | "adminSkipNoUpline") => string,
+) {
+  if (reason === "grant") return t("adminSkipGrant");
+  if (reason === "demo") return t("adminSkipDemo");
+  if (reason === "not_billplz") return t("adminSkipNotBillplz");
+  return t("adminSkipNoUpline");
+}
 
 function reasonLabel(reason: string | undefined, t: (key: "adminReasonMissing" | "adminReasonInactive" | "adminReasonOff" | "adminReasonZero") => string) {
   if (reason === "missing") return t("adminReasonMissing");
@@ -86,6 +107,46 @@ export function CommissionDesk() {
           <p className="jx-ledger-value">{formatMyrSen(desk.pendingWithdrawSen)}</p>
         </div>
       </div>
+
+      {(desk.skippedOrders?.length || 0) > 0 ? (
+        <section className="jx-panel overflow-x-auto">
+          <div className="px-4 pt-4">
+            <h2>{t("adminSkippedOrders")}</h2>
+            <p className="jx-lede mt-1">{t("adminSkippedHint")}</p>
+          </div>
+          <table className="jx-table">
+            <thead>
+              <tr>
+                <th>{t("referralBuyer")}</th>
+                <th>{t("referralOrder")}</th>
+                <th className="jx-num">{t("adminColPaidAmount")}</th>
+                <th>{t("adminColSkipReason")}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {desk.skippedOrders!.map((row) => (
+                <tr key={row.id}>
+                  <td>
+                    <Link href={`/admin/users/${row.userId}`} className="jx-link">
+                      {row.userName || row.userId}
+                    </Link>
+                  </td>
+                  <td>
+                    {row.productTitle}
+                    <p className="text-[12px] text-[var(--mute)]">{row.id.slice(-8)}</p>
+                  </td>
+                  <td className="jx-num">
+                    {row.amountSen || row.amountMyr != null
+                      ? formatMyrSen(row.amountSen || Math.round((row.amountMyr || 0) * 100))
+                      : "—"}
+                  </td>
+                  <td className="text-[13px] text-[var(--mute)]">{skipLabel(row.reason, t)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </section>
+      ) : null}
 
       <section className="jx-panel overflow-x-auto">
         <table className="jx-table">

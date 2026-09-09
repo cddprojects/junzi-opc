@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import {
   buildDownlineTree,
+  commissionSkipReason,
   computeTierPayouts,
   DEFAULT_REFERRAL_PLAN,
   walkFullUpline,
@@ -104,5 +105,33 @@ const tree = buildDownlineTree(deepUsers, "u5");
 assert.equal(tree[0]?.userId, "u4");
 assert.equal(tree[0]?.children[0]?.userId, "u3");
 assert.ok(tree[0]?.children[0]?.children[0]?.children.some((row) => row.userId === "u1"));
+
+const ding = user({ id: "ding", name: "顶", referralCode: "RDING", referrerId: "yi" });
+const yi = user({ id: "yi", name: "学员乙", referralCode: "RYI" });
+const dingBuy = computeTierPayouts({
+  plan: DEFAULT_REFERRAL_PLAN,
+  baseSen: 604,
+  chain: walkReferralChain([yi, ding], ding, false),
+});
+assert.equal(dingBuy.length, 3);
+assert.equal(dingBuy[0]?.userId, "yi");
+assert.equal(dingBuy[0]?.ratePercent, 10);
+assert.equal(dingBuy[0]?.amountSen, 60);
+assert.equal(dingBuy[0]?.paid, true);
+assert.equal(dingBuy[1]?.paid, false);
+assert.equal(dingBuy[2]?.paid, false);
+
+assert.equal(commissionSkipReason({ status: "paid", payMethod: "grant" }), "grant");
+assert.equal(commissionSkipReason({ status: "paid", payMethod: "demo" }), "demo");
+assert.equal(commissionSkipReason({ status: "pending", payMethod: "billplz" }), "pending");
+assert.equal(
+  commissionSkipReason({
+    status: "paid",
+    payMethod: "billplz",
+    referralSettled: { baseSen: 604, compression: false, tiers: dingBuy },
+  }),
+  null,
+);
+assert.equal(commissionSkipReason({ status: "paid", payMethod: "billplz" }), "no_upline");
 
 console.log("referral rules ok");

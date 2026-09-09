@@ -249,7 +249,14 @@ export function AdminUserDetail({
                 </p>
                 <p className="mt-1 text-[12px] text-[#555]">
                   {order.status === "pending" ? "待付款" : "已支付"}
-                  {order.billplzBillId ? ` · Billplz ${order.billplzBillId}` : ""}
+                  {order.payMethod === "billplz"
+                    ? " · Billplz 计佣"
+                    : order.payMethod === "grant"
+                      ? " · 后台授权，不计佣"
+                      : order.payMethod === "demo"
+                        ? " · 演示支付，不计佣"
+                        : ""}
+                  {order.billplzBillId ? ` · ${order.billplzBillId}` : ""}
                 </p>
                 {order.verifyCode ? (
                   <p className="mt-1 font-mono text-[#8a5a20]">{order.verifyCode}</p>

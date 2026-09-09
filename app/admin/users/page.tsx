@@ -6,6 +6,21 @@ import { t } from "@/lib/messages";
 
 export const dynamic = "force-dynamic";
 
+function formatJoined(iso: string, locale: "zh" | "en") {
+  const date = new Date(iso);
+  const day = date.toLocaleDateString(locale === "en" ? "en-CA" : "zh-CN", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
+  const time = date.toLocaleTimeString(locale === "en" ? "en-GB" : "zh-CN", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
+  return { day, time };
+}
+
 export default async function AdminUsersPage({
   searchParams,
 }: {
@@ -17,71 +32,87 @@ export default async function AdminUsersPage({
 
   return (
     <div>
-      <h1>学员账号</h1>
-      <p className="jx-lede">与后台登录密码分开。可搜索姓名、邮箱或手机号。</p>
-      <form className="mt-4 flex gap-2">
-        <input
-          name="q"
-          defaultValue={q}
-          placeholder="搜索姓名 / 邮箱 / 手机"
-          className="h-9 flex-1 rounded-md px-3 text-[13px]"
-        />
+      <h1>{t(locale, "adminUsers")}</h1>
+      <p className="jx-lede">{t(locale, "adminUsersIntro")}</p>
+      <form className="jx-toolbar">
+        <input name="q" defaultValue={q} placeholder={t(locale, "adminUsersSearch")} />
         <button type="submit" className="jx-btn">
-          搜索
+          {t(locale, "search")}
         </button>
       </form>
       <div className="jx-panel mt-5 overflow-x-auto">
-        <table className="jx-table">
+        <table className="jx-table jx-table-users">
           <thead>
             <tr>
-              <th>姓名</th>
-              <th>账号</th>
+              <th>{t(locale, "adminColName")}</th>
+              <th>{t(locale, "adminColAccount")}</th>
               <th>{t(locale, "adminReferralCode")}</th>
               <th>{t(locale, "adminReferrer")}</th>
-              <th>状态</th>
-              <th>会员</th>
-              <th>订单</th>
-              <th>{t(locale, "referralBalance")}</th>
-              <th>注册时间</th>
-              <th></th>
+              <th>{t(locale, "adminColStatus")}</th>
+              <th>{t(locale, "adminColMember")}</th>
+              <th className="jx-num">{t(locale, "adminColOrders")}</th>
+              <th className="jx-num">{t(locale, "adminColBalance")}</th>
+              <th>{t(locale, "adminColJoined")}</th>
+              <th>{t(locale, "adminColAction")}</th>
             </tr>
           </thead>
           <tbody>
             {users.length === 0 ? (
               <tr>
-                <td colSpan={10}>没有匹配的学员</td>
+                <td colSpan={10}>{t(locale, "adminNoUsers")}</td>
               </tr>
             ) : (
-              users.map((user) => (
-                <tr key={user.id}>
-                  <td>{user.name}</td>
-                  <td>{user.email || user.phone}</td>
-                  <td className="jx-serif">{user.referralCode || "—"}</td>
-                  <td>
-                    {user.referrerId ? (
-                      <Link href={`/admin/users/${user.referrerId}`} className="jx-link">
-                        {user.referrerName || user.referrerId}
+              users.map((user) => {
+                const joined = formatJoined(user.createdAt, locale);
+                return (
+                  <tr key={user.id}>
+                    <td className="jx-serif">{user.name}</td>
+                    <td className="text-[13px] text-[var(--mute)]">{user.email || user.phone}</td>
+                    <td className="jx-mono">{user.referralCode || "—"}</td>
+                    <td>
+                      {user.referrerId ? (
+                        <Link href={`/admin/users/${user.referrerId}`} className="jx-link">
+                          {user.referrerName || user.referrerId}
+                        </Link>
+                      ) : (
+                        <span className="text-[var(--faint)]">—</span>
+                      )}
+                    </td>
+                    <td>
+                      <span className={user.status === "disabled" ? "jx-chip jx-chip-wait" : "jx-chip jx-chip-ok"}>
+                        {user.status === "disabled" ? t(locale, "adminUserDisabled") : t(locale, "adminUserActive")}
+                      </span>
+                    </td>
+                    <td className="text-[13px] text-[var(--mute)]">
+                      {user.memberActive ? t(locale, "adminMemberOn") : t(locale, "adminMemberOff")}
+                    </td>
+                    <td className="jx-num">
+                      <span>{user.orderCount}</span>
+                      {user.orderCount === 0 ? null : user.paidOrderCount > 0 && user.billplzPaidCount === 0 ? (
+                        <span className="block text-[11px] font-normal text-[var(--faint)]">
+                          {t(locale, "adminOrdersNoCommission")}
+                        </span>
+                      ) : user.paidOrderCount !== user.orderCount ? (
+                        <span className="block text-[11px] font-normal text-[var(--faint)]">
+                          {t(locale, "adminOrdersPaidOf", { paid: user.paidOrderCount, total: user.orderCount })}
+                        </span>
+                      ) : null}
+                    </td>
+                    <td className="jx-num">
+                      <span className="jx-price">{formatMyrSen(user.commissionBalanceSen || 0)}</span>
+                    </td>
+                    <td className="jx-joined">
+                      <span>{joined.day}</span>
+                      <span>{joined.time}</span>
+                    </td>
+                    <td>
+                      <Link href={`/admin/users/${user.id}`} className="jx-link">
+                        {t(locale, "adminManage")}
                       </Link>
-                    ) : (
-                      "—"
-                    )}
-                  </td>
-                  <td>
-                    <span className={user.status === "disabled" ? "jx-chip jx-chip-wait" : "jx-chip jx-chip-ok"}>
-                      {user.status === "disabled" ? "已停用" : "正常"}
-                    </span>
-                  </td>
-                  <td>{user.memberActive ? "已开通" : "未开通"}</td>
-                  <td>{user.orderCount}</td>
-                  <td className="jx-price">{formatMyrSen(user.commissionBalanceSen || 0)}</td>
-                  <td>{new Date(user.createdAt).toLocaleString("zh-CN")}</td>
-                  <td>
-                    <Link href={`/admin/users/${user.id}`} className="jx-link">
-                      管理
-                    </Link>
-                  </td>
-                </tr>
-              ))
+                    </td>
+                  </tr>
+                );
+              })
             )}
           </tbody>
         </table>

@@ -60,6 +60,7 @@ export type Order = {
   amountMyr?: number;
   amountSen?: number;
   referralSettled?: OrderReferralSettled;
+  referralSkip?: { reason: "demo" | "grant" | "not_billplz" };
 };
 
 export function isOrderPaid(order?: Order | null) {
