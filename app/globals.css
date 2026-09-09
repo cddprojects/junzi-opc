@@ -95,6 +95,14 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+  --motion-fast: 160ms;
+  --motion-base: 240ms;
+  --motion-slow: 320ms;
+  --motion-hover: 160ms;
+  --motion-drawer: 320ms;
+  --motion-sidebar: 300ms;
+  --ease-standard: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-soft: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .dark {
@@ -171,6 +179,86 @@
 
 .toaster {
   --width: min(360px, calc(100vw - 24px));
+}
+
+.jx-expand {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows var(--motion-slow) var(--ease-standard);
+}
+
+.jx-expand.is-open {
+  grid-template-rows: 1fr;
+}
+
+.jx-expand-inner {
+  min-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: opacity var(--motion-base) var(--ease-standard);
+}
+
+.jx-expand.is-open .jx-expand-inner {
+  opacity: 1;
+}
+
+@keyframes opc-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes opc-drawer-in-right {
+  from { opacity: 0; transform: translateX(28px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes opc-drawer-in-left {
+  from { opacity: 0; transform: translateX(-28px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes opc-drop-in {
+  from { opacity: 0; transform: translateY(-4px) scale(0.985); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes opc-dialog-in {
+  from { opacity: 0; transform: translate(-50%, calc(-50% + 5px)) scale(0.985); }
+  to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
+[data-slot="dialog-overlay"] {
+  transition: opacity var(--motion-drawer) var(--ease-standard);
+}
+
+[data-slot="dialog-content"] {
+  animation: opc-dialog-in var(--motion-drawer) var(--ease-standard);
+}
+
+.cn-toast {
+  transition:
+    opacity var(--motion-base) var(--ease-standard),
+    transform var(--motion-base) var(--ease-standard);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-fast: 1ms;
+    --motion-base: 1ms;
+    --motion-slow: 1ms;
+    --motion-hover: 1ms;
+    --motion-drawer: 1ms;
+    --motion-sidebar: 1ms;
+  }
+
+  .jx-expand,
+  .jx-expand-inner,
+  [data-slot="dialog-overlay"],
+  [data-slot="dialog-content"],
+  .cn-toast {
+    animation: none;
+    transition: none;
+  }
 }
 
 @layer components {

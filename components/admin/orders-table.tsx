@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ChevronDown, ChevronRight } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { isOrderPaid, type Order } from "@/lib/account";
 import { formatMoneyAmount, type Currency } from "@/lib/currency";
 import {
@@ -21,6 +21,7 @@ import {
 } from "@/lib/commission-ui";
 import { ReferralChainDrawer } from "@/components/admin/referral-chain-drawer";
 import { useT } from "@/components/locale-provider";
+import { cn } from "@/lib/utils";
 import type { MessageKey } from "@/lib/messages";
 
 type AdminOrder = Order & {
@@ -99,7 +100,7 @@ export function AdminOrdersTable({ orders }: { orders: AdminOrder[] }) {
                           onClick={() => toggle(order.id)}
                         >
                           <span>{summary.text}</span>
-                          {expanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                          <ChevronRight size={14} className={cn("jx-comm-chevron", expanded && "is-open")} />
                         </button>
                       ) : (
                         <span className="jx-comm-quiet">{summary.text}</span>
@@ -108,10 +109,12 @@ export function AdminOrdersTable({ orders }: { orders: AdminOrder[] }) {
                     <td className="font-mono text-[12px] text-[var(--gold)]">{order.verifyCode || "—"}</td>
                   </tr>,
                 ];
-                if (expanded && order.referralSettled) {
+                if (canExpand && order.referralSettled) {
                   rows.push(
                     <tr key={`${order.id}-detail`} className="jx-order-detail">
                       <td colSpan={7}>
+                        <div className={cn("jx-expand", expanded && "is-open")}>
+                        <div className="jx-expand-inner">
                         <table className="jx-mini">
                           <thead>
                             <tr>
@@ -152,6 +155,8 @@ export function AdminOrdersTable({ orders }: { orders: AdminOrder[] }) {
                         <button type="button" className="jx-link jx-chain-link" onClick={() => setChain(order)}>
                           {t("adminViewFullChain")}
                         </button>
+                        </div>
+                        </div>
                       </td>
                     </tr>,
                   );

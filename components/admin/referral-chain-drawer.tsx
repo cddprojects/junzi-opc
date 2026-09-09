@@ -1,6 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
+import { MotionPresence } from "@/components/motion-presence";
 import {
   formatMyrSen,
   formatTierRateLabel,
@@ -33,11 +35,14 @@ export function ReferralChainDrawer({
   genealogy?: GenealogyPerson[];
 }) {
   const t = useT();
-  const extra = t4Plus(genealogy);
-  if (!open) return null;
+  const [view, setView] = useState({ buyerName, orderTitle, tiers, genealogy });
+  if (open && (view.buyerName !== buyerName || view.orderTitle !== orderTitle || view.tiers !== tiers || view.genealogy !== genealogy)) {
+    setView({ buyerName, orderTitle, tiers, genealogy });
+  }
+  const extra = t4Plus(view.genealogy);
 
   return (
-    <div className="admin-drawer-root">
+    <MotionPresence open={open} className="admin-drawer-root">
       <button type="button" className="admin-drawer-mask" aria-label={t("close")} onClick={onClose} />
       <aside
         className="admin-chain-drawer"
@@ -54,8 +59,8 @@ export function ReferralChainDrawer({
           <div>
             <h2 id="admin-chain-title">{t("adminViewFullChain")}</h2>
             <p className="admin-chain-sub">
-              {buyerName || "—"}
-              {orderTitle ? ` · ${orderTitle}` : ""}
+              {view.buyerName || "—"}
+              {view.orderTitle ? ` · ${view.orderTitle}` : ""}
             </p>
           </div>
           <button type="button" className="jx-btn-ghost" onClick={onClose}>
@@ -68,10 +73,10 @@ export function ReferralChainDrawer({
             <span className="admin-chain-mark">↑</span>
             <div>
               <p className="admin-chain-kicker">{t("adminColBuyer")}</p>
-              <p>{buyerName || "—"}</p>
+              <p>{view.buyerName || "—"}</p>
             </div>
           </li>
-          {(tiers || []).map((slot) => {
+          {(view.tiers || []).map((slot) => {
             const status = commissionUiStatus(slot);
             return (
               <li key={slot.tier} className="admin-chain-node">
@@ -114,6 +119,6 @@ export function ReferralChainDrawer({
           </ol>
         ) : null}
       </aside>
-    </div>
+    </MotionPresence>
   );
 }

@@ -127,7 +127,7 @@ export function CourseListCard({
       href={href}
       prefetch
       className={cn(
-        "block cursor-pointer overflow-hidden rounded-xl bg-white shadow-sm transition duration-150 hover:-translate-y-0.5 hover:shadow-md active:opacity-70",
+        "block cursor-pointer overflow-hidden rounded-xl bg-white shadow-sm transition-[box-shadow,opacity] duration-[var(--motion-hover)] ease-[var(--ease-standard)] hover:shadow-md active:opacity-80",
         className,
       )}
     >
@@ -220,7 +220,7 @@ export function ProductCard({ product }: { product: Product }) {
     <Link
       href={href}
       prefetch
-      className="relative z-10 block cursor-pointer overflow-hidden rounded-xl bg-white shadow-sm transition duration-150 hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 active:opacity-70"
+      className="relative z-10 block cursor-pointer overflow-hidden rounded-xl bg-white shadow-sm transition-[box-shadow,opacity] duration-[var(--motion-hover)] ease-[var(--ease-standard)] hover:shadow-md active:opacity-80"
       aria-label={title}
     >
       <CoverArt

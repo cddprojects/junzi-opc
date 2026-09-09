@@ -55,9 +55,11 @@ function DownlineNodeRow({
             })
           : t("adminNoCommission")}
       </span>
-      {open && node.children.length > 0 ? (
-        <div className="ml-4 border-l border-[var(--line)] pl-3">
-          <DownlineTree nodes={node.children} rates={rates} lazyAfter={lazyAfter} />
+      {node.children.length > 0 ? (
+        <div className={open ? "jx-expand is-open" : "jx-expand"}>
+          <div className="jx-expand-inner ml-4 border-l border-[var(--line)] pl-3">
+            <DownlineTree nodes={node.children} rates={rates} lazyAfter={lazyAfter} />
+          </div>
         </div>
       ) : null}
     </li>

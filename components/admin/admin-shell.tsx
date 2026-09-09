@@ -26,6 +26,7 @@ import {
   X,
 } from "lucide-react";
 import { AdminLocaleSwitch } from "@/components/admin/admin-locale-switch";
+import { MotionPresence } from "@/components/motion-presence";
 import { AdminSearch } from "@/components/admin/admin-search";
 import { useT } from "@/components/locale-provider";
 import type { MessageKey } from "@/lib/messages";
@@ -260,9 +261,11 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           </div>
         </aside>
 
-        {mobileOpen ? (
+        <MotionPresence
+          open={mobileOpen}
+          className="admin-drawer-root admin-nav-drawer"
+        >
           <div
-            className="admin-drawer-root admin-nav-drawer"
             onKeyDown={(event) => {
               if (event.key === "Escape") setMobileOpen(false);
             }}
@@ -287,7 +290,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
               </div>
             </aside>
           </div>
-        ) : null}
+        </MotionPresence>
 
         <div className="admin-main">
           <div className="admin-mobile-bar">

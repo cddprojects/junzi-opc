@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useT } from "@/components/locale-provider";
+import { MotionPresence } from "@/components/motion-presence";
 
 type Hit = { href: string; title: string; hint: string };
 
@@ -46,7 +47,7 @@ export function AdminSearch() {
         placeholder={t("adminSearchPlaceholder")}
         aria-label={t("adminSearchPlaceholder")}
       />
-      {open && shownHits.length > 0 ? (
+      <MotionPresence open={open && shownHits.length > 0} className="admin-search-pop-wrap">
         <div className="admin-search-pop">
           {shownHits.map((hit) => (
             <Link key={hit.href + hit.title} href={hit.href} onClick={() => setOpen(false)}>
@@ -55,7 +56,7 @@ export function AdminSearch() {
             </Link>
           ))}
         </div>
-      ) : null}
+      </MotionPresence>
     </div>
   );
 }

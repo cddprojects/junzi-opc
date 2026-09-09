@@ -114,7 +114,9 @@ export function WithdrawalDesk() {
           </tbody>
         </table>
       </div>
-      {open ? (
+      <div className={open ? "jx-expand is-open" : "jx-expand"}>
+        <div className="jx-expand-inner">
+        {open ? (
         <div className="jx-panel mt-4 p-5">
           <h2>
             {open.userName} · {formatMyrSen(open.amountSen)}
@@ -149,7 +151,9 @@ export function WithdrawalDesk() {
             </button>
           </div>
         </div>
-      ) : null}
+        ) : null}
+        </div>
+      </div>
     </div>
   );
 }

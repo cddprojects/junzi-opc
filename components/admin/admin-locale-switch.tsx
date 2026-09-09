@@ -15,23 +15,29 @@ export function AdminLocaleSwitch({ compact = false }: { compact?: boolean }) {
   return (
     <div
       className={cn("admin-locale", compact && "is-compact")}
-      role="radiogroup"
+      role="group"
       aria-label={t("chooseLanguage")}
+      data-locale={locale}
+      onKeyDown={(event) => {
+        if (event.key === "ArrowRight" || event.key === "ArrowLeft") {
+          event.preventDefault();
+          setLocale(locale === "zh" ? "en" : "zh");
+        }
+      }}
     >
+      <span className="admin-locale-thumb" aria-hidden />
       {LOCALES.map((code) => {
         const selected = locale === code;
-        const label = compact ? LABELS[code].short : LABELS[code].full;
         return (
           <button
             key={code}
             type="button"
-            role="radio"
-            aria-checked={selected}
+            aria-pressed={selected}
             aria-label={code === "zh" ? t("languageZh") : t("languageEn")}
             className={cn(selected && "is-on")}
             onClick={() => setLocale(code)}
           >
-            {label}
+            {compact ? LABELS[code].short : LABELS[code].full}
           </button>
         );
       })}
