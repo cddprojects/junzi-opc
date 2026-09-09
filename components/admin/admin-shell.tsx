@@ -180,7 +180,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         onFocus={compact ? pinRailTip : undefined}
         className={cn(compact && "is-icon", isActive(pathname, link.href) && "is-active")}
       >
-        <Icon size={16} strokeWidth={1.75} />
+        <Icon size={compact ? 20 : 16} strokeWidth={1.75} />
         {!compact && <span>{label}</span>}
       </Link>
     );
@@ -198,7 +198,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           onFocus={compact ? pinRailTip : undefined}
           className={cn(compact && "is-icon", isActive(pathname, "/admin") && "is-active")}
         >
-          <LayoutDashboard size={16} strokeWidth={1.75} />
+          <LayoutDashboard size={compact ? 20 : 16} strokeWidth={1.75} />
           {!compact && <span>{t("adminOverview")}</span>}
         </Link>
 
@@ -263,7 +263,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
               onFocus={sideCollapsed ? pinRailTip : undefined}
               className={cn(sideCollapsed && "is-icon")}
             >
-              <Home size={16} strokeWidth={1.75} />
+              <Home size={sideCollapsed ? 20 : 16} strokeWidth={1.75} />
               {!sideCollapsed && <span>{t("adminFront")}</span>}
             </Link>
             <button
@@ -275,7 +275,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
               onFocus={sideCollapsed ? pinRailTip : undefined}
               className={cn(sideCollapsed && "is-icon")}
             >
-              <LogOut size={16} strokeWidth={1.75} />
+              <LogOut size={sideCollapsed ? 20 : 16} strokeWidth={1.75} />
               {!sideCollapsed && <span>{t("adminLogout")}</span>}
             </button>
           </div>
