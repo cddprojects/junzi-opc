@@ -111,14 +111,20 @@
   }
 
   .admin-frame.is-collapsed .admin-nav-group {
-    margin-bottom: 14px;
-    padding-bottom: 8px;
+    margin-bottom: 6px;
+    padding-bottom: 6px;
     border-bottom: 1px solid rgb(255 255 255 / 6%);
   }
 
   .admin-frame.is-collapsed .admin-nav {
-    overflow: visible;
-    scrollbar-gutter: auto;
+    overflow-x: hidden;
+    overflow-y: auto;
+    scrollbar-gutter: stable;
+    padding: 4px 8px 8px;
+  }
+
+  .admin-frame.is-collapsed .admin-nav a.is-icon {
+    padding: 7px 6px;
   }
 }
 
@@ -372,7 +378,9 @@
   .admin-nav-chevron,
   .admin-nav-items,
   .admin-nav-items a,
-  .admin-locale-thumb,
+  .admin-locale-trigger,
+  .admin-locale-pop-wrap,
+  .admin-locale-pop,
   .admin-drawer-mask,
   .admin-chain-drawer,
   .admin-mobile-drawer,
@@ -407,90 +415,125 @@
 
 .admin-side-foot .admin-locale {
   align-self: flex-start;
+  margin-bottom: 22px;
 }
 
 .admin-frame.is-collapsed .admin-side-foot .admin-locale {
   align-self: center;
+  margin-bottom: 22px;
 }
 
 .admin-locale {
   position: relative;
   display: inline-flex;
   width: max-content;
-  height: 46px;
-  align-items: stretch;
-  margin-bottom: 18px;
-  padding: 4px;
-  border: 1px solid rgb(255 255 255 / 14%);
-  border-radius: 999px;
-  background: #161a17;
 }
 
-.admin-locale-thumb {
-  position: absolute;
-  top: 4px;
-  bottom: 4px;
-  left: 4px;
-  width: calc(50% - 4px);
-  border-radius: 999px;
-  background: #f4efe4;
-  box-shadow: 0 1px 3px rgb(0 0 0 / 22%);
-  transition: transform var(--motion-base) var(--ease-standard);
-}
-
-.admin-locale[data-locale="en"] .admin-locale-thumb {
-  transform: translateX(100%);
-}
-
-.admin-locale button,
-.admin-side-foot .admin-locale button {
-  position: relative;
-  z-index: 1;
-  display: flex;
+.admin-locale-trigger,
+.admin-side-foot .admin-locale-trigger,
+.admin-mobile-bar .admin-locale-trigger {
+  display: inline-flex;
+  align-items: center;
   justify-content: center;
-  width: 54px;
-  min-width: 50px;
-  min-height: 0;
+  width: 36px;
+  height: 36px;
   padding: 0;
-  border: 0;
-  border-radius: 999px;
-  background: transparent;
+  border: 1px solid rgb(255 255 255 / 14%);
+  border-radius: 8px;
+  background: #161a17;
   color: #a9a392;
-  font-size: 13px;
-  line-height: 1;
-  text-align: center;
+  transition:
+    color var(--motion-hover) var(--ease-standard),
+    background-color var(--motion-hover) var(--ease-standard),
+    border-color var(--motion-hover) var(--ease-standard);
 }
 
-.admin-locale button.is-on,
-.admin-side-foot .admin-locale button.is-on {
-  background: transparent;
-  color: #1e2420;
+.admin-locale.is-compact .admin-locale-trigger {
+  width: 32px;
+  height: 32px;
 }
 
-.admin-locale button:hover:not(.is-on),
-.admin-side-foot .admin-locale button:hover:not(.is-on) {
+.admin-locale-trigger:hover,
+.admin-locale.is-open .admin-locale-trigger,
+.admin-side-foot .admin-locale-trigger:hover,
+.admin-side-foot .admin-locale.is-open .admin-locale-trigger {
   color: var(--paper-text);
+  border-color: rgb(201 162 39 / 28%);
+  background: #1c221e;
+}
+
+.admin-locale-pop-wrap {
+  position: fixed;
+  left: var(--pop-left, 0);
+  top: var(--pop-top, auto);
+  bottom: var(--pop-bottom, auto);
+  z-index: 90;
+  transition: opacity var(--motion-base) var(--ease-standard);
+}
+
+.admin-locale-pop-wrap[data-motion="closed"] {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.admin-locale-pop {
+  min-width: 156px;
+  padding: 6px;
+  border: 1px solid var(--ink-line);
+  border-radius: 10px;
+  background: #161b18;
+  box-shadow: 0 12px 28px rgb(0 0 0 / 32%);
+  transition:
+    opacity var(--motion-base) var(--ease-standard),
+    transform var(--motion-base) var(--ease-standard);
+}
+
+.admin-locale-pop-wrap[data-motion="open"] .admin-locale-pop {
+  animation: opc-drop-in var(--motion-base) var(--ease-standard);
+}
+
+.admin-locale-pop-wrap[data-motion="closed"] .admin-locale-pop {
+  opacity: 0;
+  transform: translateY(4px) scale(0.985);
+}
+
+.admin-locale-pop button,
+.admin-side-foot .admin-locale-pop button {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 36px;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 6px;
   background: transparent;
+  color: var(--paper-mute);
+  font-size: 13px;
+  text-align: left;
 }
 
-.admin-locale.is-compact {
-  height: 40px;
-  margin-bottom: 16px;
-  padding: 3px;
+.admin-locale-pop button:hover,
+.admin-side-foot .admin-locale-pop button:hover {
+  background: rgb(255 255 255 / 6%);
+  color: var(--paper-text);
 }
 
-.admin-locale.is-compact .admin-locale-thumb {
-  top: 3px;
-  bottom: 3px;
-  left: 3px;
-  width: calc(50% - 3px);
+.admin-locale-pop button.is-on,
+.admin-side-foot .admin-locale-pop button.is-on {
+  background: rgb(255 255 255 / 6%);
+  color: var(--paper-text);
 }
 
-.admin-locale.is-compact button,
-.admin-side-foot .admin-locale.is-compact button {
-  width: 28px;
-  min-width: 28px;
-  font-size: 11px;
+.admin-locale-pop span,
+.admin-side-foot .admin-locale-pop span {
+  color: inherit !important;
+}
+
+.admin-locale-check-gap {
+  width: 14px;
+  height: 14px;
 }
 
 .admin-side-foot a,
@@ -507,6 +550,12 @@
 .admin-side-foot button.is-icon {
   justify-content: center;
   padding: 10px 8px;
+}
+
+.admin-side-foot .admin-locale-trigger.is-icon {
+  width: 32px;
+  height: 32px;
+  padding: 0;
 }
 
 .admin-side-foot a:hover,
@@ -1092,14 +1141,15 @@
   position: relative;
 }
 
+.admin-locale-trigger[data-tip]::after,
 .admin-nav a.is-icon[data-tip]::after,
 .admin-side-foot a.is-icon[data-tip]::after,
 .admin-side-foot button.is-icon[data-tip]::after {
   content: attr(data-tip);
-  position: absolute;
-  left: calc(100% + 10px);
-  top: 50%;
-  z-index: 60;
+  position: fixed;
+  left: 80px;
+  top: var(--tip-top, 50%);
+  z-index: 80;
   transform: translateY(-50%);
   padding: 5px 8px;
   border: 1px solid var(--ink-line);
@@ -1112,6 +1162,8 @@
   pointer-events: none;
 }
 
+.admin-locale-trigger[data-tip]:hover::after,
+.admin-locale-trigger[data-tip]:focus-visible::after,
 .admin-nav a.is-icon[data-tip]:hover::after,
 .admin-nav a.is-icon[data-tip]:focus-visible::after,
 .admin-side-foot a.is-icon[data-tip]:hover::after,
@@ -1119,6 +1171,22 @@
 .admin-side-foot button.is-icon[data-tip]:hover::after,
 .admin-side-foot button.is-icon[data-tip]:focus-visible::after {
   opacity: 1;
+}
+
+.admin-locale-trigger {
+  position: relative;
+}
+
+.admin-locale-trigger[data-tip]::after {
+  position: absolute;
+  left: calc(100% + 10px);
+  top: 50%;
+}
+
+.admin-frame.is-collapsed .admin-locale-trigger[data-tip]::after {
+  position: fixed;
+  left: 80px;
+  top: var(--tip-top, 50%);
 }
 
 .jx-table tbody tr.jx-order-detail:hover {

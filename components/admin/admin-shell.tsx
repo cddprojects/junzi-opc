@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   AlertTriangle,
   BookOpen,
@@ -129,6 +129,13 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
     if (mobileOpen) setMobileOpen(false);
   }
 
+  useEffect(() => {
+    if (!sideCollapsed) return;
+    document.querySelector<HTMLElement>(".admin-side .admin-nav a.is-active")?.scrollIntoView({
+      block: "nearest",
+    });
+  }, [sideCollapsed, pathname]);
+
   if (pathname === "/admin/login") {
     return <div className="admin-app">{children}</div>;
   }
@@ -154,6 +161,11 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
     router.refresh();
   }
 
+  function pinRailTip(event: { currentTarget: HTMLElement }) {
+    const rect = event.currentTarget.getBoundingClientRect();
+    event.currentTarget.style.setProperty("--tip-top", `${Math.round(rect.top + rect.height / 2)}px`);
+  }
+
   function renderLink(link: NavLink, compact: boolean) {
     const Icon = link.icon;
     const label = t(link.key);
@@ -164,6 +176,8 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         aria-label={compact ? label : undefined}
         data-tip={compact ? label : undefined}
         onClick={() => setMobileOpen(false)}
+        onMouseEnter={compact ? pinRailTip : undefined}
+        onFocus={compact ? pinRailTip : undefined}
         className={cn(compact && "is-icon", isActive(pathname, link.href) && "is-active")}
       >
         <Icon size={16} strokeWidth={1.75} />
@@ -180,6 +194,8 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           aria-label={compact ? t("adminOverview") : undefined}
           data-tip={compact ? t("adminOverview") : undefined}
           onClick={() => setMobileOpen(false)}
+          onMouseEnter={compact ? pinRailTip : undefined}
+          onFocus={compact ? pinRailTip : undefined}
           className={cn(compact && "is-icon", isActive(pathname, "/admin") && "is-active")}
         >
           <LayoutDashboard size={16} strokeWidth={1.75} />
@@ -243,6 +259,8 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
               href="/"
               aria-label={t("adminFront")}
               data-tip={sideCollapsed ? t("adminFront") : undefined}
+              onMouseEnter={sideCollapsed ? pinRailTip : undefined}
+              onFocus={sideCollapsed ? pinRailTip : undefined}
               className={cn(sideCollapsed && "is-icon")}
             >
               <Home size={16} strokeWidth={1.75} />
@@ -253,6 +271,8 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
               onClick={logout}
               aria-label={t("adminLogout")}
               data-tip={sideCollapsed ? t("adminLogout") : undefined}
+              onMouseEnter={sideCollapsed ? pinRailTip : undefined}
+              onFocus={sideCollapsed ? pinRailTip : undefined}
               className={cn(sideCollapsed && "is-icon")}
             >
               <LogOut size={16} strokeWidth={1.75} />
