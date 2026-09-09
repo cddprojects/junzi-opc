@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { formatMyrSen, formatTierRateLabel, senToMyr, type CommissionEntry, type ReferralTierPlan, type Withdrawal } from "@/lib/referral";
@@ -31,16 +31,17 @@ export function ReferralSummary() {
   const [data, setData] = useState<Dashboard | null>(null);
 
   useEffect(() => {
-    if (!user) {
-      setData(null);
-      return;
-    }
+    if (!user) return;
+    let cancelled = false;
     fetch("/api/referral/me")
       .then((res) => res.json())
       .then((row: Dashboard) => {
-        if (row?.referralCode) setData(row);
+        if (!cancelled && row?.referralCode) setData(row);
       })
       .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
   }, [user]);
 
   if (loading) return null;
@@ -78,17 +79,23 @@ export function ReferralCenter() {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
-  const load = useCallback(async () => {
-    const res = await fetch("/api/referral/me");
-    const row = (await res.json()) as Dashboard & { error?: string };
-    if (!res.ok) throw new Error(row.error || t("errorGeneric"));
-    setData(row);
-  }, [t]);
-
   useEffect(() => {
     if (!user) return;
-    load().catch((err) => setError(translateApiError(locale, err instanceof Error ? err.message : "", "errorGeneric")));
-  }, [user, load, locale]);
+    let cancelled = false;
+    fetch("/api/referral/me")
+      .then(async (res) => {
+        const row = (await res.json()) as Dashboard & { error?: string };
+        if (!res.ok) throw new Error(row.error || t("errorGeneric"));
+        if (!cancelled) setData(row);
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        setError(translateApiError(locale, err instanceof Error ? err.message : "", "errorGeneric"));
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [user, locale, t]);
 
   async function withdraw(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();

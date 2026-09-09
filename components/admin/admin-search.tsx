@@ -12,13 +12,11 @@ export function AdminSearch() {
   const [hits, setHits] = useState<Hit[]>([]);
   const [open, setOpen] = useState(false);
   const box = useRef<HTMLDivElement>(null);
+  const shownHits = query.trim() ? hits : [];
 
   useEffect(() => {
     const q = query.trim();
-    if (q.length < 1) {
-      setHits([]);
-      return;
-    }
+    if (q.length < 1) return;
     const timer = window.setTimeout(() => {
       fetch(`/api/admin/search?q=${encodeURIComponent(q)}`)
         .then((res) => res.json())
@@ -44,13 +42,13 @@ export function AdminSearch() {
       <input
         value={query}
         onChange={(event) => setQuery(event.target.value)}
-        onFocus={() => hits.length && setOpen(true)}
+        onFocus={() => shownHits.length && setOpen(true)}
         placeholder={t("adminSearchPlaceholder")}
         aria-label={t("adminSearchPlaceholder")}
       />
-      {open && hits.length > 0 ? (
+      {open && shownHits.length > 0 ? (
         <div className="admin-search-pop">
-          {hits.map((hit) => (
+          {shownHits.map((hit) => (
             <Link key={hit.href + hit.title} href={hit.href} onClick={() => setOpen(false)}>
               <span>{hit.title}</span>
               <span className="hint"> · {hit.hint}</span>

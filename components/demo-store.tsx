@@ -123,7 +123,7 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
           .catch(() => setPayConfig({ billplz: false, demo: false }));
       },
     }),
-    [cart, favorites, pathname, locale, t],
+    [cart, favorites, locale, t],
   );
 
   async function confirmPay() {

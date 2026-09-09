@@ -3,7 +3,6 @@ import "server-only";
 import { membership } from "@/lib/data";
 import {
   type CheckoutItem,
-  type Customer,
   type Order,
   type PayMethod,
   type PublicCustomer,
