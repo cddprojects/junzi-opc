@@ -337,11 +337,22 @@
 }
 
 .storefront .front-input,
-.storefront [data-slot="input"] {
+.storefront [data-slot="input"]:not(.mp-search-field) {
   min-height: 46px;
   border-radius: var(--front-radius-sm);
   border-color: var(--front-border);
   background: var(--front-surface);
+}
+
+.storefront .mp-search-field {
+  height: 36px;
+  min-height: 36px;
+  border: 0;
+  border-radius: 50px;
+  background: #f8f8f8;
+  padding-left: 2.5rem;
+  padding-right: 0.75rem;
+  box-shadow: none;
 }
 
 .storefront .front-price,

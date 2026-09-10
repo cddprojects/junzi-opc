@@ -46,8 +46,8 @@ export function SearchBox({
           defaultValue={defaultValue}
           placeholder={placeholder}
           className={cn(
-            "h-9 rounded-full border-0 bg-[#f3f3f3] pr-3 text-[13px] shadow-none placeholder:text-[#bbb]",
-            center ? "pl-9 text-center placeholder:text-center" : "pl-9",
+            "mp-search-field h-9 rounded-[50px] border-0 bg-[#f8f8f8] pr-3 pl-10 text-[13px] shadow-none placeholder:text-[#bbb]",
+            center && "text-center placeholder:text-center",
           )}
         />
       </div>
