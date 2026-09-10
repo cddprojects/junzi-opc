@@ -19,7 +19,7 @@ export default async function RecordedCoursesPage() {
       {courses.length === 0 ? (
         <p className="px-4 py-16 text-center text-[14px] text-[#999]">{t(locale, "recordedEmpty")}</p>
       ) : (
-        <div className="space-y-3 md:grid md:grid-cols-2 md:gap-4 md:space-y-0 lg:grid-cols-3">
+        <div className="space-y-2 md:grid md:grid-cols-2 md:gap-4 md:space-y-0 lg:grid-cols-3">
           {courses.map((product) => {
             const count = product.detail?.lessons.length || product.sales || 0;
             return (

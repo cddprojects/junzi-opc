@@ -182,7 +182,11 @@ function MobileHeader() {
     <header className="sticky top-0 z-[var(--z-sticky)] border-b border-[#f0f0f0] bg-white">
       <div className="relative flex h-11 items-center px-1">
         <div className="z-10 flex w-[72px] shrink-0 items-center">
-          {!isHome && (
+          {pathname === "/categories" ? (
+            <Link href="/" className="flex size-9 items-center justify-center text-[#333]" aria-label={t("navHome")}>
+              <Home className="size-5" />
+            </Link>
+          ) : !isHome && pathname !== "/mine" ? (
             <button
               type="button"
               onClick={() => router.back()}
@@ -191,7 +195,7 @@ function MobileHeader() {
             >
               <ChevronLeft className="size-6" />
             </button>
-          )}
+          ) : null}
         </div>
         <p className="min-w-0 flex-1 truncate text-center text-[16px] font-medium text-[#333]">
           {isHome ? brand.name : title}

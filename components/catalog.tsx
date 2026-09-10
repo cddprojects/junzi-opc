@@ -70,10 +70,10 @@ export function ProductRow({
     <Link
       href={href}
       prefetch
-      className="relative flex cursor-pointer gap-3 bg-white px-3 py-3 active:opacity-70"
+      className="relative flex cursor-pointer gap-3 bg-white px-3 py-2.5 active:opacity-70"
       aria-label={title}
     >
-      <span className="block h-[72px] w-[72px] shrink-0 overflow-hidden rounded-md">
+      <span className="block h-[76px] w-[76px] shrink-0 overflow-hidden rounded-md">
         <CoverArt
           theme={product.cover}
           image={product.coverImage}
@@ -147,7 +147,7 @@ export function CategoryIcons({
     <div className="grid grid-cols-5 gap-1 px-2 py-3 md:gap-6 md:px-0">
       {items.map((item) => (
         <Link key={item.id} href={item.href} className="flex flex-col items-center gap-1.5 text-center">
-          <span className="flex size-11 items-center justify-center overflow-hidden rounded-full bg-[#f4f4f4] md:size-[64px]">
+          <span className="flex size-12 items-center justify-center overflow-hidden rounded-full bg-[#f4f4f4] md:size-[64px]">
             <CategoryGlyph id={item.id} />
           </span>
           <span className="max-w-[4.6rem] text-[11px] leading-4 text-[#555] md:max-w-[7.5rem] md:text-[13px]">

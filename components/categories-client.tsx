@@ -47,7 +47,7 @@ export function CategoriesClient({ products }: { products: Product[] }) {
                 type="button"
                 onClick={() => setActive(category.id)}
                 className={cn(
-                  "relative flex h-[52px] w-full items-center justify-center px-2 text-[13px]",
+                  "relative flex h-[56px] w-full items-center justify-start px-3 text-left text-[13px] leading-4",
                   selected ? "bg-white font-medium text-[#c9a24a]" : "text-[#666]",
                 )}
               >
