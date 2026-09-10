@@ -57,7 +57,7 @@ export default async function HomePage() {
         <CategoryIcons items={homeCategories} />
       </section>
 
-      <section>
+      <section className="md:hidden">
         <HomeGuideBanners
           banners={homeBanners.map((item) => ({
             id: item.id,
