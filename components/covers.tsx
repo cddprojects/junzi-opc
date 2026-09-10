@@ -304,27 +304,22 @@ export function ComingSoonPoster({
   const t = useT();
   const monthLabel = month || t("comingSoonMonth");
   return (
-    <div className="relative min-h-[520px] overflow-hidden bg-[#efe6d4] text-[#1d2a3a]">
+    <div className="relative min-h-[calc(100dvh-140px)] overflow-hidden bg-[#efe6d4] text-[#1d2a3a] md:min-h-[560px]">
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,#d9d3c4,transparent_55%)]" />
-      <div className="absolute top-8 right-6 h-40 w-24 opacity-50">
+      <div className="absolute top-10 right-8 h-44 w-28 opacity-50">
         <div className="h-full w-[2px] bg-[#5b7a52]" />
         <div className="absolute top-6 left-[-18px] h-16 w-16 rounded-full border border-[#5b7a52]/40" />
         <div className="absolute top-16 left-2 h-20 w-10 rounded-full border border-[#5b7a52]/30" />
       </div>
-      <div className="absolute inset-x-0 bottom-0 h-[46%] bg-[linear-gradient(180deg,transparent,#c8a77a)]" />
-      <div className="relative z-10 px-6 pt-10 text-center">
-        <h1 className="font-serif text-[34px] tracking-wide">{title}</h1>
-        <div className="mx-auto mt-6 w-fit rounded border border-[#1d2a3a]/20 bg-[#f7f1e4] px-6 py-2 text-[15px]">
+      <div className="absolute inset-x-0 bottom-0 h-[48%] bg-[linear-gradient(180deg,transparent,#c8a77a)]" />
+      <div className="relative px-6 pt-16 text-center">
+        <h1 className="font-serif text-[36px] tracking-wide">{title}</h1>
+        <div className="mx-auto mt-8 w-fit border-y border-[#1d2a3a]/15 px-8 py-2 text-[16px]">
           {monthLabel}
         </div>
-        <p className="mt-4 text-[13px] tracking-[0.3em] text-[#5a6570]">{t("comingSoonLine")}</p>
-        {(title === "活动报名" || title === t("eventsTitle")) && (
-          <div className="mx-auto mt-5 w-fit rounded-md bg-[#1d2a3a] px-8 py-2 text-sm text-white">
-            {t("comingSoon")}
-          </div>
-        )}
+        <p className="mt-5 text-[13px] tracking-[0.35em] text-[#5a6570]">{t("comingSoonLine")}</p>
       </div>
-      <div className="absolute right-8 bottom-16 left-8 flex items-end justify-between">
+      <div className="absolute right-8 bottom-20 left-8 flex items-end justify-between">
         <div className="h-16 w-12 rounded-full bg-[#dce7d4] shadow-inner" />
         <div className="flex h-20 w-16 items-center justify-center rounded-sm bg-[#f3ead8] shadow">
           <span className="font-serif text-3xl">匠</span>

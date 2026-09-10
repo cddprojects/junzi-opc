@@ -5,6 +5,7 @@ import {
   HomeCarousel,
   NoticeBar,
   ProductCard,
+  ProductRow,
   SearchBox,
   SectionTitle,
 } from "@/components/catalog";
@@ -29,8 +30,8 @@ export default async function HomePage() {
   const extraVideos = videos.filter((item) => item.placement === "library");
 
   return (
-    <div className="pb-8">
-      <section className="front-section-tight space-y-6 md:space-y-10">
+    <div className="bg-[#f5f5f5] md:bg-transparent">
+      <section className="bg-white">
         <NoticeBar href="/courses/recorded" text={localized(locale, brand.notice, brand.noticeEn)} />
         <div className="md:hidden">
           <SearchBox placeholder={t(locale, "search")} center />
@@ -57,15 +58,15 @@ export default async function HomePage() {
         />
       </section>
 
-      <section className="front-section front-section-band -mx-0 rounded-[var(--front-radius-lg)] px-4 md:px-10">
+      <section className="mt-2 bg-white px-1 py-1 md:mt-6 md:rounded-xl">
         <CategoryIcons items={homeCategories} />
       </section>
 
-      <section className="front-section">
+      <section className="mt-2 px-3 md:mt-6 md:px-0">
         {homeBanners.length > 0 ? (
-          <div className="grid gap-4 md:grid-cols-2 md:gap-6">
+          <div className="grid gap-2 md:grid-cols-2 md:gap-4">
             {homeBanners.map((banner) => (
-              <Link key={banner.id} href={banner.href} className="front-card block overflow-hidden">
+              <Link key={banner.id} href={banner.href} className="block overflow-hidden rounded-lg bg-white">
                 {banner.image ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={banner.image} alt={locPosterTitle(banner, locale)} className="aspect-[16/6] w-full object-cover" />
@@ -76,53 +77,54 @@ export default async function HomePage() {
             ))}
           </div>
         ) : (
-          <Link href="/guides" className="front-card block overflow-hidden">
+          <Link href="/guides" className="block overflow-hidden rounded-lg bg-white">
             <GuideBanner />
           </Link>
         )}
       </section>
 
-      <section className="front-section front-section-band -mx-0 rounded-[var(--front-radius-lg)] px-4 md:px-10">
+      <section className="mt-2 bg-white md:mt-6 md:rounded-xl md:px-4 md:py-4">
         <SectionTitle>{t(locale, "homeJoin")}</SectionTitle>
-        <div id="join-opc" className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 lg:gap-6">
+        <div id="join-opc" className="md:hidden">
+          {joinProducts.map((product) => (
+            <ProductRow key={product.slug} product={product} />
+          ))}
+        </div>
+        <div className="hidden grid-cols-1 gap-4 sm:grid-cols-2 md:grid lg:grid-cols-3">
           {joinProducts.map((product) => (
             <ProductCard key={product.slug} product={product} />
           ))}
         </div>
       </section>
 
-      <section className="front-section">
+      <section className="mt-2 bg-white px-3 py-3 md:mt-6 md:rounded-xl md:px-4">
         <SectionTitle>{intro ? locVideoTitle(intro, locale) : localized(locale, introVideo.title, introVideo.titleEn)}</SectionTitle>
-        <div className="front-card overflow-hidden">
-          <VideoBlock video={intro} fallback="intro" />
-        </div>
+        <VideoBlock video={intro} fallback="intro" />
       </section>
 
-      <section className="front-section front-section-band -mx-0 rounded-[var(--front-radius-lg)] px-4 md:px-10">
+      <section className="mt-2 bg-white px-3 py-3 md:mt-6 md:rounded-xl md:px-4">
         <SectionTitle>{t(locale, "homeCase")}</SectionTitle>
-        <div className="front-card overflow-hidden">
-          <VideoBlock video={story} fallback="case" />
-          <p className="sr-only">{story ? locVideoTitle(story, locale) : localized(locale, caseStudy.title, caseStudy.titleEn)}</p>
-        </div>
+        <VideoBlock video={story} fallback="case" />
+        <p className="sr-only">{story ? locVideoTitle(story, locale) : localized(locale, caseStudy.title, caseStudy.titleEn)}</p>
       </section>
 
       {extraVideos.length > 0 && (
-        <section className="front-section">
+        <section className="mt-2 bg-white px-3 py-3 md:mt-6 md:rounded-xl md:px-4">
           <SectionTitle>{t(locale, "homeVideos")}</SectionTitle>
-          <div className="grid gap-6 md:grid-cols-2">
+          <div className="grid gap-3 md:grid-cols-2">
             {extraVideos.map((video) => (
-              <div key={video.id} className="front-card overflow-hidden p-3 md:p-4">
+              <div key={video.id} className="overflow-hidden">
                 <VideoBlock video={video} />
-                <p className="mt-3 font-serif text-[18px] font-medium">{locVideoTitle(video, locale)}</p>
+                <p className="mt-2 text-[14px] font-medium">{locVideoTitle(video, locale)}</p>
               </div>
             ))}
           </div>
         </section>
       )}
 
-      <section className="front-section pt-8 md:pt-12">
+      <section className="mt-2 bg-white px-3 py-3 md:mt-6 md:rounded-xl md:px-4">
         <SectionTitle>{t(locale, "homeAiTools")}</SectionTitle>
-        <Link href="/tools" className="front-card mb-2 block overflow-hidden">
+        <Link href="/tools" className="mb-2 block overflow-hidden rounded-lg">
           <AiToolBanner />
         </Link>
       </section>

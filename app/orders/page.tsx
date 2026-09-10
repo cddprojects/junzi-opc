@@ -40,9 +40,9 @@ export default async function OrdersPage({
   const products = await getStoreProductsBySlugs(orders.map((order) => order.productSlug));
 
   return (
-    <div className="px-4 py-6 md:px-0 md:py-8">
-      <div className="front-card mx-auto max-w-2xl px-5 py-6 md:px-8 md:py-8">
-        <h1 className="front-h2 text-center font-serif md:text-left">{t(locale, "ordersList")}</h1>
+    <div className="bg-[#f5f5f5] px-0 py-0 md:bg-transparent md:px-0 md:py-8">
+      <div className="mx-auto max-w-2xl bg-white px-3 py-4 md:rounded-xl md:px-8 md:py-8">
+        <h1 className="text-center text-[16px] font-medium md:text-left md:text-[22px]">{t(locale, "ordersList")}</h1>
 
         <nav className="-mx-1 mt-4 flex gap-5 overflow-x-auto px-1 text-[15px] md:mt-6">
           {ORDER_TABS.map((item) => {

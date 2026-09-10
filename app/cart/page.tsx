@@ -14,13 +14,13 @@ export default function CartPage() {
   const total = cart.reduce((sum, row) => sum + row.product.price * row.qty, 0);
 
   return (
-    <div className="front-card min-h-[60vh] overflow-hidden">
+    <div className="min-h-[50vh] overflow-hidden bg-white md:rounded-xl">
       {cart.length === 0 ? (
         <EmptyHint>{t("cartEmpty")}</EmptyHint>
       ) : (
         <div>
           {cart.map((row) => (
-            <div key={row.slug} className="flex gap-4 border-b border-[var(--front-border)] px-5 py-5 md:px-8">
+            <div key={row.slug} className="flex gap-3 border-b border-[#f0f0f0] px-3 py-3 md:px-6 md:py-5">
               <Link href={row.product.href} className="w-24 overflow-hidden rounded-[var(--front-radius-sm)]">
                 <CoverArt theme={row.product.cover} image={row.product.coverImage} compact />
               </Link>

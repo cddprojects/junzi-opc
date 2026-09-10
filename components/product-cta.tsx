@@ -41,7 +41,7 @@ export function AddToCartButton({
       disabled={loading}
       onClick={() => addToCart(product)}
       className={cn(
-        "front-btn-secondary inline-flex h-12 flex-1 cursor-pointer gap-1.5 px-3 text-[14px] disabled:cursor-not-allowed disabled:opacity-60",
+        "front-btn-secondary inline-flex h-10 flex-1 cursor-pointer gap-1 px-2 text-[13px] disabled:cursor-not-allowed disabled:opacity-60",
         className,
       )}
     >
@@ -62,10 +62,10 @@ export function ProductCtaRow({
 }) {
   return (
     <div className={cn("flex gap-2.5", className)}>
-      <AddToCartButton product={product} className={compact ? "h-11 text-[13px]" : undefined} />
+      <AddToCartButton product={product} className={compact ? "h-9 rounded-md text-[13px]" : undefined} />
       <BuyNowButton
         product={product}
-        className={cn("flex-1", compact ? "h-11 text-[13px]" : "h-12")}
+        className={cn("flex-1", compact ? "h-9 rounded-md text-[13px]" : "h-10")}
       />
     </div>
   );

@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { Search } from "lucide-react";
-import { EmptyHint, ProductCard } from "@/components/catalog";
+import { EmptyHint, ProductRow } from "@/components/catalog";
 import { productCategories, type Product, type ProductCategoryId } from "@/lib/data";
 import { cn } from "@/lib/utils";
 import { useLocale } from "@/components/locale-provider";
@@ -25,18 +25,20 @@ export function CategoriesClient({ products }: { products: Product[] }) {
   }, [active, query, products]);
 
   return (
-    <div className="flex min-h-[calc(100dvh-96px)] flex-col py-4 md:min-h-0 md:py-8">
-      <div className="px-4 md:px-0">
-        <div className="relative max-w-xl">
-          <Search className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-[var(--front-text-muted)]" />
+    <div className="flex min-h-[calc(100dvh-96px)] flex-col bg-[#f5f5f5] md:min-h-0 md:bg-transparent">
+      <div className="bg-white px-3 py-2">
+        <div className="relative">
+          <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-[#bbb]" />
           <input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder={t("searchKeyword")}
-            className="front-input h-12 w-full rounded-[var(--front-radius-sm)] border border-[var(--front-border)] bg-[var(--front-surface)] pr-3 pl-10 text-[15px] outline-none placeholder:text-[var(--front-text-muted)]"
+            className="h-9 w-full rounded-full border-0 bg-[#f3f3f3] pr-3 pl-9 text-[13px] outline-none placeholder:text-[#bbb]"
           />
         </div>
-        <nav className="mt-6 flex gap-6 overflow-x-auto">
+      </div>
+      <div className="flex min-h-0 flex-1">
+        <nav className="w-[88px] shrink-0 bg-[#f7f7f7] md:w-[120px]">
           {productCategories.map((category) => {
             const selected = category.id === active;
             return (
@@ -44,26 +46,30 @@ export function CategoriesClient({ products }: { products: Product[] }) {
                 key={category.id}
                 type="button"
                 onClick={() => setActive(category.id)}
-                className={cn("front-tab shrink-0 text-[15px] md:text-[16px]", selected && "is-active")}
+                className={cn(
+                  "relative flex h-[52px] w-full items-center justify-center px-2 text-[13px]",
+                  selected ? "bg-white font-medium text-[#c9a24a]" : "text-[#666]",
+                )}
               >
+                {selected ? <span className="absolute top-1/2 left-0 h-4 w-[3px] -translate-y-1/2 bg-[#c9a24a]" /> : null}
                 {localized(locale, category.label, category.labelEn)}
               </button>
             );
           })}
         </nav>
+        <section className="min-w-0 flex-1 bg-white">
+          {list.length === 0 ? (
+            <EmptyHint>{t("noProducts")}</EmptyHint>
+          ) : (
+            <div>
+              {list.map((product) => (
+                <ProductRow key={product.slug} product={product} showOriginal={false} />
+              ))}
+            </div>
+          )}
+          <p className="py-8 text-center text-[12px] text-[#bbb]">{t("moreNone")}</p>
+        </section>
       </div>
-      <section className="min-w-0 flex-1 px-4 pt-6 md:px-0">
-        {list.length === 0 ? (
-          <EmptyHint>{t("noProducts")}</EmptyHint>
-        ) : (
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 lg:gap-6">
-            {list.map((product) => (
-              <ProductCard key={product.slug} product={product} />
-            ))}
-          </div>
-        )}
-        <p className="py-10 text-center text-[13px] text-[var(--front-text-muted)]">{t("moreNone")}</p>
-      </section>
     </div>
   );
 }

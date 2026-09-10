@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 export function LocaleSwitcher({ compact }: { compact?: boolean }) {
   const { locale, setLocale, t } = useLocale();
   return (
-    <label className={cn("mb-[10px] inline-flex items-center gap-2 text-[var(--front-text-soft)]", compact ? "text-[12px]" : "text-[13px]")}>
+    <label className={cn("inline-flex items-center gap-2 text-[var(--front-text-soft)]", compact ? "text-[12px]" : "mb-[10px] text-[13px]")}>
       {!compact && <span className="text-[var(--front-text-muted)]">{t("language")}</span>}
       <select
         aria-label={t("chooseLanguage")}

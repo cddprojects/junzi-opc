@@ -14,27 +14,26 @@ export default async function RecordedCoursesPage() {
   const courses = recordedProducts(products);
 
   return (
-    <div className="px-4 py-8 md:px-0">
-      <h1 className="front-h2 font-serif">{t(locale, "recordedTitle")}</h1>
-      <p className="mt-3 text-[15px] text-[var(--front-text-soft)]">{t(locale, "recordedHint")}</p>
+    <div className="bg-[#f5f5f5] pb-4 md:bg-transparent md:px-0 md:py-6">
+      <h1 className="sr-only md:not-sr-only md:mb-4 md:text-[22px] md:font-semibold">{t(locale, "recordedTitle")}</h1>
       {courses.length === 0 ? (
-        <p className="mt-10 text-center text-[15px] text-[var(--front-text-muted)]">{t(locale, "recordedEmpty")}</p>
+        <p className="px-4 py-16 text-center text-[14px] text-[#999]">{t(locale, "recordedEmpty")}</p>
       ) : (
-        <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="space-y-2 md:grid md:grid-cols-2 md:gap-4 md:space-y-0 lg:grid-cols-3">
           {courses.map((product) => {
-            const count = product.detail?.lessons.length || 0;
+            const count = product.detail?.lessons.length || product.sales || 0;
             return (
               <Link
                 key={product.slug}
                 href={`/courses/recorded/${product.slug}`}
                 prefetch
-                className="front-card overflow-hidden transition duration-150 hover:shadow-md active:opacity-70"
+                className="block overflow-hidden bg-white active:opacity-80"
               >
-                <CoverArt theme={product.cover} image={product.coverImage} showVideoBadge />
-                <div className="px-5 py-4">
-                  <h2 className="front-h3 font-serif">{locProductTitle(product, locale)}</h2>
-                  <p className="mt-2 text-[13px] text-[var(--front-text-muted)]">
-                    {t(locale, "recordedMeta", { n: count, sales: product.sales || 0 })}
+                <CoverArt theme={product.cover} image={product.coverImage} showVideoBadge className="aspect-[16/9]" />
+                <div className="px-3 py-3">
+                  <h2 className="text-[15px] leading-5 font-medium text-[#333]">{locProductTitle(product, locale)}</h2>
+                  <p className="mt-1 text-[12px] text-[#999]">
+                    {t(locale, "learnersCount", { n: product.sales || count })}
                   </p>
                 </div>
               </Link>

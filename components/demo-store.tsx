@@ -17,6 +17,7 @@ import { translateApiError } from "@/lib/messages";
 import { loginHref, safeReturnPath } from "@/lib/safe-path";
 import { fromCny, formatMoneyAmount } from "@/lib/currency";
 import { PayBusyOverlay } from "@/components/pay-busy-overlay";
+import { Portal } from "@/components/portal";
 import { canFollowPayRedirect, isAbortError } from "@/lib/pay-redirect";
 
 export type CartItem = { slug: string; qty: number; product: Product };
@@ -260,30 +261,27 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
         <PayBusyOverlay title={t("connectingPay")} cancelLabel={t("cancelPay")} onCancel={closePay} />
       ) : null}
       {visible ? (
-        <div className="fixed inset-0 z-[80] flex items-center justify-center p-4">
-          <button
-            type="button"
-            className="absolute inset-0 bg-black/40"
-            aria-label={t("close")}
-            onClick={closePay}
-          />
-          <div
-            role="dialog"
-            aria-modal="true"
-            className="front-card relative z-10 w-full max-w-[380px] p-6 shadow-xl"
-          >
+        <Portal>
+          <div className="mp-modal-root">
+            <button
+              type="button"
+              className="mp-modal-backdrop"
+              aria-label={t("close")}
+              onClick={closePay}
+            />
+            <div role="dialog" aria-modal="true" className="mp-pay-sheet">
             {result ? (
               <>
-                <h2 className="front-h3 font-serif">{t("paySuccess")}</h2>
-                <p className="mt-2 text-[14px] text-[var(--front-text-soft)]">{t("paySuccessBody")}</p>
+                <h2 className="text-[17px] font-semibold">{t("paySuccess")}</h2>
+                <p className="mt-2 text-[13px] text-[#666]">{t("paySuccessBody")}</p>
                 <div className="mt-3 space-y-3">
                   {result.map((order) => (
-                    <div key={order.id} className="rounded-lg bg-[#faf6ee] px-3 py-3">
+                    <div key={order.id} className="rounded-lg bg-[#f7f7f7] px-3 py-3">
                       <p className="text-[13px]">{order.productTitle}</p>
                       {order.verifyCode ? (
                         <CopyCode
                           code={order.verifyCode}
-                          className="mt-1 block w-full text-left font-mono text-[13px] font-medium text-[#8a5a20]"
+                          className="mt-1 block w-full text-left font-mono text-[13px] font-medium text-[#333]"
                         />
                       ) : null}
                     </div>
@@ -311,10 +309,10 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
               </>
             ) : (
               <>
-                <h2 className="front-h3 font-serif">
+                <h2 className="text-[17px] font-semibold">
                   {!loading && !user ? t("payNeedLogin") : t("payConfirm")}
                 </h2>
-                <p className="mt-2 text-[14px] leading-7 text-[var(--front-text-soft)]">
+                <p className="mt-2 text-[13px] leading-6 text-[#666]">
                   {!loading && !user
                     ? t("payNeedLoginBody")
                     : payConfig && !canPay
@@ -328,7 +326,7 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
                         <span>
                           {localized(locale, item.title, item.titleEn)} × {item.qty || 1}
                         </span>
-                        <span className="opc-price shrink-0 text-[#8a5a20]">
+                        <span className="shrink-0 font-semibold text-[#fa3534]">
                           {formatMoneyAmount(
                             Math.round(fromCny(item.price * (item.qty || 1), "MYR", settings.fx) * 100) / 100,
                             "MYR",
@@ -339,7 +337,7 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
                   </ul>
                 )}
                 {items.length > 0 ? (
-                  <p className="mt-3 rounded-md bg-[#faf6ee] px-3 py-2 text-[13px] text-[#5a3d14]">
+                  <p className="mt-3 rounded-md bg-[#fff5f5] px-3 py-2 text-[13px] font-medium text-[#fa3534]">
                     {t("billplzChargeLine", { amount: chargeLabel })}
                   </p>
                 ) : null}
@@ -372,14 +370,15 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
                       {payLabel}
                     </button>
                   )}
-                  <button type="button" onClick={closePay} className="w-full py-2 text-[14px] text-[var(--front-accent)]">
+                  <button type="button" onClick={closePay} className="w-full py-2 text-[14px] text-[#666]">
                     {t("back")}
                   </button>
                 </div>
               </>
             )}
+            </div>
           </div>
-        </div>
+        </Portal>
       ) : null}
     </StoreContext.Provider>
   );

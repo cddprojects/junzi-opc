@@ -16,6 +16,8 @@ import { mineBlocks } from "@/lib/data";
 import { useAuth } from "@/components/auth-provider";
 import { useT } from "@/components/locale-provider";
 import { ReferralSummary } from "@/components/referral-center";
+import { LocaleSwitcher } from "@/components/locale-switcher";
+import { CurrencySwitcher } from "@/components/currency-switcher";
 import type { MessageKey } from "@/lib/messages";
 
 const MINE_LABELS: Record<string, MessageKey> = {
@@ -39,9 +41,9 @@ export default function MinePage() {
   const t = useT();
 
   return (
-    <div className="front-card overflow-hidden">
-      <div className="flex items-center gap-4 bg-[var(--front-text)] px-5 py-8 text-[var(--front-surface)] md:px-10 md:py-10">
-        <div className="flex size-16 items-center justify-center rounded-full bg-[var(--front-accent)]">
+    <div className="overflow-hidden bg-[#f5f5f5] md:rounded-xl md:bg-white">
+      <div className="flex items-center gap-3 bg-[#1a1a1a] px-4 py-6 text-white md:px-8 md:py-8">
+        <div className="flex size-14 items-center justify-center rounded-full bg-[#333]">
           <svg viewBox="0 0 48 48" className="size-8 text-[#d8d8d8]" aria-hidden>
             <circle cx="24" cy="18" r="8" fill="currentColor" />
             <path d="M8 40c2-10 8-14 16-14s14 4 16 14" fill="currentColor" />
@@ -52,7 +54,7 @@ export default function MinePage() {
             <p className="text-[16px]">{t("loading")}</p>
           ) : user ? (
             <>
-              <p className="truncate font-serif text-[20px] font-medium">{user.name}</p>
+              <p className="truncate text-[17px] font-medium">{user.name}</p>
               <p className="mt-0.5 text-[13px] text-white/80">{user.email || user.phone}</p>
               <p className="mt-1 text-[12px] text-white/70">
                 {user.memberActive ? t("mineMemberOn") : t("mineMemberOff")}
@@ -60,7 +62,7 @@ export default function MinePage() {
             </>
           ) : (
             <>
-              <p className="font-serif text-[20px] font-medium">{t("mineGuest")}</p>
+              <p className="text-[17px] font-medium">{t("mineGuest")}</p>
               <p className="mt-0.5 text-[13px] text-white/80">{t("mineGuestHint")}</p>
               <div className="mt-2 flex gap-3 text-[13px]">
                 <Link href="/login?next=/mine" className="underline">
@@ -82,8 +84,8 @@ export default function MinePage() {
 
       {user ? <ReferralSummary /> : null}
 
-      <section className="bg-[var(--front-surface)] px-4 pt-6 pb-6 md:px-10">
-        <h2 className="front-h3 mb-5 font-serif">{t("minePersonal")}</h2>
+      <section className="mt-2 bg-white px-3 pt-4 pb-4 md:mt-0 md:px-8">
+        <h2 className="mb-4 text-[14px] font-medium text-[#333]">{t("minePersonal")}</h2>
         <div className="grid grid-cols-4">
           {mineBlocks.personal.map((item, index) => {
             const Icon = personalIcons[index] || ReceiptText;
@@ -97,8 +99,8 @@ export default function MinePage() {
         </div>
       </section>
 
-      <section className="bg-[var(--front-surface)] px-4 pt-2 pb-8 md:px-10 md:pb-12">
-        <h2 className="front-h3 mb-5 font-serif">{t("mineServices")}</h2>
+      <section className="mt-2 bg-white px-3 pt-4 pb-8 md:mt-0 md:px-8 md:pb-10">
+        <h2 className="mb-4 text-[14px] font-medium text-[#333]">{t("mineServices")}</h2>
         <div className="grid grid-cols-5">
           {mineBlocks.services.map((item, index) => {
             const Icon = serviceIcons[index] || CircleHelp;
@@ -112,10 +114,14 @@ export default function MinePage() {
             );
           })}
         </div>
+        <div className="mt-6 flex items-center justify-center gap-4">
+          <LocaleSwitcher />
+          <CurrencySwitcher />
+        </div>
         {user && (
           <button
             type="button"
-            className="front-btn-secondary mt-8 w-full text-[var(--front-text-soft)]"
+            className="front-btn-secondary mt-6 w-full text-[#666]"
             onClick={async () => {
               await logout();
               router.refresh();

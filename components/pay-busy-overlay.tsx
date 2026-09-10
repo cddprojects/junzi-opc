@@ -1,5 +1,7 @@
 "use client";
 
+import { Portal } from "@/components/portal";
+
 export function PayBusyOverlay({
   title,
   cancelLabel,
@@ -10,22 +12,25 @@ export function PayBusyOverlay({
   onCancel: () => void;
 }) {
   return (
-    <div
-      className="fixed inset-0 z-[90] flex items-center justify-center bg-black/40 p-4"
-      role="alertdialog"
-      aria-busy="true"
-      aria-live="polite"
-      aria-label={title}
-    >
-      <div className="front-card w-full max-w-[320px] p-6 shadow-xl">
-        <p className="text-center text-[15px] text-[var(--front-text)]">{title}</p>
-        <div className="mx-auto mt-4 h-1.5 w-28 overflow-hidden rounded-full bg-[var(--front-surface-soft)]">
-          <div className="h-full w-2/3 animate-pulse rounded-full bg-[var(--front-accent)]" />
+    <Portal>
+      <div
+        className="mp-modal-root"
+        role="alertdialog"
+        aria-busy="true"
+        aria-live="polite"
+        aria-label={title}
+      >
+        <div className="mp-modal-backdrop" />
+        <div className="mp-pay-sheet max-w-[320px] rounded-xl">
+          <p className="text-center text-[15px] text-[#333]">{title}</p>
+          <div className="mx-auto mt-4 h-1.5 w-28 overflow-hidden rounded-full bg-[#f3f3f3]">
+            <div className="h-full w-2/3 animate-pulse rounded-full bg-[#fa3534]" />
+          </div>
+          <button type="button" onClick={onCancel} className="mt-5 w-full py-2 text-[14px] text-[#666]">
+            {cancelLabel}
+          </button>
         </div>
-        <button type="button" onClick={onCancel} className="mt-5 w-full py-2 text-[14px] text-[var(--front-accent)]">
-          {cancelLabel}
-        </button>
       </div>
-    </div>
+    </Portal>
   );
 }

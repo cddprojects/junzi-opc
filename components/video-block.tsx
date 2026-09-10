@@ -16,7 +16,7 @@ export function VideoBlock({
 
   if (video.videoUrl) {
     return (
-      <div className="overflow-hidden rounded-md bg-black">
+      <div className="mp-media overflow-hidden bg-black">
         <video
           className="aspect-video w-full"
           controls
@@ -30,7 +30,7 @@ export function VideoBlock({
 
   if (video.poster) {
     return (
-      <div className="relative aspect-video overflow-hidden rounded-md bg-[#2a3340] text-white">
+      <div className="mp-media relative aspect-video overflow-hidden bg-[#2a3340] text-white">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={video.poster}
@@ -40,7 +40,7 @@ export function VideoBlock({
           className="absolute inset-0 size-full object-cover"
         />
         <div className="absolute inset-0 bg-black/25" />
-        <div className="relative z-10 flex h-full flex-col justify-end p-4">
+        <div className="relative flex h-full flex-col justify-end p-4">
           <p className="font-serif text-[18px] font-semibold md:text-[22px]">{video.overlay || video.title}</p>
           {video.duration && <p className="mt-2 self-end text-[11px] text-white/80">{video.duration}</p>}
         </div>
