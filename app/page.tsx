@@ -34,7 +34,7 @@ export default async function HomePage() {
     .sort((a, b) => a.sort - b.sort);
   const intro = videos.find((item) => item.placement === "home-intro");
   const story = videos.find((item) => item.placement === "home-case");
-  const aiBanner = postersByPlacement(posters, "home-ai").find((item) => item.image);
+  const aiBanner = postersByPlacement(posters, "ai-tools").find((item) => item.image);
 
   return (
     <div className="bg-[#f5f5f5] md:bg-transparent">

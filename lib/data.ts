@@ -41,7 +41,7 @@ export const POSTER_PLACEMENTS = [
   "workshop",
   "events",
   "member",
-  "home-ai",
+  "ai-tools",
 ] as const;
 
 export type PosterPlacement = (typeof POSTER_PLACEMENTS)[number];
@@ -52,13 +52,13 @@ export const POSTER_PLACEMENT_LABELS: Record<PosterPlacement, string> = {
   workshop: "线下工作坊",
   events: "活动报名",
   member: "会员中心",
-  "home-ai": "首页AI工具横幅",
+  "ai-tools": "AI工具小程序",
 };
 
 export function parsePosterPlacement(value: unknown, fallback: PosterPlacement = "home-carousel"): PosterPlacement {
-  return (POSTER_PLACEMENTS as readonly string[]).includes(String(value))
-    ? (value as PosterPlacement)
-    : fallback;
+  const raw = String(value);
+  if (raw === "home-ai" || raw === "ai-tools") return "ai-tools";
+  return (POSTER_PLACEMENTS as readonly string[]).includes(raw) ? (raw as PosterPlacement) : fallback;
 }
 
 export type Poster = {
@@ -115,12 +115,12 @@ export const DEFAULT_SLOT_POSTERS: Poster[] = [
     subtitleEn: "Coming soon",
   },
   {
-    id: "home-ai",
+    id: "ai-tools",
     title: "AI工具小程序",
     titleEn: "AI tools mini program",
     href: "/tools",
     sort: 0,
-    placement: "home-ai",
+    placement: "ai-tools",
     image: "/posters/ai-tool-sm.jpg",
     kicker: "点击进入",
     kickerEn: "Enter",

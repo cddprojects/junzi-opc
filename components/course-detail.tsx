@@ -52,25 +52,7 @@ export function CourseDetailView({
         <div className="overflow-hidden bg-black md:rounded-xl">
           <Hero product={view} video={heroVideo} />
         </div>
-        <div className="mp-summary bg-white px-4 pt-4 pb-4 md:rounded-xl md:px-8 md:py-8">
-          <div className="mp-summary-price flex items-center justify-between gap-4">
-            <div className="mp-summary-compare min-w-0">
-              <p className="text-[26px] leading-none font-semibold text-[#fa3534] md:text-[28px]">
-                <Money cny={product.price} />
-              </p>
-              {product.originalPrice ? (
-                <p className="text-[13px] leading-none text-[#666] line-through">
-                  <Money cny={product.originalPrice} />
-                </p>
-              ) : null}
-            </div>
-            <div className="flex min-w-0 flex-col items-end gap-2">
-              <p className="text-[12px] text-[#999]">{t("soldCount", { n: product.sales })}</p>
-              <div className="hidden w-full min-w-[220px] md:block">
-                <ProductCtaRow product={product} />
-              </div>
-            </div>
-          </div>
+        <div className="mp-summary h-full bg-white px-4 pt-4 pb-4 md:rounded-xl md:px-8 md:py-8">
           <div className="mp-summary-title flex items-start justify-between gap-3">
             <h1 className="min-w-0 text-[18px] leading-7 font-semibold text-[#1a1a1a] md:text-[22px]">{view.title}</h1>
             <div className="relative flex shrink-0 gap-4 text-center text-[10px] text-[#888]">
@@ -112,6 +94,24 @@ export function CourseDetailView({
                 <span className="text-[#666]">{view.giftNote}</span>
               </div>
             ) : null}
+          </div>
+          <div className="mp-summary-price flex items-center justify-between gap-4">
+            <div className="mp-summary-compare min-w-0">
+              <p className="text-[26px] leading-none font-semibold text-[#fa3534] md:text-[28px]">
+                <Money cny={product.price} />
+              </p>
+              {product.originalPrice ? (
+                <p className="text-[13px] leading-none text-[#666] line-through">
+                  <Money cny={product.originalPrice} />
+                </p>
+              ) : null}
+            </div>
+            <div className="flex min-w-0 flex-col items-end gap-2">
+              <p className="text-[12px] text-[#999]">{t("soldCount", { n: product.sales })}</p>
+              <div className="hidden w-full min-w-[220px] md:block">
+                <ProductCtaRow product={product} />
+              </div>
+            </div>
           </div>
         </div>
       </div>

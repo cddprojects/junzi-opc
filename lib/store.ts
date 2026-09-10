@@ -73,7 +73,7 @@ export type AppStore = {
 const DATA_DIR = path.join(process.cwd(), "data");
 const STORE_PATH = path.join(DATA_DIR, "store.json");
 export const UPLOAD_DIR = path.join(DATA_DIR, "uploads");
-const STORE_VERSION = 14;
+const STORE_VERSION = 15;
 
 let storeCache: { mtimeMs: number; store: AppStore } | null = null;
 

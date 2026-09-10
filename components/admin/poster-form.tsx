@@ -126,7 +126,7 @@ export function PosterForm({ poster, products = [] }: { poster?: Poster; product
       </label>
       <UploadField label="海报图片" value={image} onChange={setImage} accept="image/*" />
       <p className="text-[12px] text-[#888]">
-        首页轮播、首页AI工具横幅：无图则前台隐藏。线下工作坊 / 活动报名：无关联商品时只显示海报；有关联商品时显示海报加商品列表。会员中心：关联「年度会员」时保留开通购买；仅海报则显示海报和详情图。图上按钮文案填在「角标」（如「点击进入」），跳转用上方链接。
+        首页轮播、AI工具小程序：无图则前台隐藏。线下工作坊 / 活动报名：无关联商品只显示海报；有关联商品显示海报和商品列表。会员中心：用详情图做长图画廊；关联「年度会员」才显示开通购买。AI 图上按钮：角标=按钮文案（如「点击进入」），跳转链接=按钮地址。
       </p>
       <ImageListEditor values={detailImages} onChange={setDetailImages} />
       <label className="block text-[13px]">

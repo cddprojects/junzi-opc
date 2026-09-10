@@ -560,54 +560,46 @@
   color: #fff;
 }
 
-/* Product summary: mobile = price first (ref image2). Desktop = title first. */
+/* Product summary: desktop DOM order = title first / price last.
+   Mobile (max-width) pulls price to the top. */
 .storefront .mp-summary {
   display: flex;
   flex-direction: column;
 }
 
 .storefront .mp-summary-price {
-  order: 1;
-}
-
-.storefront .mp-summary-title {
-  order: 2;
-  margin-top: 16px;
-}
-
-.storefront .mp-summary-meta {
-  order: 3;
+  margin-top: auto;
+  padding-top: 2.5rem;
 }
 
 .storefront .mp-summary-compare {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 8px;
+  display: block;
 }
 
-@media (min-width: 768px) {
-  .storefront .mp-summary-title {
-    order: 1;
-    margin-top: 0;
-  }
+.storefront .mp-summary-compare .line-through {
+  margin-top: 6px;
+}
 
-  .storefront .mp-summary-meta {
-    order: 2;
-  }
-
+@media (max-width: 767.98px) {
   .storefront .mp-summary-price {
-    order: 3;
-    margin-top: auto;
-    padding-top: 2.5rem;
+    order: -1;
+    margin-top: 0;
+    padding-top: 0;
+  }
+
+  .storefront .mp-summary-title {
+    margin-top: 16px;
   }
 
   .storefront .mp-summary-compare {
-    display: block;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 8px;
   }
 
   .storefront .mp-summary-compare .line-through {
-    margin-top: 6px;
+    margin-top: 0;
   }
 }
 

@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 export default async function ToolsPage() {
   const locale = await getRequestLocale();
   const { posters } = await getCatalog();
-  const aiBanner = postersByPlacement(posters, "home-ai").find((item) => item.image);
+  const aiBanner = postersByPlacement(posters, "ai-tools").find((item) => item.image);
   return (
     <div>
       {aiBanner ? (
