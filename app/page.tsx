@@ -4,6 +4,7 @@ import {
   CategoryIcons,
   HomeCarousel,
   HomeGuideBanners,
+  HomeMediaSection,
   NoticeBar,
   ProductCard,
   ProductRow,
@@ -57,7 +58,7 @@ export default async function HomePage() {
         <CategoryIcons items={homeCategories} />
       </section>
 
-      <section className="mt-2 px-3 md:mt-6 md:px-0">
+      <section className="mt-2 md:mt-6">
         <HomeGuideBanners
           banners={homeBanners.map((item) => ({
             id: item.id,
@@ -82,37 +83,35 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="mt-2 bg-white px-3 py-3 md:mt-6 md:rounded-xl md:px-4">
-        <SectionTitle>{intro ? locVideoTitle(intro, locale) : localized(locale, introVideo.title, introVideo.titleEn)}</SectionTitle>
+      <HomeMediaSection
+        title={intro ? locVideoTitle(intro, locale) : localized(locale, introVideo.title, introVideo.titleEn)}
+      >
         <VideoBlock video={intro} fallback="intro" />
-      </section>
+      </HomeMediaSection>
 
-      <section className="mt-2 bg-white px-3 py-3 md:mt-6 md:rounded-xl md:px-4">
-        <SectionTitle>{t(locale, "homeCase")}</SectionTitle>
+      <HomeMediaSection title={t(locale, "homeCase")}>
         <VideoBlock video={story} fallback="case" />
         <p className="sr-only">{story ? locVideoTitle(story, locale) : localized(locale, caseStudy.title, caseStudy.titleEn)}</p>
-      </section>
+      </HomeMediaSection>
 
       {extraVideos.length > 0 && (
-        <section className="mt-2 bg-white px-3 py-3 md:mt-6 md:rounded-xl md:px-4">
-          <SectionTitle>{t(locale, "homeVideos")}</SectionTitle>
+        <HomeMediaSection title={t(locale, "homeVideos")}>
           <div className="grid gap-3 md:grid-cols-2">
             {extraVideos.map((video) => (
               <div key={video.id} className="overflow-hidden">
                 <VideoBlock video={video} />
-                <p className="mt-2 text-[14px] font-medium">{locVideoTitle(video, locale)}</p>
+                <p className="mp-section-title mt-2 pb-0 text-[14px] font-medium">{locVideoTitle(video, locale)}</p>
               </div>
             ))}
           </div>
-        </section>
+        </HomeMediaSection>
       )}
 
-      <section className="mt-2 bg-white px-3 py-3 md:mt-6 md:rounded-xl md:px-4">
-        <SectionTitle>{t(locale, "homeAiTools")}</SectionTitle>
-        <Link href="/tools" className="mb-2 block overflow-hidden rounded-lg">
+      <HomeMediaSection title={t(locale, "homeAiTools")}>
+        <Link href="/tools" className="mp-full-bleed">
           <AiToolBanner />
         </Link>
-      </section>
+      </HomeMediaSection>
     </div>
   );
 }

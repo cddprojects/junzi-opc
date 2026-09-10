@@ -539,6 +539,39 @@
 }
 
 /* Shared stacked-card lists: 录播课 / 直播课 / 年度会员 */
+.storefront .mp-home-block {
+  margin-top: 8px;
+  background: #fff;
+  padding-top: 12px;
+}
+
+.storefront .mp-section-title {
+  padding: 0 16px 8px;
+}
+
+.storefront .mp-full-bleed {
+  display: block;
+  width: 100%;
+  overflow: hidden;
+  border-radius: 0;
+}
+
+@media (min-width: 768px) {
+  .storefront .mp-home-block {
+    margin-top: 24px;
+    padding: 16px;
+    border-radius: 12px;
+  }
+
+  .storefront .mp-section-title {
+    padding: 0 0 16px;
+  }
+
+  .storefront .mp-full-bleed {
+    border-radius: 8px;
+  }
+}
+
 .storefront .mp-card-list {
   display: flex;
   flex-direction: column;

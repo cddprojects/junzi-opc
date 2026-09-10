@@ -16,7 +16,7 @@ export function VideoBlock({
 
   if (video.videoUrl) {
     return (
-      <div className="mp-media overflow-hidden bg-black">
+      <div className="mp-media mp-full-bleed bg-black">
         <video
           className="aspect-video w-full"
           controls
@@ -30,7 +30,7 @@ export function VideoBlock({
 
   if (video.poster) {
     return (
-      <div className="mp-media relative aspect-video overflow-hidden bg-[#2a3340] text-white">
+      <div className="mp-media mp-full-bleed relative aspect-video bg-[#2a3340] text-white">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={video.poster}

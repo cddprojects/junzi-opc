@@ -272,7 +272,7 @@ function LiveShizhanArt() {
 export function GuideBanner() {
   const { locale, t } = useLocale();
   return (
-    <div className="relative w-full overflow-hidden rounded-lg bg-[#f4ead6] px-4 py-5 md:px-8 md:py-6">
+    <div className="mp-full-bleed relative w-full bg-[#f4ead6] px-4 py-5 md:px-8 md:py-6">
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,#fff8ea,transparent_70%)]" />
       <div className="relative flex items-center justify-between gap-4">
         <div className="min-w-0">
@@ -412,7 +412,7 @@ export function AiToolBanner() {
     [t("coverAiP4"), t("coverAiP4d")],
   ];
   return (
-    <div className="relative overflow-hidden rounded-md bg-[#132033] px-3 pt-3 pb-3 text-[#f3e6c4]">
+    <div className="mp-full-bleed relative bg-[#132033] px-3 pt-3 pb-3 text-[#f3e6c4]">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_0%,#2a4060,transparent_40%)]" />
       <div className="relative">
         <div className="flex items-start justify-between gap-2">

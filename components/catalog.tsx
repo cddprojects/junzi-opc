@@ -385,14 +385,14 @@ export function HomeGuideBanners({
                 href={banner.href}
                 target="_blank"
                 rel="noreferrer"
-                className="block w-full overflow-hidden rounded-lg"
+                className="mp-full-bleed"
               >
                 {media}
               </a>
             );
           }
           return (
-            <Link key={banner.id} href={banner.href || "/guides"} prefetch className="block w-full overflow-hidden rounded-lg">
+            <Link key={banner.id} href={banner.href || "/guides"} prefetch className="mp-full-bleed">
               {media}
             </Link>
           );
@@ -418,9 +418,24 @@ export function HomeGuideBanners({
 
 export function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
-    <h2 className="px-3 pb-2 text-[16px] font-semibold tracking-tight md:px-0 md:pb-4 md:text-[20px]">
+    <h2 className="mp-section-title text-[16px] font-semibold tracking-tight md:text-[20px]">
       {children}
     </h2>
+  );
+}
+
+export function HomeMediaSection({
+  title,
+  children,
+}: {
+  title: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="mp-home-block">
+      <SectionTitle>{title}</SectionTitle>
+      {children}
+    </section>
   );
 }
 
