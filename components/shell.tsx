@@ -51,7 +51,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         className={cn(
           "front-wrap w-full md:px-6 md:pt-4 md:pb-20",
           isProduct
-            ? "pb-[calc(56px+env(safe-area-inset-bottom))] md:pb-20"
+            ? "pb-[calc(68px+env(safe-area-inset-bottom))] md:pb-20"
             : "pb-[calc(52px+env(safe-area-inset-bottom))] md:pb-20",
         )}
       >

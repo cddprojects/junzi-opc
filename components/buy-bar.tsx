@@ -1,12 +1,30 @@
 "use client";
 
+import type { ReactNode } from "react";
 import Link from "next/link";
-import { Home, ShoppingCart } from "lucide-react";
+import { Headset, Home, ShoppingCart } from "lucide-react";
 import type { Product } from "@/lib/data";
 import { useDemoStore, cartCount } from "@/components/demo-store";
-import { ProductCtaRow } from "@/components/product-cta";
+import { AddToCartButton } from "@/components/product-cta";
 import { BuyNowButton } from "@/components/buy-now-button";
 import { useT } from "@/components/locale-provider";
+
+function BarLink({
+  href,
+  label,
+  children,
+}: {
+  href: string;
+  label: string;
+  children: ReactNode;
+}) {
+  return (
+    <Link href={href} className="relative flex h-11 w-11 shrink-0 flex-col items-center justify-center gap-0.5 text-[10px] text-[#666]">
+      {children}
+      {label}
+    </Link>
+  );
+}
 
 export function BuyBar({ product }: { product?: Product }) {
   const { cart } = useDemoStore();
@@ -14,26 +32,26 @@ export function BuyBar({ product }: { product?: Product }) {
   const t = useT();
 
   return (
-    <div className="fixed right-0 bottom-0 left-0 z-[30] border-t border-[#eee] bg-white pb-[env(safe-area-inset-bottom)] md:left-1/2 md:max-w-[1200px] md:-translate-x-1/2">
-      <div className="flex h-[50px] items-center pr-2 pl-1">
-        <Link href="/" className="flex w-11 flex-col items-center gap-0.5 text-[10px] text-[#666]">
+    <div className="fixed right-0 bottom-0 left-0 z-[30] border-t border-[#eee] bg-white md:hidden">
+      <div className="flex items-center gap-1 pr-2 pl-1 pt-1.5 pb-[max(8px,env(safe-area-inset-bottom))]">
+        <BarLink href="/" label={t("navHome")}>
           <Home className="size-5" />
-          {t("navHome")}
-        </Link>
-        <Link href="/cart" className="relative flex w-11 flex-col items-center gap-0.5 text-[10px] text-[#666]">
+        </BarLink>
+        <BarLink href="/service" label={t("service")}>
+          <Headset className="size-5" />
+        </BarLink>
+        <BarLink href="/cart" label={t("cart")}>
           <ShoppingCart className="size-5" />
-          {t("cart")}
           {count > 0 && (
-            <span className="absolute top-[-2px] right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#fa3534] px-1 text-[10px] text-white">
+            <span className="absolute top-0 right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#fa3534] px-1 text-[10px] text-white">
               {count}
             </span>
           )}
-        </Link>
+        </BarLink>
         {product ? (
-          <ProductCtaRow product={product} compact className="ml-1 min-w-0 flex-1" />
-        ) : (
-          <BuyNowButton className="ml-1 h-9 flex-1" />
-        )}
+          <AddToCartButton product={product} iconOnly className="size-11 rounded-xl" />
+        ) : null}
+        <BuyNowButton product={product} className="h-11 min-h-11 flex-1 rounded-xl text-[15px]" />
       </div>
     </div>
   );

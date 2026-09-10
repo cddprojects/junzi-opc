@@ -65,7 +65,9 @@ export function SimpleProductDetail({
         {product.description && (
           <p className="mt-3 text-[13px] leading-6 text-[#555] whitespace-pre-wrap">{product.description}</p>
         )}
-        <ProductCtaRow product={product} className="mt-5" />
+        <div className="mt-5 hidden md:block">
+          <ProductCtaRow product={product} />
+        </div>
       </div>
 
       <p className="py-3 text-center text-[12px] text-[#999]">—— 商品详情 ——</p>

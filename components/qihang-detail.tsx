@@ -79,7 +79,9 @@ export function QihangDetail({ product, video }: { product: Product; video?: Cat
           {product.giftNote && <span className="rounded-full bg-[#fa3534] px-2 py-0.5 text-white">赠送</span>}
           <span className="text-[#555]">{product.giftNote}</span>
         </div>
-        <ProductCtaRow product={product} className="mt-5" />
+        <div className="mt-5 hidden md:block">
+          <ProductCtaRow product={product} />
+        </div>
       </div>
 
       <p className="py-3 text-center text-[12px] text-[#999]">—— 商品详情 ——</p>

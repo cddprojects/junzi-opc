@@ -27,9 +27,11 @@ function CartPlusIcon({ className }: { className?: string }) {
 export function AddToCartButton({
   product,
   className,
+  iconOnly,
 }: {
   product: Product;
   className?: string;
+  iconOnly?: boolean;
 }) {
   const { addToCart } = useDemoStore();
   const { loading } = useAuth();
@@ -40,13 +42,17 @@ export function AddToCartButton({
       type="button"
       disabled={loading}
       onClick={() => addToCart(product)}
+      aria-label={t("addToCart")}
       className={cn(
-        "front-btn-secondary inline-flex h-10 flex-1 cursor-pointer gap-1 px-2 text-[13px] disabled:cursor-not-allowed disabled:opacity-60",
+        "inline-flex cursor-pointer items-center justify-center disabled:cursor-not-allowed disabled:opacity-60",
+        iconOnly
+          ? "shrink-0 bg-[#fff1f0] text-[#fa3534] hover:bg-[#ffe4e1]"
+          : "front-btn-secondary flex-1 gap-1 px-2 text-[13px]",
         className,
       )}
     >
-      <CartPlusIcon className="size-[18px] shrink-0" />
-      {t("addToCart")}
+      <CartPlusIcon className={iconOnly ? "size-6" : "size-[18px] shrink-0"} />
+      {iconOnly ? null : t("addToCart")}
     </button>
   );
 }
@@ -54,19 +60,14 @@ export function AddToCartButton({
 export function ProductCtaRow({
   product,
   className,
-  compact,
 }: {
   product: Product;
   className?: string;
-  compact?: boolean;
 }) {
   return (
-    <div className={cn("flex gap-2.5", className)}>
-      <AddToCartButton product={product} className={compact ? "h-9 rounded-md text-[13px]" : undefined} />
-      <BuyNowButton
-        product={product}
-        className={cn("flex-1", compact ? "h-9 rounded-md text-[13px]" : "h-10")}
-      />
+    <div className={cn("flex items-stretch gap-3", className)}>
+      <AddToCartButton product={product} iconOnly className="size-14 rounded-[14px]" />
+      <BuyNowButton product={product} className="h-14 min-h-14 flex-[1_1_80%] rounded-[14px] text-[16px]" />
     </div>
   );
 }

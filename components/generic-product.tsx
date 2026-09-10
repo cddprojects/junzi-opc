@@ -56,7 +56,9 @@ export function GenericProductDetail({
             </button>
           </div>
           {product.subtitle && <p className="mt-2 text-[13px] text-[#666]">{product.subtitle}</p>}
-          <ProductCtaRow product={product} className="mt-6" />
+          <div className="mt-6 hidden md:block">
+            <ProductCtaRow product={product} />
+          </div>
         </div>
       </div>
 
