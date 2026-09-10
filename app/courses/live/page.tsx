@@ -9,6 +9,7 @@ export default async function LiveCoursesPage() {
   const locale = await getRequestLocale();
   return (
     <div className="bg-[#f5f5f5] pb-4 md:bg-transparent md:px-0 md:py-6">
+      <h1 className="sr-only md:not-sr-only md:mb-4 md:text-[22px] md:font-semibold">{t(locale, "liveTitle")}</h1>
       <div className="mp-card-list mp-card-list--grid">
         {liveCourses.map((course) => (
           <Link

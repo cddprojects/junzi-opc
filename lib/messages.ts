@@ -170,6 +170,7 @@ export const zh = {
   courseCode: "课程码",
 
   recordedTitle: "线上录播课",
+  liveTitle: "线上直播课",
   recordedHint: "这里是正课课节，不是商品页的片头介绍。未购买只能看到目录。",
   recordedEmpty: "还没有带正课课节的课程。",
   recordedMeta: "{n} 节正课 · {sales} 人学习",
@@ -778,6 +779,7 @@ export const en: Record<MessageKey, string> = {
   courseCode: "Course code",
 
   recordedTitle: "Recorded courses",
+  liveTitle: "Live courses",
   recordedHint: "These are the full lessons, not the product-page intro. The syllabus is visible before purchase.",
   recordedEmpty: "No courses with lesson videos yet.",
   recordedMeta: "{n} lessons · {sales} learners",
