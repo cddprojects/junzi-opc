@@ -52,14 +52,14 @@ export function CourseDetailView({
         <div className="overflow-hidden bg-black md:rounded-xl">
           <Hero product={view} video={heroVideo} />
         </div>
-        <div className="flex flex-col bg-white px-4 pt-4 pb-4 md:rounded-xl md:px-8 md:py-8">
-          <div className="order-1 flex items-end justify-between gap-4 md:order-3 md:mt-auto md:pt-10">
-            <div className="flex min-w-0 items-baseline gap-2 md:block">
+        <div className="mp-summary bg-white px-4 pt-4 pb-4 md:rounded-xl md:px-8 md:py-8">
+          <div className="mp-summary-price flex items-center justify-between gap-4">
+            <div className="mp-summary-compare min-w-0">
               <p className="text-[26px] leading-none font-semibold text-[#fa3534] md:text-[28px]">
                 <Money cny={product.price} />
               </p>
               {product.originalPrice ? (
-                <p className="text-[13px] leading-none text-[#666] line-through md:mt-1.5">
+                <p className="text-[13px] leading-none text-[#666] line-through">
                   <Money cny={product.originalPrice} />
                 </p>
               ) : null}
@@ -71,7 +71,7 @@ export function CourseDetailView({
               </div>
             </div>
           </div>
-          <div className="order-2 mt-4 flex items-start justify-between gap-3 md:order-1 md:mt-0">
+          <div className="mp-summary-title flex items-start justify-between gap-3">
             <h1 className="min-w-0 text-[18px] leading-7 font-semibold text-[#1a1a1a] md:text-[22px]">{view.title}</h1>
             <div className="relative flex shrink-0 gap-4 text-center text-[10px] text-[#888]">
               <button
@@ -103,7 +103,7 @@ export function CourseDetailView({
               </button>
             </div>
           </div>
-          <div className="order-3 md:order-2">
+          <div className="mp-summary-meta">
             {view.subtitle ? <p className="mt-3 text-[14px] leading-6 text-[#666]">{view.subtitle}</p> : null}
             {detail.lecturer ? <p className="mt-2 text-[14px] text-[#666]">{t("taughtBy", { name: detail.lecturer })}</p> : null}
             {view.giftNote ? (

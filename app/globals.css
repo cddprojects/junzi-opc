@@ -560,6 +560,57 @@
   color: #fff;
 }
 
+/* Product summary: mobile = price first (ref image2). Desktop = title first. */
+.storefront .mp-summary {
+  display: flex;
+  flex-direction: column;
+}
+
+.storefront .mp-summary-price {
+  order: 1;
+}
+
+.storefront .mp-summary-title {
+  order: 2;
+  margin-top: 16px;
+}
+
+.storefront .mp-summary-meta {
+  order: 3;
+}
+
+.storefront .mp-summary-compare {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+}
+
+@media (min-width: 768px) {
+  .storefront .mp-summary-title {
+    order: 1;
+    margin-top: 0;
+  }
+
+  .storefront .mp-summary-meta {
+    order: 2;
+  }
+
+  .storefront .mp-summary-price {
+    order: 3;
+    margin-top: auto;
+    padding-top: 2.5rem;
+  }
+
+  .storefront .mp-summary-compare {
+    display: block;
+  }
+
+  .storefront .mp-summary-compare .line-through {
+    margin-top: 6px;
+  }
+}
+
 /* Shared stacked-card lists: 录播课 / 直播课 / 年度会员 */
 .storefront .mp-home-block {
   margin-top: 8px;
