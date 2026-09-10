@@ -2,6 +2,7 @@ import { randomUUID } from "crypto";
 import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { assertAdmin } from "@/lib/auth";
+import { posterFieldsFromBody } from "@/lib/poster";
 import { readStore, writeStore } from "@/lib/store";
 import type { Poster } from "@/lib/data";
 
@@ -21,21 +22,15 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "未登录" }, { status: 401 });
   }
   const body = (await request.json()) as Partial<Poster>;
-  if (!body.title?.trim()) {
+  const fields = posterFieldsFromBody(body);
+  if (!fields.title) {
     return NextResponse.json({ error: "请填写标题" }, { status: 400 });
   }
   const store = await readStore();
   const poster: Poster = {
     id: randomUUID(),
-    title: body.title.trim(),
-    href: body.href || "/",
-    sort: Number(body.sort ?? store.posters.length),
-    placement: body.placement || "home-carousel",
-    image: body.image,
-    subtitle: body.subtitle,
-    kicker: body.kicker,
-    priceLabel: body.priceLabel,
-    theme: body.theme || "qihang",
+    ...fields,
+    sort: Number.isFinite(fields.sort) ? fields.sort : store.posters.length,
   };
   store.posters.push(poster);
   await writeStore(store);

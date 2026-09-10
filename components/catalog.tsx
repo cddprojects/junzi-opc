@@ -81,23 +81,26 @@ export function ProductRow({
           className="h-full w-full"
         />
       </span>
-      <div className="min-w-0 flex-1">
+      <div className="flex min-w-0 flex-1 flex-col">
         <p className="line-clamp-2 text-[14px] leading-5 font-medium text-[#333]">{title}</p>
-        <div className="mt-2 flex items-end justify-between">
-          <div>
+        <div className="mt-2 flex items-end justify-between gap-2">
+          <div className="min-w-0">
             <p className="text-[16px] leading-none font-semibold text-[#fa3534]">
               <Money cny={product.price} />
             </p>
             {showOriginal && product.originalPrice ? (
               <p className="mt-1 text-[11px] text-[#bbb] line-through">
-                {t("originalPrice")} <Money cny={product.originalPrice} />
+                {t("originalPrice")}
+                <Money cny={product.originalPrice} />
               </p>
             ) : null}
-            <p className="mt-1 text-[11px] text-[#bbb]">{t("salesCount", { n: product.sales })}</p>
           </div>
-          <span className="mp-plus" aria-hidden>
-            <Plus className="size-3.5" />
-          </span>
+          <div className="flex shrink-0 flex-col items-end justify-between gap-2 self-stretch">
+            <span className="mp-plus" aria-hidden>
+              <Plus className="size-3.5" />
+            </span>
+            <p className="text-[11px] text-[#bbb]">{t("salesCount", { n: product.sales })}</p>
+          </div>
         </div>
       </div>
     </Link>

@@ -1,13 +1,20 @@
-"use client";
+import { PlacementCatalog } from "@/components/placement-catalog";
+import { getCatalog } from "@/lib/store";
+import { getRequestLocale } from "@/lib/i18n-server";
+import { t } from "@/lib/messages";
 
-import { ComingSoonPoster } from "@/components/covers";
-import { useT } from "@/components/locale-provider";
+export const dynamic = "force-dynamic";
 
-export default function WorkshopPage() {
-  const t = useT();
+export default async function WorkshopPage() {
+  const locale = await getRequestLocale();
+  const { posters, products } = await getCatalog();
   return (
-    <div className="md:overflow-hidden md:rounded-2xl">
-      <ComingSoonPoster title={t("workshopTitle")} />
-    </div>
+    <PlacementCatalog
+      posters={posters}
+      products={products}
+      placement="workshop"
+      title={t(locale, "workshopTitle")}
+      locale={locale}
+    />
   );
 }

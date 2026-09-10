@@ -304,12 +304,22 @@ export function GuideBanner() {
 export function ComingSoonPoster({
   title,
   month,
+  image,
 }: {
   title: string;
   month?: string;
+  image?: string;
 }) {
   const t = useT();
   const monthLabel = month || t("comingSoonMonth");
+  if (image) {
+    return (
+      <div className="relative w-full overflow-hidden bg-[#efe6d4]">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={image} alt={title} className="block h-auto w-full" />
+      </div>
+    );
+  }
   return (
     <div className="relative min-h-[calc(100dvh-140px)] overflow-hidden bg-[#efe6d4] text-[#1d2a3a] md:min-h-[560px]">
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,#d9d3c4,transparent_55%)]" />

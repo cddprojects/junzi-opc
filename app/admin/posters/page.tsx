@@ -1,12 +1,8 @@
 import Link from "next/link";
+import { POSTER_PLACEMENT_LABELS } from "@/lib/data";
 import { getCatalog } from "@/lib/store";
 
 export const dynamic = "force-dynamic";
-
-const PLACES = {
-  "home-carousel": "首页轮播",
-  "home-banner": "首页横幅",
-};
 
 export default async function AdminPostersPage() {
   const { posters } = await getCatalog();
@@ -15,7 +11,7 @@ export default async function AdminPostersPage() {
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1>海报 / 轮播</h1>
-          <p className="jx-lede">共 {posters.length} 张。</p>
+          <p className="jx-lede">共 {posters.length} 张。可放到首页轮播、中部横幅、工作坊、活动、会员中心或首页AI工具。</p>
         </div>
         <Link href="/admin/posters/new" className="jx-btn">
           新增海报
@@ -28,6 +24,7 @@ export default async function AdminPostersPage() {
               <th>图片</th>
               <th>标题</th>
               <th>位置</th>
+              <th>商品</th>
               <th>排序</th>
               <th>链接</th>
               <th></th>
@@ -45,7 +42,8 @@ export default async function AdminPostersPage() {
                   )}
                 </td>
                 <td>{poster.title}</td>
-                <td>{PLACES[poster.placement]}</td>
+                <td>{POSTER_PLACEMENT_LABELS[poster.placement]}</td>
+                <td className="text-[12px]">{poster.productSlug || "—"}</td>
                 <td>{poster.sort}</td>
                 <td className="max-w-[160px] truncate text-[12px]">{poster.href}</td>
                 <td>

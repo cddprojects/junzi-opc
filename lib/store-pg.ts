@@ -2,7 +2,7 @@ import "server-only";
 
 import { cache } from "react";
 import type { Customer, Order, UserSession } from "@/lib/account";
-import type { CatalogVideo, Poster, Product } from "@/lib/data";
+import { parsePosterPlacement, type CatalogVideo, type Poster, type Product } from "@/lib/data";
 import { asFiniteNumber, asIso, asOptionalNumber, requireIso, sqlRows, withStoreTx } from "@/lib/db";
 import { hydrateOrderFromPayment, hydrateTopUpFromPayment } from "@/lib/migrate-payments";
 import type { BillplzBill, Payment } from "@/lib/payments";
@@ -75,7 +75,7 @@ function mapPoster(row: Record<string, unknown>): Poster {
     titleEn: text(row.title_en),
     href: String(row.href),
     sort: asFiniteNumber(row.sort),
-    placement: row.placement === "home-banner" ? "home-banner" : "home-carousel",
+    placement: parsePosterPlacement(row.placement),
     image: text(row.image),
     subtitle: text(row.subtitle),
     subtitleEn: text(row.subtitle_en),
@@ -84,6 +84,8 @@ function mapPoster(row: Record<string, unknown>): Poster {
     priceLabel: text(row.price_label),
     priceLabelEn: text(row.price_label_en),
     theme: text(row.theme) as Poster["theme"],
+    productSlug: text(row.product_slug),
+    detailImages: Array.isArray(row.detail_images) ? (row.detail_images as string[]) : undefined,
   };
 }
 
@@ -791,6 +793,8 @@ export async function persistAppStoreToPg(store: AppStore) {
       price_label: poster.priceLabel || null,
       price_label_en: poster.priceLabelEn || null,
       theme: poster.theme || null,
+      product_slug: poster.productSlug || null,
+      detail_images: poster.detailImages || null,
     }));
     await sql`delete from posters`;
     if (posterRows.length) await sql`insert into posters ${sql(posterRows)}`;

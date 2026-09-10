@@ -10,12 +10,13 @@ export default async function EditPosterPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const poster = (await getCatalog()).posters.find((item) => item.id === id);
+  const { posters, products } = await getCatalog();
+  const poster = posters.find((item) => item.id === id);
   if (!poster) notFound();
   return (
     <div>
       <h1 className="mb-4 font-serif text-[24px]">编辑海报</h1>
-      <PosterForm poster={poster} />
+      <PosterForm poster={poster} products={products} />
     </div>
   );
 }

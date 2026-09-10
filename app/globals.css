@@ -227,6 +227,11 @@
   background: var(--front-bg);
 }
 
+/* Storefront only: px-3 = 16px inline. Admin keeps Tailwind default (12px). */
+.storefront .px-3 {
+  padding-inline: calc(var(--spacing) * 4);
+}
+
 .storefront h1,
 .storefront h2,
 .storefront h3,

@@ -2,15 +2,19 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { COVER_THEMES, type Poster } from "@/lib/data";
+import { COVER_THEMES, POSTER_PLACEMENT_LABELS, POSTER_PLACEMENTS, membership, type Poster, type Product } from "@/lib/data";
 import { UploadField } from "@/components/admin/upload-field";
+import { ImageListEditor } from "@/components/admin/image-list-editor";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { EnInput } from "@/components/admin/en-field";
 
-export function PosterForm({ poster }: { poster?: Poster }) {
+export function PosterForm({ poster, products = [] }: { poster?: Poster; products?: Product[] }) {
   const router = useRouter();
   const [image, setImage] = useState(poster?.image || "");
+  const [detailImages, setDetailImages] = useState<string[]>(
+    poster?.detailImages?.length ? [...poster.detailImages] : [],
+  );
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -32,7 +36,9 @@ export function PosterForm({ poster }: { poster?: Poster }) {
       priceLabel: String(form.get("priceLabel") || ""),
       priceLabelEn: String(form.get("priceLabelEn") || ""),
       theme: String(form.get("theme") || "qihang"),
+      productSlug: String(form.get("productSlug") || ""),
       image,
+      detailImages,
     };
     const url = poster ? `/api/admin/posters/${poster.id}` : "/api/admin/posters";
     const res = await fetch(url, {
@@ -76,8 +82,11 @@ export function PosterForm({ poster }: { poster?: Poster }) {
             defaultValue={poster?.placement || "home-carousel"}
             className="mt-1 h-9 w-full rounded-md border border-input bg-white px-2"
           >
-            <option value="home-carousel">首页轮播</option>
-            <option value="home-banner">首页中部横幅</option>
+            {POSTER_PLACEMENTS.map((placement) => (
+              <option key={placement} value={placement}>
+                {POSTER_PLACEMENT_LABELS[placement]}
+              </option>
+            ))}
           </select>
         </label>
         <label className="block text-[13px]">
@@ -99,10 +108,27 @@ export function PosterForm({ poster }: { poster?: Poster }) {
           </select>
         </label>
       </div>
+      <label className="block text-[13px]">
+        关联商品
+        <select
+          name="productSlug"
+          defaultValue={poster?.productSlug || ""}
+          className="mt-1 h-9 w-full rounded-md border border-input bg-white px-2"
+        >
+          <option value="">仅海报（不关联商品）</option>
+          <option value={membership.slug}>年度会员</option>
+          {products.map((product) => (
+            <option key={product.slug} value={product.slug}>
+              {product.title}
+            </option>
+          ))}
+        </select>
+      </label>
       <UploadField label="海报图片" value={image} onChange={setImage} accept="image/*" />
       <p className="text-[12px] text-[#888]">
-        首页轮播只展示已上传图片，无图隐藏。首页横幅为通栏：有图用上传图，无图显示默认操作指南样式，链接默认可填 /guides。
+        首页轮播、首页AI工具横幅：无图则前台隐藏。线下工作坊 / 活动报名：无关联商品时只显示海报；有关联商品时显示海报加商品列表。会员中心：关联「年度会员」时保留开通购买；仅海报则显示海报和详情图。图上按钮文案填在「角标」（如「点击进入」），跳转用上方链接。
       </p>
+      <ImageListEditor values={detailImages} onChange={setDetailImages} />
       <label className="block text-[13px]">
         副标题
         <Input name="subtitle" defaultValue={poster?.subtitle} className="mt-1 h-9" />
@@ -110,8 +136,8 @@ export function PosterForm({ poster }: { poster?: Poster }) {
       <EnInput name="subtitleEn" defaultValue={poster?.subtitleEn} label="副标题" />
       <div className="grid gap-3 md:grid-cols-2">
         <label className="block text-[13px]">
-          角标
-          <Input name="kicker" defaultValue={poster?.kicker} className="mt-1 h-9" />
+          角标 / 图上按钮
+          <Input name="kicker" defaultValue={poster?.kicker} className="mt-1 h-9" placeholder="点击进入" />
         </label>
         <label className="block text-[13px]">
           价格文案
@@ -119,7 +145,7 @@ export function PosterForm({ poster }: { poster?: Poster }) {
         </label>
       </div>
       <div className="grid gap-3 md:grid-cols-2">
-        <EnInput name="kickerEn" defaultValue={poster?.kickerEn} label="角标" />
+        <EnInput name="kickerEn" defaultValue={poster?.kickerEn} label="角标 / 图上按钮" />
         <EnInput name="priceLabelEn" defaultValue={poster?.priceLabelEn} label="价格文案" />
       </div>
       {error && <p className="text-[13px] text-[#fa3534]">{error}</p>}

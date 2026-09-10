@@ -189,8 +189,25 @@ async function main() {
             price_label: poster.priceLabel || null,
             price_label_en: poster.priceLabelEn || null,
             theme: poster.theme || null,
+            product_slug: poster.productSlug || null,
+            detail_images: poster.detailImages || null,
           })}
-          on conflict (id) do update set title = excluded.title, image = excluded.image, sort = excluded.sort
+          on conflict (id) do update set
+            title = excluded.title,
+            title_en = excluded.title_en,
+            href = excluded.href,
+            image = excluded.image,
+            sort = excluded.sort,
+            placement = excluded.placement,
+            subtitle = excluded.subtitle,
+            subtitle_en = excluded.subtitle_en,
+            kicker = excluded.kicker,
+            kicker_en = excluded.kicker_en,
+            price_label = excluded.price_label,
+            price_label_en = excluded.price_label_en,
+            theme = excluded.theme,
+            product_slug = excluded.product_slug,
+            detail_images = excluded.detail_images
         `;
       }
 

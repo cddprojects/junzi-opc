@@ -7,11 +7,14 @@ import {
   banners,
   brand,
   caseStudy,
+  DEFAULT_SLOT_POSTERS,
   introVideo,
+  parsePosterPlacement,
   products as seedProducts,
   qihangDetail,
   type CatalogVideo,
   type Poster,
+  type PosterPlacement,
   type Product,
 } from "@/lib/data";
 import {
@@ -70,7 +73,7 @@ export type AppStore = {
 const DATA_DIR = path.join(process.cwd(), "data");
 const STORE_PATH = path.join(DATA_DIR, "store.json");
 export const UPLOAD_DIR = path.join(DATA_DIR, "uploads");
-const STORE_VERSION = 13;
+const STORE_VERSION = 14;
 
 let storeCache: { mtimeMs: number; store: AppStore } | null = null;
 
@@ -78,6 +81,16 @@ function rememberStore(store: AppStore, mtimeMs?: number) {
   const stamp = mtimeMs ?? (existsSync(STORE_PATH) ? statSync(STORE_PATH).mtimeMs : Date.now());
   storeCache = { mtimeMs: stamp, store };
   return store;
+}
+
+function ensureSlotPosters(posters: Poster[]): Poster[] {
+  const next = [...posters];
+  for (const seed of DEFAULT_SLOT_POSTERS) {
+    if (!next.some((item) => item.placement === seed.placement)) {
+      next.push(seed);
+    }
+  }
+  return next;
 }
 
 function seedProduct(product: Product): Product {
@@ -88,21 +101,24 @@ function seedStore(): AppStore {
   return {
     version: STORE_VERSION,
     products: seedProducts.map(seedProduct),
-    posters: banners.map((banner, index) => ({
-      id: banner.id,
-      title: banner.title,
-      titleEn: banner.titleEn,
-      href: banner.href,
-      sort: index,
-      placement: banner.id === "guide" ? "home-banner" : "home-carousel",
-      subtitle: banner.line1,
-      subtitleEn: banner.line1En,
-      kicker: banner.kicker,
-      kickerEn: banner.kickerEn,
-      priceLabel: banner.price,
-      priceLabelEn: banner.priceEn,
-      theme: banner.theme,
-    })),
+    posters: [
+      ...banners.map((banner, index) => ({
+        id: banner.id,
+        title: banner.title,
+        titleEn: banner.titleEn,
+        href: banner.href,
+        sort: index,
+        placement: (banner.id === "guide" ? "home-banner" : "home-carousel") as PosterPlacement,
+        subtitle: banner.line1,
+        subtitleEn: banner.line1En,
+        kicker: banner.kicker,
+        kickerEn: banner.kickerEn,
+        priceLabel: banner.price,
+        priceLabelEn: banner.priceEn,
+        theme: banner.theme,
+      })),
+      ...DEFAULT_SLOT_POSTERS,
+    ],
     videos: [
       {
         id: "intro",
@@ -303,16 +319,22 @@ function migrateStore(parsed: AppStore): AppStore {
   const next = {
     version: STORE_VERSION,
     products,
-    posters: (parsed.posters ?? []).map((poster) => {
-      const seed = banners.find((banner) => banner.id === poster.id);
-      if (!seed) return poster;
-      return fillBlank(poster, {
-        titleEn: seed.titleEn,
-        subtitleEn: seed.line1En,
-        kickerEn: seed.kickerEn,
-        priceLabelEn: seed.priceEn,
-      }, ["titleEn", "subtitleEn", "kickerEn", "priceLabelEn"]);
-    }),
+    posters: ensureSlotPosters(
+      (parsed.posters ?? []).map((poster) => {
+        const next = {
+          ...poster,
+          placement: parsePosterPlacement(poster.placement),
+        };
+        const seed = banners.find((banner) => banner.id === poster.id);
+        if (!seed) return next;
+        return fillBlank(next, {
+          titleEn: seed.titleEn,
+          subtitleEn: seed.line1En,
+          kickerEn: seed.kickerEn,
+          priceLabelEn: seed.priceEn,
+        }, ["titleEn", "subtitleEn", "kickerEn", "priceLabelEn"]);
+      }),
+    ),
     videos: (parsed.videos ?? []).map((video) => {
       if (video.id === "intro") {
         return fillBlank(video, { titleEn: introVideo.titleEn, overlayEn: introVideo.overlayEn }, ["titleEn", "overlayEn"]);
@@ -519,7 +541,7 @@ function shapeCatalog(input: {
   return {
     brand,
     products,
-    posters: [...input.posters].sort((a, b) => a.sort - b.sort),
+    posters: ensureSlotPosters(input.posters).sort((a, b) => a.sort - b.sort),
     videos: input.videos,
     settings: normalizeSettings(input.settings),
   };

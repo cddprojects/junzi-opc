@@ -35,7 +35,31 @@ export type Product = {
   detail?: CourseDetail;
 };
 
-export type PosterPlacement = "home-carousel" | "home-banner";
+export const POSTER_PLACEMENTS = [
+  "home-carousel",
+  "home-banner",
+  "workshop",
+  "events",
+  "member",
+  "home-ai",
+] as const;
+
+export type PosterPlacement = (typeof POSTER_PLACEMENTS)[number];
+
+export const POSTER_PLACEMENT_LABELS: Record<PosterPlacement, string> = {
+  "home-carousel": "首页轮播",
+  "home-banner": "首页中部横幅",
+  workshop: "线下工作坊",
+  events: "活动报名",
+  member: "会员中心",
+  "home-ai": "首页AI工具横幅",
+};
+
+export function parsePosterPlacement(value: unknown, fallback: PosterPlacement = "home-carousel"): PosterPlacement {
+  return (POSTER_PLACEMENTS as readonly string[]).includes(String(value))
+    ? (value as PosterPlacement)
+    : fallback;
+}
 
 export type Poster = {
   id: string;
@@ -52,7 +76,56 @@ export type Poster = {
   priceLabel?: string;
   priceLabelEn?: string;
   theme?: CoverTheme;
+  productSlug?: string;
+  detailImages?: string[];
 };
+
+export function postersByPlacement(posters: Poster[], placement: PosterPlacement) {
+  return posters
+    .filter((item) => item.placement === placement)
+    .slice()
+    .sort((a, b) => a.sort - b.sort);
+}
+
+export const DEFAULT_SLOT_POSTERS: Poster[] = [
+  {
+    id: "workshop",
+    title: "线下工作坊",
+    titleEn: "In-person workshop",
+    href: "/workshop",
+    sort: 0,
+    placement: "workshop",
+    image: "/posters/workshop-sm.jpg",
+    kicker: "9月份开启",
+    kickerEn: "Opens in September",
+    subtitle: "敬请期待",
+    subtitleEn: "Coming soon",
+  },
+  {
+    id: "events",
+    title: "活动报名",
+    titleEn: "Events",
+    href: "/events",
+    sort: 0,
+    placement: "events",
+    image: "/posters/events-sm.jpg",
+    kicker: "9月份开启",
+    kickerEn: "Opens in September",
+    subtitle: "敬请期待",
+    subtitleEn: "Coming soon",
+  },
+  {
+    id: "home-ai",
+    title: "AI工具小程序",
+    titleEn: "AI tools mini program",
+    href: "/tools",
+    sort: 0,
+    placement: "home-ai",
+    image: "/posters/ai-tool-sm.jpg",
+    kicker: "点击进入",
+    kickerEn: "Enter",
+  },
+];
 
 export type VideoPlacement = "home-intro" | "home-case" | "product-hero" | "library";
 

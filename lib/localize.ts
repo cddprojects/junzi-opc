@@ -30,6 +30,26 @@ export function locPosterTitle(poster: Pick<Poster, "title" | "titleEn">, locale
   return localized(locale, poster.title, poster.titleEn);
 }
 
+export function locPosterSubtitle(poster: Pick<Poster, "subtitle" | "subtitleEn">, locale: Locale) {
+  return localized(locale, poster.subtitle, poster.subtitleEn);
+}
+
+export function locPosterKicker(poster: Pick<Poster, "kicker" | "kickerEn">, locale: Locale) {
+  return localized(locale, poster.kicker, poster.kickerEn);
+}
+
+export function locPosterCta(
+  poster: Pick<Poster, "kicker" | "kickerEn" | "priceLabel" | "priceLabelEn">,
+  locale: Locale,
+  fallback: string,
+) {
+  return (
+    localized(locale, poster.kicker, poster.kickerEn) ||
+    localized(locale, poster.priceLabel, poster.priceLabelEn) ||
+    fallback
+  );
+}
+
 export function locVideoTitle(video: Pick<CatalogVideo, "title" | "titleEn">, locale: Locale) {
   return localized(locale, video.title, video.titleEn);
 }

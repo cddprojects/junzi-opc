@@ -267,6 +267,7 @@ export const zh = {
   comingSoonMonth: "9月份开启",
   comingSoon: "敬请期待",
   comingSoonLine: "— 敬请期待 —",
+  clickEnter: "点击进入",
 
   workshopTitle: "线下工作坊",
   eventsTitle: "活动报名",
@@ -871,6 +872,7 @@ export const en: Record<MessageKey, string> = {
   comingSoonMonth: "Opens in September",
   comingSoon: "Coming soon",
   comingSoonLine: "— Coming soon —",
+  clickEnter: "Enter",
 
   workshopTitle: "In-person workshop",
   eventsTitle: "Events",

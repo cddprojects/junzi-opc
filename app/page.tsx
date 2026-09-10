@@ -1,5 +1,3 @@
-import Link from "next/link";
-import { AiToolBanner } from "@/components/covers";
 import {
   CategoryIcons,
   HomeCarousel,
@@ -11,8 +9,9 @@ import {
   SearchBox,
   SectionTitle,
 } from "@/components/catalog";
+import { HomeAiBanner } from "@/components/home-ai-banner";
 import { VideoBlock } from "@/components/video-block";
-import { brand, caseStudy, homeCategories, introVideo } from "@/lib/data";
+import { brand, caseStudy, homeCategories, introVideo, postersByPlacement } from "@/lib/data";
 import { getCatalog } from "@/lib/store";
 import { getRequestLocale } from "@/lib/i18n-server";
 import { localized } from "@/lib/i18n";
@@ -35,6 +34,7 @@ export default async function HomePage() {
     .sort((a, b) => a.sort - b.sort);
   const intro = videos.find((item) => item.placement === "home-intro");
   const story = videos.find((item) => item.placement === "home-case");
+  const aiBanner = postersByPlacement(posters, "home-ai").find((item) => item.image);
 
   return (
     <div className="bg-[#f5f5f5] md:bg-transparent">
@@ -76,7 +76,7 @@ export default async function HomePage() {
         <SectionTitle>{t(locale, "homeJoin")}</SectionTitle>
         <div id="join-opc" className="md:hidden">
           {joinProducts.map((product) => (
-            <ProductRow key={product.slug} product={product} showOriginal={false} />
+            <ProductRow key={product.slug} product={product} />
           ))}
         </div>
         <div className="hidden grid-cols-1 gap-4 sm:grid-cols-2 md:grid lg:grid-cols-3">
@@ -97,11 +97,11 @@ export default async function HomePage() {
         <p className="sr-only">{story ? locVideoTitle(story, locale) : localized(locale, caseStudy.title, caseStudy.titleEn)}</p>
       </HomeMediaSection>
 
-      <HomeMediaSection title={t(locale, "homeAiTools")}>
-        <Link href="/tools" className="mp-full-bleed">
-          <AiToolBanner />
-        </Link>
-      </HomeMediaSection>
+      {aiBanner ? (
+        <HomeMediaSection title={t(locale, "homeAiTools")}>
+          <HomeAiBanner poster={aiBanner} locale={locale} ctaFallback={t(locale, "clickEnter")} />
+        </HomeMediaSection>
+      ) : null}
     </div>
   );
 }
