@@ -38,7 +38,7 @@ export default async function HomePage() {
 
   return (
     <div className="bg-[#f5f5f5] md:bg-transparent">
-      <section className="bg-white">
+      <section>
         <NoticeBar href="/courses/recorded" text={localized(locale, brand.notice, brand.noticeEn)} />
         <div className="md:hidden">
           <SearchBox placeholder={t(locale, "search")} center />

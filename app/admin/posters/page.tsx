@@ -11,7 +11,9 @@ export default async function AdminPostersPage() {
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1>海报 / 轮播</h1>
-          <p className="jx-lede">共 {posters.length} 张。可放到首页轮播、中部横幅、工作坊、活动、会员中心或首页AI工具。</p>
+          <p className="jx-lede">
+            共 {posters.length} 张。位置：首页轮播、中部横幅、线下工作坊、活动报名、会员中心、AI工具小程序。
+          </p>
         </div>
         <Link href="/admin/posters/new" className="jx-btn">
           新增海报

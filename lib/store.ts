@@ -84,11 +84,18 @@ function rememberStore(store: AppStore, mtimeMs?: number) {
 }
 
 function ensureSlotPosters(posters: Poster[]): Poster[] {
-  const next = [...posters];
+  const next = posters.map((poster) => ({
+    ...poster,
+    placement: parsePosterPlacement(poster.placement),
+  }));
   for (const seed of DEFAULT_SLOT_POSTERS) {
-    if (!next.some((item) => item.placement === seed.placement)) {
+    const existing = next.find((item) => item.placement === seed.placement || item.id === seed.id);
+    if (!existing) {
       next.push(seed);
+      continue;
     }
+    if (!existing.image && seed.image) existing.image = seed.image;
+    if (existing.placement !== seed.placement) existing.placement = seed.placement;
   }
   return next;
 }
@@ -460,6 +467,7 @@ function persistableStore(store: AppStore): AppStore {
     ...store,
     version: STORE_VERSION,
     products: store.products.map(ensureProductDetail),
+    posters: ensureSlotPosters(store.posters ?? []),
     users: (store.users ?? []).map((user) => ensureCustomerReferral(user, taken)),
     sessions: (store.sessions ?? []).map((session) => ({
       tokenHash: session.tokenHash,

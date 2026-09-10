@@ -71,8 +71,8 @@ export function PosterForm({ poster, products = [] }: { poster?: Poster; product
       </label>
       <EnInput name="titleEn" defaultValue={poster?.titleEn} label="标题" />
       <label className="block text-[13px]">
-        跳转链接
-        <Input name="href" defaultValue={poster?.href || "/"} className="mt-1 h-9" />
+        跳转 / 图上按钮链接
+        <Input name="href" defaultValue={poster?.href || "/"} className="mt-1 h-9" placeholder="/tools" />
       </label>
       <div className="grid gap-3 md:grid-cols-3">
         <label className="block text-[13px]">
@@ -125,8 +125,15 @@ export function PosterForm({ poster, products = [] }: { poster?: Poster; product
         </select>
       </label>
       <UploadField label="海报图片" value={image} onChange={setImage} accept="image/*" />
+      <div className="grid gap-3 md:grid-cols-2">
+        <label className="block text-[13px]">
+          图上按钮文案
+          <Input name="kicker" defaultValue={poster?.kicker} className="mt-1 h-9" placeholder="点击进入" />
+        </label>
+        <EnInput name="kickerEn" defaultValue={poster?.kickerEn} label="图上按钮文案" />
+      </div>
       <p className="text-[12px] text-[#888]">
-        首页轮播、AI工具小程序：无图则前台隐藏。线下工作坊 / 活动报名：无关联商品只显示海报；有关联商品显示海报和商品列表。会员中心：用详情图做长图画廊；关联「年度会员」才显示开通购买。AI 图上按钮：角标=按钮文案（如「点击进入」），跳转链接=按钮地址。
+        位置说明：轮播 / AI工具无图则前台隐藏该块。工作坊、活动：不关联商品只显示海报；关联了商品则显示商品列表。会员中心：上传详情图做长图画廊；关联「年度会员」才显示开通购买。AI 图上按钮用「图上按钮文案」+「跳转 / 图上按钮链接」。
       </p>
       <ImageListEditor values={detailImages} onChange={setDetailImages} />
       <label className="block text-[13px]">
@@ -134,20 +141,11 @@ export function PosterForm({ poster, products = [] }: { poster?: Poster; product
         <Input name="subtitle" defaultValue={poster?.subtitle} className="mt-1 h-9" />
       </label>
       <EnInput name="subtitleEn" defaultValue={poster?.subtitleEn} label="副标题" />
-      <div className="grid gap-3 md:grid-cols-2">
-        <label className="block text-[13px]">
-          角标 / 图上按钮
-          <Input name="kicker" defaultValue={poster?.kicker} className="mt-1 h-9" placeholder="点击进入" />
-        </label>
-        <label className="block text-[13px]">
-          价格文案
-          <Input name="priceLabel" defaultValue={poster?.priceLabel} className="mt-1 h-9" />
-        </label>
-      </div>
-      <div className="grid gap-3 md:grid-cols-2">
-        <EnInput name="kickerEn" defaultValue={poster?.kickerEn} label="角标 / 图上按钮" />
-        <EnInput name="priceLabelEn" defaultValue={poster?.priceLabelEn} label="价格文案" />
-      </div>
+      <label className="block text-[13px]">
+        价格文案
+        <Input name="priceLabel" defaultValue={poster?.priceLabel} className="mt-1 h-9" />
+      </label>
+      <EnInput name="priceLabelEn" defaultValue={poster?.priceLabelEn} label="价格文案" />
       {error && <p className="text-[13px] text-[#fa3534]">{error}</p>}
       <div className="flex gap-3">
         <Button type="submit" disabled={busy} className="jx-btn h-auto">
