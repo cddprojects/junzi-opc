@@ -88,14 +88,27 @@ export async function createBillplzBill(input: {
     body.set("reference_1_label", "Checkout");
     body.set("reference_1", input.reference.slice(0, 120));
   }
-  const res = await fetch(`${config.host}/api/v3/bills`, {
-    method: "POST",
-    headers: {
-      Authorization: `Basic ${Buffer.from(`${config.apiKey}:`).toString("base64")}`,
-      "Content-Type": "application/x-www-form-urlencoded",
-    },
-    body,
-  });
+  const started = Date.now();
+  let res: Response;
+  try {
+    res = await fetch(`${config.host}/api/v3/bills`, {
+      method: "POST",
+      headers: {
+        Authorization: `Basic ${Buffer.from(`${config.apiKey}:`).toString("base64")}`,
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body,
+      signal: AbortSignal.timeout(12_000),
+    });
+  } catch (error) {
+    const timedOut =
+      (error instanceof Error && (error.name === "TimeoutError" || error.name === "AbortError")) ||
+      (typeof DOMException !== "undefined" && error instanceof DOMException && error.name === "TimeoutError");
+    console.error("[billplz] create-bill fail", `${Date.now() - started}ms`, timedOut ? "timeout" : error);
+    if (timedOut) throw new Error("Billplz 连接超时，请稍后重试");
+    throw error instanceof Error ? error : new Error("Billplz 连接失败，请稍后重试");
+  }
+  console.info("[billplz] create-bill", res.status, `${Date.now() - started}ms`);
   const data = (await res.json().catch(() => null)) as
     | CreatedBill
     | { error?: { message?: string[] | string; type?: string } }

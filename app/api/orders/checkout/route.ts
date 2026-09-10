@@ -8,11 +8,10 @@ import {
   isBillplzConfigured,
 } from "@/lib/billplz";
 import {
-  attachBillToCheckout,
   checkoutOrders,
   checkoutWithWallet,
-  createPendingCheckout,
-  deleteCheckout,
+  persistBillplzCheckout,
+  prepareBillplzCheckout,
 } from "@/lib/user-store";
 import { formatMoneyAmount } from "@/lib/currency";
 
@@ -47,7 +46,10 @@ function publicOrder(order: {
 }
 
 export async function POST(request: Request) {
+  const started = Date.now();
+  const mark = (step: string) => console.info("[checkout]", step, `${Date.now() - started}ms`);
   const user = await getCurrentUser();
+  mark("auth");
   if (!user) return NextResponse.json({ error: "请先登录" }, { status: 401 });
   const body = (await request.json().catch(() => null)) as {
     items?: CheckoutItem[];
@@ -67,38 +69,36 @@ export async function POST(request: Request) {
       });
     }
     if (isBillplzConfigured()) {
-      const pending = await createPendingCheckout(user.id, items, currency);
+      const pending = await prepareBillplzCheckout(user, items, currency);
+      mark("prepare");
       const origin = appBaseUrl(request);
-      try {
-        const bill = await createBillplzBill({
-          name: pending.user.name,
-          email: pending.user.email || "",
-          amountSen: pending.totalSen,
-          description: pending.orders
-            .map((order) => `${order.productTitle}×${order.qty}`)
-            .join(" / ")
-            .slice(0, 200),
-          callbackUrl: `${origin}/api/billplz/callback`,
-          redirectUrl: `${origin}/pay/return?checkout=${encodeURIComponent(pending.checkoutId)}`,
-          reference: pending.checkoutId,
-        });
-        const orders = await attachBillToCheckout(pending.checkoutId, bill);
-        return NextResponse.json({
-          mode: "billplz",
-          redirectUrl: bill.url,
-          checkoutId: pending.checkoutId,
-          charge: {
-            currency: "MYR",
-            myr: pending.totalMyr,
-            sen: pending.totalSen,
-            formatted: formatMoneyAmount(pending.totalMyr, "MYR"),
-          },
-          orders: orders.map(publicOrder),
-        });
-      } catch (error) {
-        await deleteCheckout(pending.checkoutId);
-        throw error;
-      }
+      const bill = await createBillplzBill({
+        name: pending.user.name,
+        email: pending.user.email || "",
+        amountSen: pending.totalSen,
+        description: pending.orders
+          .map((order) => `${order.productTitle}×${order.qty}`)
+          .join(" / ")
+          .slice(0, 200),
+        callbackUrl: `${origin}/api/billplz/callback`,
+        redirectUrl: `${origin}/pay/return?checkout=${encodeURIComponent(pending.checkoutId)}`,
+        reference: pending.checkoutId,
+      });
+      mark("billplz");
+      const orders = await persistBillplzCheckout(pending, bill);
+      mark("persist");
+      return NextResponse.json({
+        mode: "billplz",
+        redirectUrl: bill.url,
+        checkoutId: pending.checkoutId,
+        charge: {
+          currency: "MYR",
+          myr: pending.totalMyr,
+          sen: pending.totalSen,
+          formatted: formatMoneyAmount(pending.totalMyr, "MYR"),
+        },
+        orders: orders.map(publicOrder),
+      });
     }
 
     if (allowDemoPay()) {
@@ -111,6 +111,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ error: "请先配置 Billplz 收款" }, { status: 503 });
   } catch (error) {
+    mark("error");
     return NextResponse.json({ error: error instanceof Error ? error.message : "结算失败" }, { status: 400 });
   }
 }

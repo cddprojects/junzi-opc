@@ -1,12 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { formatMyrSen, senToMyr, TOPUP_PRESETS_SEN } from "@/lib/wallet";
 import { normalizeWithdrawalStatus } from "@/lib/wallet";
 import { useAuth } from "@/components/auth-provider";
 import { useLocale } from "@/components/locale-provider";
+import { PayBusyOverlay } from "@/components/pay-busy-overlay";
 import { translateApiError } from "@/lib/messages";
+import { canFollowPayRedirect, isAbortError } from "@/lib/pay-redirect";
 
 type WalletData = {
   topUpBalanceSen: number;
@@ -25,6 +27,9 @@ export function WalletPage() {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState("");
   const [otherMyr, setOtherMyr] = useState("");
+  const topUpLock = useRef(false);
+  const topUpAbortRef = useRef<AbortController | null>(null);
+  const mountedRef = useRef(true);
 
   function load() {
     return fetch("/api/wallet/me")
@@ -40,21 +45,79 @@ export function WalletPage() {
     load().catch((err) => setError(translateApiError(locale, err instanceof Error ? err.message : "", "errorGeneric")));
   }, [user, locale]);
 
+  useEffect(() => {
+    mountedRef.current = true;
+    const abortInFlight = () => topUpAbortRef.current?.abort();
+    window.addEventListener("pagehide", abortInFlight);
+    window.addEventListener("popstate", abortInFlight);
+    return () => {
+      mountedRef.current = false;
+      abortInFlight();
+      window.removeEventListener("pagehide", abortInFlight);
+      window.removeEventListener("popstate", abortInFlight);
+    };
+  }, []);
+
+  function cancelTopUp() {
+    topUpAbortRef.current?.abort();
+    topUpAbortRef.current = null;
+    topUpLock.current = false;
+    setBusy("");
+  }
+
   async function topUp(amountSen: number) {
+    if (topUpLock.current || busy) return;
+    topUpLock.current = true;
     setBusy("topup");
     setError("");
-    const res = await fetch("/api/wallet/topup", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ amountSen }),
-    });
-    const row = (await res.json()) as { error?: string; redirectUrl?: string };
-    setBusy("");
-    if (!res.ok) {
-      setError(translateApiError(locale, row.error, "errorGeneric"));
-      return;
+    const controller = new AbortController();
+    topUpAbortRef.current = controller;
+    try {
+      const res = await fetch("/api/wallet/topup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ amountSen }),
+        signal: controller.signal,
+      });
+      const row = (await res.json()) as { error?: string; redirectUrl?: string };
+      if (
+        !canFollowPayRedirect({
+          mounted: mountedRef.current,
+          aborted: controller.signal.aborted,
+        })
+      ) {
+        return;
+      }
+      if (!res.ok) {
+        topUpLock.current = false;
+        setBusy("");
+        setError(translateApiError(locale, row.error, "errorGeneric"));
+        return;
+      }
+      if (row.redirectUrl) {
+        if (
+          !canFollowPayRedirect({
+            mounted: mountedRef.current,
+            aborted: controller.signal.aborted,
+          })
+        ) {
+          return;
+        }
+        window.location.assign(row.redirectUrl);
+        return;
+      }
+      topUpLock.current = false;
+      setBusy("");
+    } catch (err) {
+      if (isAbortError(err) || !mountedRef.current) {
+        topUpLock.current = false;
+        if (mountedRef.current) setBusy("");
+        return;
+      }
+      topUpLock.current = false;
+      setBusy("");
+      setError(translateApiError(locale, err instanceof Error ? err.message : "", "errorGeneric"));
     }
-    if (row.redirectUrl) window.location.assign(row.redirectUrl);
   }
 
   async function withdraw(event: React.FormEvent<HTMLFormElement>) {
@@ -98,6 +161,9 @@ export function WalletPage() {
 
   return (
     <div className="space-y-4 pb-8">
+      {busy === "topup" ? (
+        <PayBusyOverlay title={t("connectingPay")} cancelLabel={t("cancelPay")} onCancel={cancelTopUp} />
+      ) : null}
       <section className="rounded-2xl bg-white px-4 py-5 md:px-6">
         <h1 className="font-serif text-[24px]">{t("walletTitle")}</h1>
         <p className="mt-2 text-[13px] leading-6 text-[#666]">{t("walletIntro")}</p>

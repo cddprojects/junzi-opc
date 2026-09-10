@@ -28,7 +28,7 @@ import { computeLegacyOrderNo } from "@/lib/order-no";
 import { paymentKindForPayMethod, type Payment } from "@/lib/payments";
 import { requireVerifySecret, usesSupabaseStore } from "@/lib/runtime-store";
 import { hashSessionToken } from "@/lib/session-token";
-import { ensureCustomerReferral, getSettings, getStoreProduct, readStore, writeStore } from "@/lib/store";
+import { ensureCustomerReferral, getSettings, getStoreProduct, getStoreProductsBySlugs, readStore, writeStore } from "@/lib/store";
 import { fromCny, parseCurrency } from "@/lib/currency";
 import {
   buildDownlineTree,
@@ -243,15 +243,31 @@ async function resolveCheckoutItem(item: CheckoutItem) {
   return { slug: product.slug, title: product.title, price: product.price };
 }
 
-async function buildPendingOrder(
+function pricedCheckoutItem(
+  item: CheckoutItem,
+  catalog: Map<string, { slug: string; title: string; price: number }>,
+) {
+  if (item.slug === membership.slug) {
+    return {
+      slug: membership.slug,
+      title: membership.title,
+      price: membership.campPrice,
+    };
+  }
+  const product = catalog.get(item.slug);
+  if (!product) throw new Error(`商品不存在：${item.slug}`);
+  return { slug: product.slug, title: product.title, price: product.price };
+}
+
+function buildPendingOrderFromPriced(
   userId: string,
   raw: CheckoutItem,
+  item: { slug: string; title: string; price: number },
   currency: ReturnType<typeof parseCurrency>,
   fx: Awaited<ReturnType<typeof getSettings>>["fx"],
   checkoutId: string,
   paymentId: string,
-): Promise<Order> {
-  const item = await resolveCheckoutItem(raw);
+): Order {
   const qty = Math.max(1, Number(raw.qty || 1));
   const priceCny = item.price;
   const price = fromCny(priceCny, currency, fx);
@@ -277,6 +293,184 @@ async function buildPendingOrder(
   };
   order.orderNo = computeLegacyOrderNo(order);
   return order;
+}
+
+async function buildPendingOrder(
+  userId: string,
+  raw: CheckoutItem,
+  currency: ReturnType<typeof parseCurrency>,
+  fx: Awaited<ReturnType<typeof getSettings>>["fx"],
+  checkoutId: string,
+  paymentId: string,
+): Promise<Order> {
+  return buildPendingOrderFromPriced(
+    userId,
+    raw,
+    await resolveCheckoutItem(raw),
+    currency,
+    fx,
+    checkoutId,
+    paymentId,
+  );
+}
+
+export type PreparedBillplzCheckout = {
+  checkoutId: string;
+  paymentId: string;
+  orders: Order[];
+  user: Pick<PublicCustomer, "id" | "name" | "email">;
+  totalSen: number;
+  totalMyr: number;
+  payment: Payment;
+};
+
+/** Price + IDs only. Does not write the store — Billplz can start immediately after this. */
+export async function prepareBillplzCheckout(
+  user: Pick<PublicCustomer, "id" | "name" | "email" | "status">,
+  items: CheckoutItem[],
+  currencyInput?: string,
+): Promise<PreparedBillplzCheckout> {
+  if (!items.length) throw new Error("没有可结算的商品");
+  if (user.status === "disabled") throw new Error("账号已被停用");
+  if (!user.email?.trim()) throw new Error("请先在个人资料填写邮箱后再付款");
+  const settings = await getSettings();
+  const currency = parseCurrency(currencyInput, settings.defaultCurrency);
+  const checkoutId = newId("chk");
+  const paymentId = newId("pay");
+  const slugs = [...new Set(items.map((item) => item.slug).filter((slug) => slug !== membership.slug))];
+  const catalog = await getStoreProductsBySlugs(slugs);
+  const created = items.map((raw) => {
+    const order = buildPendingOrderFromPriced(
+      user.id,
+      raw,
+      pricedCheckoutItem(raw, catalog),
+      currency,
+      settings.fx,
+      checkoutId,
+      paymentId,
+    );
+    order.payMethod = "billplz";
+    return order;
+  });
+  const totalSen = created.reduce((sum, order) => sum + (order.amountSen || 0), 0);
+  if (totalSen < 1) throw new Error("收款金额无效");
+  return {
+    checkoutId,
+    paymentId,
+    orders: created,
+    user: { id: user.id, name: user.name, email: user.email },
+    totalSen,
+    totalMyr: Math.round(totalSen) / 100,
+    payment: {
+      id: paymentId,
+      userId: user.id,
+      kind: "order_cart",
+      provider: "billplz",
+      status: "pending",
+      amountSen: totalSen,
+      checkoutId,
+      createdAt: created[0].createdAt,
+    },
+  };
+}
+
+export async function persistBillplzCheckout(
+  pending: PreparedBillplzCheckout,
+  bill: { id: string; url: string },
+) {
+  const orders = pending.orders.map((order) => ({
+    ...order,
+    billplzBillId: bill.id,
+    billplzUrl: bill.url,
+    paymentId: pending.paymentId,
+  }));
+  const billRow = {
+    id: bill.id,
+    paymentId: pending.paymentId,
+    url: bill.url,
+    amountSen: pending.totalSen,
+    status: "created" as const,
+    createdAt: new Date().toISOString(),
+  };
+  if (usesSupabaseStore()) {
+    const { insertCheckoutWithBillToPg } = await import("@/lib/store-pg");
+    await insertCheckoutWithBillToPg({ payment: pending.payment, orders, bill: billRow });
+    return orders;
+  }
+  const store = await readStore();
+  if (store.billplzBills.some((row) => row.paymentId === pending.paymentId)) {
+    throw new Error("该支付已绑定 Billplz 账单");
+  }
+  store.orders.push(...orders);
+  store.payments.push(pending.payment);
+  store.billplzBills.push(billRow);
+  await writeStore(store);
+  return orders;
+}
+
+export type PreparedBillplzTopUp = {
+  user: Pick<PublicCustomer, "id" | "name" | "email">;
+  topUp: TopUpRecord;
+  payment: Payment;
+};
+
+export async function prepareBillplzTopUp(
+  user: Pick<PublicCustomer, "id" | "name" | "email" | "status">,
+  amountSen: number,
+): Promise<PreparedBillplzTopUp> {
+  if (user.status === "disabled") throw new Error("账号已被停用");
+  if (!user.email?.trim()) throw new Error("请先在个人资料填写邮箱后再付款");
+  const amount = asNonNegSen(amountSen);
+  if (amount < 100) throw new Error("充值金额无效");
+  const paymentId = newId("pay");
+  const createdAt = new Date().toISOString();
+  const topUp = {
+    id: newId("tup"),
+    userId: user.id,
+    paymentId,
+    amountSen: amount,
+    status: "pending" as const,
+    createdAt,
+  };
+  return {
+    user: { id: user.id, name: user.name, email: user.email },
+    topUp,
+    payment: {
+      id: paymentId,
+      userId: user.id,
+      kind: "topup",
+      provider: "billplz",
+      status: "pending",
+      amountSen: amount,
+      createdAt,
+    },
+  };
+}
+
+export async function persistBillplzTopUp(pending: PreparedBillplzTopUp, bill: { id: string; url: string }) {
+  const topUp = { ...pending.topUp, billplzBillId: bill.id, billplzUrl: bill.url };
+  const billRow = {
+    id: bill.id,
+    paymentId: pending.payment.id,
+    url: bill.url,
+    amountSen: pending.payment.amountSen,
+    status: "created" as const,
+    createdAt: new Date().toISOString(),
+  };
+  if (usesSupabaseStore()) {
+    const { insertTopUpWithBillToPg } = await import("@/lib/store-pg");
+    await insertTopUpWithBillToPg({ payment: pending.payment, topUp, bill: billRow });
+    return topUp;
+  }
+  const store = await readStore();
+  if (store.billplzBills.some((row) => row.paymentId === pending.payment.id)) {
+    throw new Error("该支付已绑定 Billplz 账单");
+  }
+  store.payments.push(pending.payment);
+  store.topUps.push(topUp);
+  store.billplzBills.push(billRow);
+  await writeStore(store);
+  return topUp;
 }
 
 function fulfillOrderInStore(store: Awaited<ReturnType<typeof readStore>>, order: Order, payMethod: PayMethod, paidAt?: string) {
@@ -488,6 +682,11 @@ export async function attachBillToCheckout(
 }
 
 export async function deleteCheckout(checkoutId: string) {
+  if (usesSupabaseStore()) {
+    const { cancelPendingCheckoutInPg } = await import("@/lib/store-pg");
+    await cancelPendingCheckoutInPg(checkoutId);
+    return;
+  }
   const store = await readStore();
   const payment = store.payments.find((item) => item.checkoutId === checkoutId);
   if (payment?.status === "paid") return;
@@ -1011,6 +1210,11 @@ export async function attachBillToTopUp(topUpId: string, bill: { id: string; url
 }
 
 export async function deletePendingTopUp(topUpId: string) {
+  if (usesSupabaseStore()) {
+    const { deletePendingTopUpInPg } = await import("@/lib/store-pg");
+    await deletePendingTopUpInPg(topUpId);
+    return;
+  }
   const store = await readStore();
   store.topUps = store.topUps.filter((row) => row.id !== topUpId || row.status === "credited");
   await writeStore(store);

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { Product } from "@/lib/data";
@@ -10,8 +10,10 @@ import { useAuth } from "@/components/auth-provider";
 import { useCurrency } from "@/components/currency-provider";
 import { useDemoStore } from "@/components/demo-store";
 import { useLocale } from "@/components/locale-provider";
+import { PayBusyOverlay } from "@/components/pay-busy-overlay";
 import { localized } from "@/lib/i18n";
 import { translateApiError } from "@/lib/messages";
+import { canFollowPayRedirect, isAbortError } from "@/lib/pay-redirect";
 import { loginHref, safeReturnPath } from "@/lib/safe-path";
 import { formatMoneyAmount, fromCny } from "@/lib/currency";
 
@@ -33,6 +35,9 @@ export function CheckoutClient({
   const [topUpSen, setTopUpSen] = useState(0);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const payLock = useRef(false);
+  const abortRef = useRef<AbortController | null>(null);
+  const mountedRef = useRef(true);
 
   const items: CheckoutItem[] = useMemo(() => {
     if (member) return [memberCheckoutItem()];
@@ -64,8 +69,28 @@ export function CheckoutClient({
       .catch(() => setTopUpSen(0));
   }, []);
 
+  useEffect(() => {
+    mountedRef.current = true;
+    const abortInFlight = () => abortRef.current?.abort();
+    window.addEventListener("pagehide", abortInFlight);
+    window.addEventListener("popstate", abortInFlight);
+    return () => {
+      mountedRef.current = false;
+      abortInFlight();
+      window.removeEventListener("pagehide", abortInFlight);
+      window.removeEventListener("popstate", abortInFlight);
+    };
+  }, []);
+
+  function cancelPay() {
+    abortRef.current?.abort();
+    abortRef.current = null;
+    payLock.current = false;
+    setBusy(false);
+  }
+
   async function confirmPay(payWith?: "wallet") {
-    if (busy) return;
+    if (payLock.current || busy) return;
     if (!user) {
       router.push(
         loginHref(
@@ -83,29 +108,62 @@ export function CheckoutClient({
       setError(t("billplzNotConfigured"));
       return;
     }
+    payLock.current = true;
     setBusy(true);
     setError("");
-    const res = await fetch("/api/orders/checkout", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ items, currency, payWith }),
-    });
-    const data = (await res.json()) as {
-      error?: string;
-      redirectUrl?: string;
-      orders?: { id: string }[];
-    };
-    if (!res.ok) {
+    const controller = new AbortController();
+    abortRef.current = controller;
+    try {
+      const res = await fetch("/api/orders/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ items, currency, payWith }),
+        signal: controller.signal,
+      });
+      const data = (await res.json()) as {
+        error?: string;
+        redirectUrl?: string;
+        orders?: { id: string }[];
+      };
+      if (
+        !canFollowPayRedirect({
+          mounted: mountedRef.current,
+          aborted: controller.signal.aborted,
+        })
+      ) {
+        return;
+      }
+      if (!res.ok) {
+        payLock.current = false;
+        setBusy(false);
+        setError(translateApiError(locale, data.error, "checkoutFailed"));
+        return;
+      }
+      if (data.redirectUrl) {
+        if (
+          !canFollowPayRedirect({
+            mounted: mountedRef.current,
+            aborted: controller.signal.aborted,
+          })
+        ) {
+          return;
+        }
+        window.location.assign(data.redirectUrl);
+        return;
+      }
+      await refresh();
+      if (!mountedRef.current || controller.signal.aborted) return;
+      router.push(data.orders?.[0]?.id ? `/orders/${data.orders[0].id}` : "/orders");
+    } catch (err) {
+      if (isAbortError(err) || !mountedRef.current) {
+        payLock.current = false;
+        if (mountedRef.current) setBusy(false);
+        return;
+      }
+      payLock.current = false;
       setBusy(false);
-      setError(translateApiError(locale, data.error, "checkoutFailed"));
-      return;
+      setError(translateApiError(locale, err instanceof Error ? err.message : "", "checkoutFailed"));
     }
-    if (data.redirectUrl) {
-      window.location.assign(data.redirectUrl);
-      return;
-    }
-    await refresh();
-    router.push(data.orders?.[0]?.id ? `/orders/${data.orders[0].id}` : "/orders");
   }
 
   const title = !loading && !user ? t("payNeedLogin") : t("payConfirm");
@@ -118,6 +176,7 @@ export function CheckoutClient({
 
   return (
     <div className="mx-auto max-w-md px-4 py-8 md:px-0">
+      {busy ? <PayBusyOverlay title={t("connectingPay")} cancelLabel={t("cancelPay")} onCancel={cancelPay} /> : null}
       <div className="rounded-xl bg-white p-5 shadow-sm">
         <h1 className="font-serif text-[22px] text-[#3a2c10]">{title}</h1>
         <p className="mt-2 text-[13px] leading-6 text-[#666]">{body}</p>
@@ -186,7 +245,7 @@ export function CheckoutClient({
             >
               {payConfig?.billplz
                 ? busy
-                  ? t("payingRedirect")
+                  ? t("connectingPay")
                   : t("payWithBillplz")
                 : payConfig?.demo
                   ? busy

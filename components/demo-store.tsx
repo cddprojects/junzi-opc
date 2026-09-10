@@ -16,6 +16,8 @@ import { localized } from "@/lib/i18n";
 import { translateApiError } from "@/lib/messages";
 import { loginHref, safeReturnPath } from "@/lib/safe-path";
 import { fromCny, formatMoneyAmount } from "@/lib/currency";
+import { PayBusyOverlay } from "@/components/pay-busy-overlay";
+import { canFollowPayRedirect, isAbortError } from "@/lib/pay-redirect";
 
 export type CartItem = { slug: string; qty: number; product: Product };
 
@@ -49,8 +51,12 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
   const [result, setResult] = React.useState<PayResult[] | null>(null);
   const [payConfig, setPayConfig] = React.useState<PayConfig | null>(null);
   const payLock = React.useRef(false);
+  const checkoutAbortRef = React.useRef<AbortController | null>(null);
+  const mountedRef = React.useRef(true);
+  const payOpenRef = React.useRef(false);
 
   const visible = payOpen;
+  payOpenRef.current = payOpen;
   const chargeMyr = items.reduce(
     (sum, item) => sum + fromCny(item.price * (item.qty || 1), "MYR", settings.fx),
     0,
@@ -58,6 +64,9 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
   const chargeLabel = formatMoneyAmount(Math.round(chargeMyr * 100) / 100, "MYR");
 
   const closePay = React.useCallback(() => {
+    checkoutAbortRef.current?.abort();
+    checkoutAbortRef.current = null;
+    payLock.current = false;
     setPayOpen(false);
     setResult(null);
     setError("");
@@ -77,6 +86,19 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
     pathRef.current = pathname;
     closePay();
   }, [pathname, closePay]);
+
+  React.useEffect(() => {
+    mountedRef.current = true;
+    const abortInFlight = () => checkoutAbortRef.current?.abort();
+    window.addEventListener("pagehide", abortInFlight);
+    window.addEventListener("popstate", abortInFlight);
+    return () => {
+      mountedRef.current = false;
+      abortInFlight();
+      window.removeEventListener("pagehide", abortInFlight);
+      window.removeEventListener("popstate", abortInFlight);
+    };
+  }, []);
 
   React.useEffect(() => {
     if (visible) return;
@@ -163,38 +185,67 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
     payLock.current = true;
     setBusy(true);
     setError("");
-    const res = await fetch("/api/orders/checkout", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ items, currency }),
-    });
-    const data = (await res.json()) as {
-      error?: string;
-      mode?: string;
-      redirectUrl?: string;
-      orders?: PayResult[];
-    };
-    if (!res.ok) {
+    const controller = new AbortController();
+    checkoutAbortRef.current = controller;
+    try {
+      const res = await fetch("/api/orders/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ items, currency }),
+        signal: controller.signal,
+      });
+      const data = (await res.json()) as {
+        error?: string;
+        mode?: string;
+        redirectUrl?: string;
+        orders?: PayResult[];
+      };
+      const allow = canFollowPayRedirect({
+        mounted: mountedRef.current,
+        aborted: controller.signal.aborted,
+        dialogOpen: payOpenRef.current,
+      });
+      if (!allow) return;
+      if (!res.ok) {
+        payLock.current = false;
+        setBusy(false);
+        setError(translateApiError(locale, data.error, "checkoutFailed"));
+        return;
+      }
+      if (data.redirectUrl) {
+        if (
+          !canFollowPayRedirect({
+            mounted: mountedRef.current,
+            aborted: controller.signal.aborted,
+            dialogOpen: payOpenRef.current,
+          })
+        ) {
+          return;
+        }
+        window.location.assign(data.redirectUrl);
+        return;
+      }
       payLock.current = false;
       setBusy(false);
-      setError(translateApiError(locale, data.error, "checkoutFailed"));
-      return;
+      setResult(data.orders || []);
+      setCart((current) => current.filter((row) => !items.some((item) => item.slug === row.slug)));
+      await refresh();
+    } catch (error) {
+      if (isAbortError(error) || !mountedRef.current || !payOpenRef.current) {
+        payLock.current = false;
+        if (mountedRef.current && payOpenRef.current) setBusy(false);
+        return;
+      }
+      payLock.current = false;
+      setBusy(false);
+      setError(translateApiError(locale, error instanceof Error ? error.message : "", "checkoutFailed"));
     }
-    if (data.redirectUrl) {
-      window.location.assign(data.redirectUrl);
-      return;
-    }
-    payLock.current = false;
-    setBusy(false);
-    setResult(data.orders || []);
-    setCart((current) => current.filter((row) => !items.some((item) => item.slug === row.slug)));
-    await refresh();
   }
 
   const canPay = Boolean(payConfig?.billplz || payConfig?.demo);
   const payLabel = payConfig?.billplz
     ? busy
-      ? t("payingRedirect")
+      ? t("connectingPay")
       : t("payWithBillplz")
     : payConfig?.demo
       ? busy
@@ -205,6 +256,9 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
   return (
     <StoreContext.Provider value={value}>
       {children}
+      {busy && !result ? (
+        <PayBusyOverlay title={t("connectingPay")} cancelLabel={t("cancelPay")} onCancel={closePay} />
+      ) : null}
       {visible ? (
         <div className="fixed inset-0 z-[80] flex items-center justify-center p-4">
           <button

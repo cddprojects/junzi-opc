@@ -532,6 +532,144 @@ function ids(rows: { id?: string; slug?: string }[]) {
   return rows.map((row) => row.id || row.slug).filter(Boolean) as string[];
 }
 
+export async function loadUserByIdFromPg(userId: string) {
+  const rows = await sqlRows<Row>("user_by_id", (sql) => sql`select * from users where id = ${userId} limit 1`);
+  return rows[0] ? mapUser(rows[0]) : undefined;
+}
+
+function paymentInsertRow(payment: Payment) {
+  return {
+    id: payment.id,
+    user_id: payment.userId,
+    kind: payment.kind,
+    provider: payment.provider,
+    status: payment.status,
+    amount_sen: payment.amountSen,
+    checkout_id: payment.checkoutId || null,
+    created_at: payment.createdAt,
+    paid_at: payment.paidAt || null,
+    cancelled_at: payment.cancelledAt || null,
+    note: payment.note || null,
+    expected_amount_sen: payment.expectedAmountSen ?? null,
+    received_amount_sen: payment.receivedAmountSen ?? null,
+    mismatch_billplz_bill_id: payment.mismatchBillplzBillId || null,
+    callback_received_at: payment.callbackReceivedAt || null,
+  };
+}
+
+function orderInsertRow(order: Order) {
+  return {
+    id: order.id,
+    order_no: order.orderNo!,
+    user_id: order.userId,
+    payment_id: order.paymentId!,
+    checkout_id: order.checkoutId!,
+    product_slug: order.productSlug,
+    product_title: order.productTitle,
+    price: order.price,
+    price_cny: order.priceCny ?? order.price,
+    currency: order.currency || "CNY",
+    qty: order.qty,
+    created_at: order.createdAt,
+    verify_code: order.verifyCode || null,
+    status: order.status === "pending" ? "pending" : "paid",
+    paid_at: order.paidAt || null,
+    pay_method: order.payMethod || null,
+    amount_myr: order.amountMyr ?? null,
+    amount_sen: order.amountSen || 0,
+    referral_settled: null,
+    referral_skip: null,
+  };
+}
+
+function billInsertRow(bill: BillplzBill) {
+  return {
+    id: bill.id,
+    payment_id: bill.paymentId,
+    url: bill.url || null,
+    collection_id: bill.collectionId || null,
+    amount_sen: bill.amountSen,
+    status: bill.status,
+    paid_at: bill.paidAt || null,
+    last_callback_at: bill.lastCallbackAt || null,
+    created_at: bill.createdAt,
+  };
+}
+
+/** One short transaction: pending payment + orders + Billplz row. No full-store dump. */
+export async function insertCheckoutWithBillToPg(input: {
+  payment: Payment;
+  orders: Order[];
+  bill: BillplzBill;
+}) {
+  await withStoreTx(async (sql) => {
+    const existing = await sql`
+      select id from billplz_bills where payment_id = ${input.payment.id} limit 1
+    `;
+    if (existing.length) throw new Error("该支付已绑定 Billplz 账单");
+    await sql`insert into payments ${sql(paymentInsertRow(input.payment))}`;
+    if (input.orders.length) await sql`insert into orders ${sql(input.orders.map(orderInsertRow))}`;
+    await sql`insert into billplz_bills ${sql(billInsertRow(input.bill))}`;
+  });
+}
+
+export async function insertTopUpWithBillToPg(input: {
+  payment: Payment;
+  topUp: TopUpRecord;
+  bill: BillplzBill;
+}) {
+  await withStoreTx(async (sql) => {
+    const existing = await sql`
+      select id from billplz_bills where payment_id = ${input.payment.id} limit 1
+    `;
+    if (existing.length) throw new Error("该支付已绑定 Billplz 账单");
+    await sql`insert into payments ${sql(paymentInsertRow(input.payment))}`;
+    await sql`
+      insert into top_ups ${sql({
+        id: input.topUp.id,
+        user_id: input.topUp.userId,
+        payment_id: input.topUp.paymentId!,
+        amount_sen: input.topUp.amountSen,
+        status: input.topUp.status,
+        created_at: input.topUp.createdAt,
+        credited_at: input.topUp.creditedAt || null,
+        note: input.topUp.note || null,
+      })}
+    `;
+    await sql`insert into billplz_bills ${sql(billInsertRow(input.bill))}`;
+  });
+}
+
+export async function cancelPendingCheckoutInPg(checkoutId: string) {
+  await withStoreTx(async (sql) => {
+    const payments = await sql`
+      select id, status from payments where checkout_id = ${checkoutId} limit 1
+    `;
+    const payment = payments[0] as { id: string; status: string } | undefined;
+    if (payment?.status === "paid") return;
+    await sql`delete from orders where checkout_id = ${checkoutId}`;
+    if (payment && payment.status === "pending") {
+      const now = new Date().toISOString();
+      await sql`
+        update payments
+        set status = ${"cancelled"}, cancelled_at = ${now}
+        where id = ${payment.id}
+      `;
+      await sql`
+        update billplz_bills
+        set status = ${"failed"}
+        where payment_id = ${payment.id} and status = ${"created"}
+      `;
+    }
+  });
+}
+
+export async function deletePendingTopUpInPg(topUpId: string) {
+  await withStoreTx(async (sql) => {
+    await sql`delete from top_ups where id = ${topUpId} and status <> ${"credited"}`;
+  });
+}
+
 export async function persistAppStoreToPg(store: AppStore) {
   await withStoreTx(async (sql) => {
     const userBase = store.users.map((user) => ({
