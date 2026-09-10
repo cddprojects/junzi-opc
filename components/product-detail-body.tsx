@@ -13,7 +13,7 @@ export default function ProductDetailBody({ product }: { product: Product }) {
 
   const images = normalizeDetailImages(product.detailImages);
   return (
-    <section className="grid grid-cols-2 gap-0.5 bg-white pb-[2px]">
+    <section className="grid grid-cols-1 gap-0.5 bg-white pb-[2px] md:grid-cols-2">
       {images.map((src, index) => (
         // eslint-disable-next-line @next/next/no-img-element
         <img
