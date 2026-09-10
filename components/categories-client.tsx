@@ -33,7 +33,7 @@ export function CategoriesClient({ products }: { products: Product[] }) {
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder={t("searchKeyword")}
-            className="mp-search-field h-9 w-full rounded-[50px] border-0 bg-[#f8f8f8] pr-3 pl-10 text-[13px] outline-none placeholder:text-[#bbb]"
+            className="mp-search-field h-9 w-full rounded-[50px] border-0 bg-white pr-3 pl-10 text-[13px] outline-none placeholder:text-[#bbb]"
           />
         </div>
       </div>
