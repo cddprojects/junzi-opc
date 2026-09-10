@@ -35,7 +35,6 @@ export default async function HomePage() {
     .sort((a, b) => a.sort - b.sort);
   const intro = videos.find((item) => item.placement === "home-intro");
   const story = videos.find((item) => item.placement === "home-case");
-  const extraVideos = videos.filter((item) => item.placement === "library");
 
   return (
     <div className="bg-[#f5f5f5] md:bg-transparent">
@@ -93,19 +92,6 @@ export default async function HomePage() {
         <VideoBlock video={story} fallback="case" />
         <p className="sr-only">{story ? locVideoTitle(story, locale) : localized(locale, caseStudy.title, caseStudy.titleEn)}</p>
       </HomeMediaSection>
-
-      {extraVideos.length > 0 && (
-        <HomeMediaSection title={t(locale, "homeVideos")}>
-          <div className="grid gap-3 md:grid-cols-2">
-            {extraVideos.map((video) => (
-              <div key={video.id} className="overflow-hidden">
-                <VideoBlock video={video} />
-                <p className="mp-section-title mt-2 pb-0 text-[14px] font-medium">{locVideoTitle(video, locale)}</p>
-              </div>
-            ))}
-          </div>
-        </HomeMediaSection>
-      )}
 
       <HomeMediaSection title={t(locale, "homeAiTools")}>
         <Link href="/tools" className="mp-full-bleed">
