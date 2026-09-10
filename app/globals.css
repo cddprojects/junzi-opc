@@ -557,7 +557,7 @@
 }
 
 .storefront .mp-section-title {
-  padding: 0 16px 8px;
+  padding: 16px 16px 8px;
 }
 
 .storefront .mp-full-bleed {
@@ -575,7 +575,7 @@
   }
 
   .storefront .mp-section-title {
-    padding: 0 0 16px;
+    padding: 16px 0;
   }
 
   .storefront .mp-full-bleed {
