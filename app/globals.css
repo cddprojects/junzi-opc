@@ -224,7 +224,7 @@
   right: 0;
   left: 0;
   z-index: 400;
-  height: 2px;
+  height: 3px;
   opacity: 0;
   transition: opacity var(--motion-fast) var(--ease-standard);
 }
