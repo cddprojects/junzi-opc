@@ -49,7 +49,7 @@ export function BuyBar({ product }: { product?: Product }) {
           )}
         </BarLink>
         {product ? (
-          <AddToCartButton product={product} iconOnly className="size-11 rounded-xl" />
+          <AddToCartButton product={product} iconOnly className="size-11 rounded-[8px]" />
         ) : null}
         <BuyNowButton product={product} className="h-11 min-h-11 flex-1 rounded-xl text-[15px]" />
       </div>
