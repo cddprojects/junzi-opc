@@ -35,8 +35,13 @@ export default async function OrdersPage({
 
   const { tab: tabParam } = await searchParams;
   const tab = parseOrderTab(tabParam);
-  const all = ordersForUser(user.id);
+  const all = await ordersForUser(user.id);
   const orders = filterOrders(all, tab);
+  const products = new Map(
+    await Promise.all(
+      [...new Set(orders.map((order) => order.productSlug))].map(async (slug) => [slug, await getStoreProduct(slug)] as const),
+    ),
+  );
 
   return (
     <div className="px-4 py-5 md:px-0 md:py-2">
@@ -78,7 +83,7 @@ export default async function OrdersPage({
         ) : (
           <div className="mt-3 space-y-3">
             {orders.map((order) => {
-              const product = getStoreProduct(order.productSlug);
+              const product = products.get(order.productSlug);
               return (
                 <Link
                   key={order.id}

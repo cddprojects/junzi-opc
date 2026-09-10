@@ -9,7 +9,7 @@ export async function GET() {
   } catch {
     return NextResponse.json({ error: "未登录" }, { status: 401 });
   }
-  return NextResponse.json(getSettings());
+  return NextResponse.json(await getSettings());
 }
 
 export async function PUT(request: Request) {
@@ -19,5 +19,5 @@ export async function PUT(request: Request) {
     return NextResponse.json({ error: "未登录" }, { status: 401 });
   }
   const body = (await request.json().catch(() => null)) as Partial<StoreSettings> | null;
-  return NextResponse.json(updateSettings(normalizeSettings(body)));
+  return NextResponse.json(await updateSettings(normalizeSettings(body)));
 }

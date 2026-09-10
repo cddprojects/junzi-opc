@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 
 export default async function AdminAnomaliesPage() {
   const locale = await getRequestLocale();
-  const desk = listCommissionDesk();
+  const desk = await listCommissionDesk();
 
   return (
     <div>

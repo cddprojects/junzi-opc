@@ -5,7 +5,7 @@ import { lookupVerifyCode } from "@/lib/user-store";
 
 export async function POST(request: Request) {
   const body = (await request.json().catch(() => null)) as { code?: string } | null;
-  const found = lookupVerifyCode(body?.code || "");
+  const found = await lookupVerifyCode(body?.code || "");
   if (!found || !found.user) {
     return NextResponse.json({ error: "课程码无效" }, { status: 404 });
   }

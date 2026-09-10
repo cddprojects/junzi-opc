@@ -9,6 +9,6 @@ export default async function CheckoutPage({
   searchParams: Promise<{ slug?: string; member?: string }>;
 }) {
   const params = await searchParams;
-  const product = params.slug ? getStoreProduct(params.slug) : null;
+  const product = params.slug ? await getStoreProduct(params.slug) : null;
   return <CheckoutClient product={product} member={params.member === "1"} />;
 }

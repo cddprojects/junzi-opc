@@ -13,7 +13,7 @@ export async function PUT(request: Request) {
     phone?: string;
   } | null;
   try {
-    const next = updateCustomerProfile(user.id, body || {});
+    const next = await updateCustomerProfile(user.id, body || {});
     const jar = await cookies();
     const token = jar.get(USER_COOKIE)?.value;
     if (token) await setUserCookie(token);

@@ -10,7 +10,7 @@ export default async function EditProductPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const product = getStoreProduct(slug);
+  const product = await getStoreProduct(slug);
   if (!product) notFound();
   return (
     <div>

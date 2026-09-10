@@ -1,6 +1,8 @@
 # Supabase design review (final, pre-implementation)
 
-Status: **PLAN ONLY**. No SQL applied, no import run, `data/store.json` not deleted, no Vercel deploy.
+Status: **IMPLEMENTED** (schema + app repos + import script). `data/store.json` is not deleted. No production deploy from this change.
+
+**Risk #1 locked:** Billplz reported sen must exactly equal `payment.amount_sen` (bigint, no tolerance). Mismatch is persisted and `payments.status = amount_mismatch`. Callback still returns HTTP 200 with a JSON body so Billplz stops retrying.
 
 This document is the approved plan plus the user’s overrides. Implementation must not start until this review is approved.
 
@@ -132,7 +134,11 @@ One payment is the **idempotency and fulfillment root**.
 | `user_id` | text not null | **FK → users.id** `ON DELETE RESTRICT` |
 | `kind` | text not null | **CHECK** `order_cart` \| `topup` \| `wallet_cart` \| `demo_cart` \| `grant_cart` |
 | `provider` | text not null | **CHECK** `billplz` \| `wallet` \| `demo` \| `grant` |
-| `status` | text not null | **CHECK** `pending` \| `paid` \| `cancelled` \| `failed` |
+| `status` | text not null | **CHECK** `pending` \| `paid` \| `cancelled` \| `failed` \| `amount_mismatch` |
+| `expected_amount_sen` | bigint | Audit: what we expected |
+| `received_amount_sen` | bigint | Audit: what Billplz reported |
+| `mismatch_billplz_bill_id` | text | Audit bill id |
+| `callback_received_at` | timestamptz | When the mismatch (or last audit write) was recorded |
 | `amount_sen` | bigint not null | **MYR sen**, cart/top-up total |
 | `checkout_id` | text | **UNIQUE** when set. `chk_…`. Null for top-up. |
 | `created_at` | timestamptz not null | |
@@ -154,6 +160,8 @@ Index: `user_id`, `status`, `created_at`.
 pending ──(provider paid / wallet debit / demo|grant)──► paid     [terminal success]
 pending ──(deleteCheckout / bill create fail)────────► cancelled [terminal]
 pending ──(explicit provider failure, optional)──────► failed    [terminal]
+pending ──(reported sen ≠ amount_sen)────────────────► amount_mismatch [audit; no fulfill]
+amount_mismatch ──(later callback with exact sen)───► paid     [allowed]
 paid    ── any later unpaid / repeat paid ───────────► no-op     [do not reverse]
 ```
 
@@ -378,11 +386,10 @@ Algorithm:
 4. If `payment.status = paid` → return 200, **zero** further writes (no fulfill, no commission, no wallet, no sales++, no memberUntil).
 5. If `payment.status IN (cancelled, failed)` → return 200, no fulfill.
 6. If callback is unpaid and payment is `pending` → update `last_callback_at` only.
-7. If callback is paid and payment is `pending`:
-   - **Top-up:** keep `assertTopUpAmountMatch`. Mismatch → do not credit; leave `pending` (or `failed`); throw like today (`充值金额不符`).
-   - **Orders:** keep today’s rule (no amount match required when `reportedAmountSen` is null). If reported sen is present and ≠ `payment.amount_sen`, **do not fulfill** (safer than today); leave `pending` and log. Confirm on implementation if you want this extra guard.
-   - Then run fulfill **once**, set `payment.status = paid`, `paid_at`, bill `status = paid`.
-8. Return / callback racing each other: the row lock serializes them. Loser sees `paid` and no-ops.
+7. If callback is paid and `reportedAmountSen` is **null**: persist `last_callback_at` only (`awaiting_amount`). Do not fulfill.
+8. If callback is paid and `asSen(reported) !== payment.amount_sen`: persist audit fields, set `status = amount_mismatch`, **do not** fulfill / commission / wallet / top-up. HTTP **200** + JSON `{ ok:false, status:"amount_mismatch", expectedAmountSen, receivedAmountSen, billplzBillId, paymentId }` so Billplz stops retrying.
+9. If amounts match (including a later retry after `amount_mismatch`): fulfill once, `paid`.
+10. Return / callback racing each other: advisory lock + payment status serializes them.
 
 `last_callback_at` must not be treated as fulfillment.
 
@@ -626,16 +633,6 @@ No remaining product-scope questions from the previous eight decisions except ri
 
 ---
 
-## 8. What this turn did not do
+## 8. Implementation notes
 
-- No SQL migration applied  
-- No import script executed  
-- `data/store.json` / `data/uploads/` not deleted or rewritten  
-- No Vercel deploy  
-- No UI redesign  
-
----
-
-**Ready for your approval before implementation.**
-
-Please confirm **risk #1** (reject order fulfill when Billplz reported sen ≠ `payment.amount_sen`). Everything else in this document is treated as the implementation spec once you approve.
+SQL lives in `supabase/migrations/20260910_000001_init.sql`. Import: `npm run import:supabase`. Local non-Vercel without Supabase env still uses `data/store.json`. Vercel / `NODE_ENV=production` (serve) fail-fast without Supabase + `VERIFY_SECRET`. `data/store.json` is never deleted by the app or import script.

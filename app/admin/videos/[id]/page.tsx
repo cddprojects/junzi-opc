@@ -10,7 +10,7 @@ export default async function EditVideoPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const catalog = getCatalog();
+  const catalog = await getCatalog();
   const video = catalog.videos.find((item) => item.id === id);
   if (!video) notFound();
   return (

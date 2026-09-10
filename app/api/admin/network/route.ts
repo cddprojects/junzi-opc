@@ -9,5 +9,5 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "未登录" }, { status: 401 });
   }
   const rootId = new URL(request.url).searchParams.get("rootId") || undefined;
-  return NextResponse.json(listReferralNetwork(rootId));
+  return NextResponse.json(await listReferralNetwork(rootId));
 }

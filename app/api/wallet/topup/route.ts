@@ -14,7 +14,7 @@ export async function POST(request: Request) {
   const amountSen =
     body?.amountSen != null ? asSen(body.amountSen) : asSen(Math.round(Number(body?.amountMyr || 0) * 100));
   try {
-    const pending = createPendingTopUp(user.id, amountSen);
+    const pending = await createPendingTopUp(user.id, amountSen);
     const origin = appBaseUrl(request);
     try {
       const bill = await createBillplzBill({
@@ -26,7 +26,7 @@ export async function POST(request: Request) {
         redirectUrl: `${origin}/pay/return?topup=${encodeURIComponent(pending.topUp.id)}`,
         reference: `topup:${pending.topUp.id}`,
       });
-      attachBillToTopUp(pending.topUp.id, bill);
+      await attachBillToTopUp(pending.topUp.id, bill);
       return NextResponse.json({
         mode: "billplz",
         redirectUrl: bill.url,
@@ -34,7 +34,7 @@ export async function POST(request: Request) {
         amountSen: pending.topUp.amountSen,
       });
     } catch (error) {
-      deletePendingTopUp(pending.topUp.id);
+      await deletePendingTopUp(pending.topUp.id);
       throw error;
     }
   } catch (error) {

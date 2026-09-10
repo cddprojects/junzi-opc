@@ -10,7 +10,7 @@ export default async function AdminProductsPage({
   searchParams: Promise<{ cat?: string }>;
 }) {
   const { cat = "" } = await searchParams;
-  const { products } = getCatalog();
+  const { products } = await getCatalog();
   const list = cat ? products.filter((item) => item.categoryId === cat) : products;
 
   return (

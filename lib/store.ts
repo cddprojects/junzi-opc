@@ -22,6 +22,14 @@ import {
 import { type Customer, type Order, type UserSession } from "@/lib/account";
 import { generateVerifySecret } from "@/lib/security";
 import { DEFAULT_SETTINGS, normalizeSettings, type StoreSettings } from "@/lib/currency";
+import { hashSessionToken } from "@/lib/session-token";
+import {
+  hydrateOrderFromPayment,
+  hydrateTopUpFromPayment,
+  synthesizePaymentsFromStore,
+} from "@/lib/migrate-payments";
+import type { BillplzBill, Payment } from "@/lib/payments";
+import { usesFileStore, usesSupabaseStore } from "@/lib/runtime-store";
 import {
   DEFAULT_REFERRAL_PLAN,
   normalizeReferralCode,
@@ -47,6 +55,8 @@ export type AppStore = {
   users: Customer[];
   sessions: UserSession[];
   orders: Order[];
+  payments: Payment[];
+  billplzBills: BillplzBill[];
   verifySecret: string;
   settings: StoreSettings;
   referralPlan: ReferralPlan;
@@ -59,7 +69,7 @@ export type AppStore = {
 const DATA_DIR = path.join(process.cwd(), "data");
 const STORE_PATH = path.join(DATA_DIR, "store.json");
 export const UPLOAD_DIR = path.join(DATA_DIR, "uploads");
-const STORE_VERSION = 12;
+const STORE_VERSION = 13;
 
 let storeCache: { mtimeMs: number; store: AppStore } | null = null;
 
@@ -125,6 +135,8 @@ function seedStore(): AppStore {
     users: [],
     sessions: [],
     orders: [],
+    payments: [],
+    billplzBills: [],
     verifySecret: generateVerifySecret(),
     settings: { ...DEFAULT_SETTINGS, fx: { ...DEFAULT_SETTINGS.fx } },
     referralPlan: { ...DEFAULT_REFERRAL_PLAN, tiers: DEFAULT_REFERRAL_PLAN.tiers.map((tier) => ({ ...tier })) },
@@ -161,6 +173,9 @@ export function ensureCustomerReferral(user: Customer, taken: Set<string>): Cust
 }
 
 function ensureDirs() {
+  if (!usesFileStore()) {
+    throw new Error("Refusing to write data/ on Vercel/production. Configure Supabase.");
+  }
   if (!existsSync(DATA_DIR)) mkdirSync(DATA_DIR, { recursive: true });
   if (!existsSync(UPLOAD_DIR)) mkdirSync(UPLOAD_DIR, { recursive: true });
 }
@@ -284,7 +299,7 @@ function migrateStore(parsed: AppStore): AppStore {
       taken,
     ),
   );
-  return {
+  const next = {
     version: STORE_VERSION,
     products,
     posters: (parsed.posters ?? []).map((poster) => {
@@ -310,12 +325,21 @@ function migrateStore(parsed: AppStore): AppStore {
       return video;
     }),
     users,
-    sessions: (parsed.sessions ?? []).filter((session) => Date.parse(session.expiresAt) > now),
+    sessions: (parsed.sessions ?? [])
+      .filter((session) => Date.parse(session.expiresAt) > now)
+      .map((session) => {
+        const raw = session.token;
+        const tokenHash = session.tokenHash || (raw ? hashSessionToken(raw) : "");
+        return { tokenHash, userId: session.userId, expiresAt: session.expiresAt };
+      })
+      .filter((session) => session.tokenHash),
     orders: (parsed.orders ?? []).map((order) => ({
       ...order,
-      status: order.status === "pending" ? "pending" : "paid",
+      status: (order.status === "pending" ? "pending" : "paid") as Order["status"],
       payMethod: order.payMethod || (order.billplzBillId ? "billplz" : "demo"),
     })),
+    payments: parsed.payments ?? [],
+    billplzBills: parsed.billplzBills ?? [],
     verifySecret: parsed.verifySecret || generateVerifySecret(),
     settings: normalizeSettings(parsed.settings),
     referralPlan: normalizeReferralPlan(parsed.referralPlan),
@@ -327,6 +351,30 @@ function migrateStore(parsed: AppStore): AppStore {
       migrateWithdrawals(parsed.withdrawals ?? []),
     ),
     topUps: parsed.topUps ?? [],
+  };
+  return ensurePayments(next);
+}
+
+function ensurePayments(store: AppStore): AppStore {
+  if ((store.payments?.length || 0) > 0) {
+    return {
+      ...store,
+      orders: store.orders.map((order) => hydrateOrderFromPayment(order, store.payments, store.billplzBills)),
+      topUps: store.topUps.map((row) => hydrateTopUpFromPayment(row, store.billplzBills)),
+    };
+  }
+  const synthesized = synthesizePaymentsFromStore({ orders: store.orders, topUps: store.topUps });
+  if (synthesized.errors.length) {
+    console.error("[store] payment migrate errors", synthesized.errors);
+  }
+  return {
+    ...store,
+    orders: synthesized.orders.map((order) =>
+      hydrateOrderFromPayment(order, synthesized.payments, synthesized.billplzBills),
+    ),
+    topUps: synthesized.topUps.map((row) => hydrateTopUpFromPayment(row, synthesized.billplzBills)),
+    payments: synthesized.payments,
+    billplzBills: synthesized.billplzBills,
   };
 }
 
@@ -383,10 +431,35 @@ function backfillWalletTransactions(
   return next;
 }
 
-export function readStore(): AppStore {
+function persistableStore(store: AppStore): AppStore {
+  const taken = new Set<string>();
+  return ensurePayments({
+    ...store,
+    version: STORE_VERSION,
+    products: store.products.map(ensureProductDetail),
+    users: (store.users ?? []).map((user) => ensureCustomerReferral(user, taken)),
+    sessions: (store.sessions ?? []).map((session) => ({
+      tokenHash: session.tokenHash,
+      userId: session.userId,
+      expiresAt: session.expiresAt,
+    })),
+    orders: store.orders ?? [],
+    payments: store.payments ?? [],
+    billplzBills: store.billplzBills ?? [],
+    verifySecret: usesFileStore() ? store.verifySecret || generateVerifySecret() : "",
+    settings: normalizeSettings(store.settings),
+    referralPlan: normalizeReferralPlan(store.referralPlan),
+    commissionLedger: store.commissionLedger ?? [],
+    withdrawals: migrateWithdrawals(store.withdrawals ?? []),
+    walletTransactions: store.walletTransactions ?? [],
+    topUps: store.topUps ?? [],
+  });
+}
+
+function readFileStore(): AppStore {
   ensureDirs();
   if (!existsSync(STORE_PATH)) {
-    const seeded = seedStore();
+    const seeded = persistableStore(seedStore());
     writeFileSync(STORE_PATH, JSON.stringify(seeded, null, 2), "utf8");
     return rememberStore(seeded);
   }
@@ -400,7 +473,8 @@ export function readStore(): AppStore {
   if (
     parsed.version !== STORE_VERSION ||
     parsed.products?.some((item) => !item.detail) ||
-    missingSeededEnglish
+    missingSeededEnglish ||
+    !(parsed.payments && parsed.payments.length) && migrated.payments.length > 0
   ) {
     writeFileSync(STORE_PATH, JSON.stringify(migrated, null, 2), "utf8");
     return rememberStore(migrated);
@@ -408,32 +482,30 @@ export function readStore(): AppStore {
   return rememberStore(migrated, mtimeMs);
 }
 
-export function writeStore(store: AppStore) {
+export async function readStore(): Promise<AppStore> {
+  if (usesSupabaseStore()) {
+    const { loadAppStoreFromPg } = await import("@/lib/store-pg");
+    const store = persistableStore(await loadAppStoreFromPg());
+    return rememberStore(store);
+  }
+  return readFileStore();
+}
+
+export async function writeStore(store: AppStore) {
+  const next = persistableStore(store);
+  if (usesSupabaseStore()) {
+    const { persistAppStoreToPg } = await import("@/lib/store-pg");
+    await persistAppStoreToPg(next);
+    rememberStore(next);
+    return;
+  }
   ensureDirs();
-  const next: AppStore = {
-    ...store,
-    version: STORE_VERSION,
-    products: store.products.map(ensureProductDetail),
-    users: (() => {
-      const taken = new Set<string>();
-      return (store.users ?? []).map((user) => ensureCustomerReferral(user, taken));
-    })(),
-    sessions: store.sessions ?? [],
-    orders: store.orders ?? [],
-    verifySecret: store.verifySecret || generateVerifySecret(),
-    settings: normalizeSettings(store.settings),
-    referralPlan: normalizeReferralPlan(store.referralPlan),
-    commissionLedger: store.commissionLedger ?? [],
-    withdrawals: migrateWithdrawals(store.withdrawals ?? []),
-    walletTransactions: store.walletTransactions ?? [],
-    topUps: store.topUps ?? [],
-  };
   writeFileSync(STORE_PATH, JSON.stringify(next, null, 2), "utf8");
   rememberStore(next);
 }
 
-export function getCatalog() {
-  const store = readStore();
+export async function getCatalog() {
+  const store = await readStore();
   const products = store.products.map((product) => ({
     ...ensureProductDetail(product),
     href: product.href || `/product/${product.slug}`,
@@ -448,34 +520,34 @@ export function getCatalog() {
   };
 }
 
-export function getSettings() {
-  return normalizeSettings(readStore().settings);
+export async function getSettings() {
+  return normalizeSettings((await readStore()).settings);
 }
 
-export function getReferralPlan() {
-  return normalizeReferralPlan(readStore().referralPlan);
+export async function getReferralPlan() {
+  return normalizeReferralPlan((await readStore()).referralPlan);
 }
 
-export function updateReferralPlan(patch: Partial<ReferralPlan>) {
-  const store = readStore();
+export async function updateReferralPlan(patch: Partial<ReferralPlan>) {
+  const store = await readStore();
   store.referralPlan = normalizeReferralPlan({ ...store.referralPlan, ...patch, tiers: patch.tiers ?? store.referralPlan?.tiers });
-  writeStore(store);
+  await writeStore(store);
   return store.referralPlan;
 }
 
-export function updateSettings(patch: Partial<StoreSettings>) {
-  const store = readStore();
+export async function updateSettings(patch: Partial<StoreSettings>) {
+  const store = await readStore();
   store.settings = normalizeSettings({ ...store.settings, ...patch, fx: { ...store.settings?.fx, ...patch.fx } });
-  writeStore(store);
+  await writeStore(store);
   return store.settings;
 }
 
-export function getStoreProduct(slug: string) {
-  return getProductPage(slug).product;
+export async function getStoreProduct(slug: string) {
+  return (await getProductPage(slug)).product;
 }
 
-export function getProductPage(slug: string) {
-  const store = readStore();
+export async function getProductPage(slug: string) {
+  const store = await readStore();
   const raw = store.products.find((item) => item.slug === slug);
   return {
     product: raw
@@ -489,9 +561,9 @@ export function getProductPage(slug: string) {
   };
 }
 
-export function searchStoreProducts(query: string) {
+export async function searchStoreProducts(query: string) {
   const q = query.trim().toLowerCase();
-  const { products } = getCatalog();
+  const { products } = await getCatalog();
   if (!q) return products;
   return products.filter((item) =>
     [

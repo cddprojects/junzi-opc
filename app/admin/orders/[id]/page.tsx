@@ -17,7 +17,7 @@ export default async function AdminOrderDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const order = getOrderAdmin(id);
+  const order = await getOrderAdmin(id);
   if (!order) notFound();
   const locale = await getRequestLocale();
   const publicNo = publicOrderNo(order);

@@ -15,7 +15,7 @@ export async function GET() {
   } catch {
     return NextResponse.json({ error: "未登录" }, { status: 401 });
   }
-  return NextResponse.json(getCatalog().products);
+  return NextResponse.json((await getCatalog()).products);
 }
 
 export async function POST(request: Request) {
@@ -28,7 +28,7 @@ export async function POST(request: Request) {
   if (!body.title?.trim()) {
     return NextResponse.json({ error: "请填写标题" }, { status: 400 });
   }
-  const store = readStore();
+  const store = await readStore();
   const slug = slugify(body.slug || body.title);
   if (store.products.some((item) => item.slug === slug)) {
     return NextResponse.json({ error: "该 slug 已存在" }, { status: 400 });
@@ -57,7 +57,7 @@ export async function POST(request: Request) {
     detail: body.detail,
   });
   store.products.push(product);
-  writeStore(store);
+  await writeStore(store);
   revalidatePublic();
   return NextResponse.json(product);
 }

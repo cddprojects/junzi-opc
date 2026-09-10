@@ -9,5 +9,5 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "未登录" }, { status: 401 });
   }
   const q = new URL(request.url).searchParams.get("q") || "";
-  return NextResponse.json({ users: listCustomers(q) });
+  return NextResponse.json({ users: await listCustomers(q) });
 }

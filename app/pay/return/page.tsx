@@ -26,33 +26,36 @@ export default async function PayReturnPage({
 
   if (signed && bill.paid && bill.id) {
     try {
-      const result = fulfillBillplzPayment(bill.id, bill.paidAt);
-      if (result.kind === "topup" && result.topUp) {
+      const result = await fulfillBillplzPayment(bill.id, bill.paidAt, bill.amountSen);
+      if (result.kind === "amount_mismatch" || result.kind === "awaiting_amount") {
+        paid = false;
+        orderId = result.orders[0]?.id || "";
+      } else if (result.kind === "topup" && result.topUp) {
         topUpCredited = result.topUp.status === "credited";
         topUpSen = result.topUp.amountSen;
         paid = topUpCredited;
       } else {
         orderId = result.orders[0]?.id || "";
-        paid = result.orders.some((order) => isOrderPaid(order));
+        paid = result.orders.some((order) => isOrderPaid(order)) || result.kind === "already_paid";
       }
     } catch {
       paid = false;
     }
   } else if (bill.id) {
-    const existingTopUp = topUpByBillId(bill.id);
+    const existingTopUp = await topUpByBillId(bill.id);
     if (existingTopUp) {
       topUpCredited = existingTopUp.status === "credited";
       topUpSen = existingTopUp.amountSen;
       paid = topUpCredited;
     } else {
-      const existing = ordersByBillId(bill.id);
+      const existing = await ordersByBillId(bill.id);
       orderId = existing[0]?.id || "";
       paid = existing.some((order) => isOrderPaid(order));
     }
   }
 
   const user = await getCurrentUser();
-  const order = user && orderId ? orderForUser(user.id, orderId) : null;
+  const order = user && orderId ? await orderForUser(user.id, orderId) : null;
 
   return (
     <div className="mx-auto max-w-lg px-4 py-10">

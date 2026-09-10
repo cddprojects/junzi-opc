@@ -7,7 +7,9 @@ import { paidOrdersForUser } from "@/lib/user-store";
 export async function courseAccess(productSlug: string) {
   const admin = await isAdminRequest();
   const user = await getCurrentUser();
-  const owned = user ? paidOrdersForUser(user.id).some((order) => order.productSlug === productSlug) : false;
+  const owned = user
+    ? (await paidOrdersForUser(user.id)).some((order) => order.productSlug === productSlug)
+    : false;
   return {
     admin,
     user,

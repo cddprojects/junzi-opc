@@ -14,7 +14,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     currency?: string;
   } | null;
   try {
-    const orders = grantCourse(id, body?.productSlug || "", body?.currency || "CNY");
+    const orders = await grantCourse(id, body?.productSlug || "", body?.currency || "CNY");
     return NextResponse.json({ orders });
   } catch (error) {
     return NextResponse.json({ error: error instanceof Error ? error.message : "授权失败" }, { status: 400 });
@@ -30,7 +30,7 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
   const { id } = await params;
   const orderId = new URL(request.url).searchParams.get("orderId") || "";
   try {
-    revokeOrder(id, orderId);
+    await revokeOrder(id, orderId);
     return NextResponse.json({ ok: true });
   } catch (error) {
     return NextResponse.json({ error: error instanceof Error ? error.message : "撤销失败" }, { status: 400 });

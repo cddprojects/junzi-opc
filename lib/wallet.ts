@@ -37,6 +37,7 @@ export type TopUpRecord = {
   userId: string;
   amountSen: number;
   status: TopUpStatus;
+  paymentId?: string;
   billplzBillId?: string;
   billplzUrl?: string;
   createdAt: string;

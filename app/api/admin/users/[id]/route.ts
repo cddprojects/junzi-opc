@@ -15,7 +15,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     return NextResponse.json({ error: "未登录" }, { status: 401 });
   }
   const { id } = await params;
-  const user = getCustomerAdmin(id);
+  const user = await getCustomerAdmin(id);
   if (!user) return NextResponse.json({ error: "用户不存在" }, { status: 404 });
   return NextResponse.json({ user });
 }
@@ -37,18 +37,18 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     confirmReferrerChange?: boolean;
   } | null;
   try {
-    if (body?.status) setCustomerStatus(id, body.status);
-    if (body && ("memberUntil" in body)) setCustomerMembership(id, body.memberUntil);
+    if (body?.status) await setCustomerStatus(id, body.status);
+    if (body && ("memberUntil" in body)) await setCustomerMembership(id, body.memberUntil);
     if (body?.name || body?.email !== undefined || body?.phone !== undefined) {
-      updateCustomerProfile(id, { name: body.name, email: body.email, phone: body.phone });
+      await updateCustomerProfile(id, { name: body.name, email: body.email, phone: body.phone });
     }
     if (body && "referrerCode" in body) {
       if (!body.confirmReferrerChange) {
         return NextResponse.json({ error: "请确认：只影响未来订单" }, { status: 400 });
       }
-      setCustomerReferrer(id, body.referrerCode ?? null);
+      await setCustomerReferrer(id, body.referrerCode ?? null);
     }
-    const user = getCustomerAdmin(id);
+    const user = await getCustomerAdmin(id);
     return NextResponse.json({ user });
   } catch (error) {
     return NextResponse.json({ error: error instanceof Error ? error.message : "保存失败" }, { status: 400 });

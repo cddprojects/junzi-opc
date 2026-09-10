@@ -10,7 +10,7 @@ export default async function ProductPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const { product, video } = getProductPage(slug);
+  const { product, video } = await getProductPage(slug);
   if (!product) notFound();
   return <CourseDetailView product={product} video={video} />;
 }

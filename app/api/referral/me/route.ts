@@ -6,7 +6,7 @@ export async function GET() {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "请先登录" }, { status: 401 });
   try {
-    return NextResponse.json(getReferralDashboard(user.id));
+    return NextResponse.json(await getReferralDashboard(user.id));
   } catch (error) {
     return NextResponse.json({ error: error instanceof Error ? error.message : "操作失败" }, { status: 400 });
   }

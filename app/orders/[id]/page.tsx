@@ -24,9 +24,9 @@ export default async function OrderDetailPage({
   const { id } = await params;
   if (!user) redirect(`/login?next=${encodeURIComponent(`/orders/${id}`)}`);
 
-  const order = orderForUser(user.id, id);
+  const order = await orderForUser(user.id, id);
   if (!order) notFound();
-  const product = getStoreProduct(order.productSlug);
+  const product = await getStoreProduct(order.productSlug);
   const unit = { amount: order.price, currency: order.currency };
   const total = { amount: order.price * order.qty, currency: order.currency };
   const unitCny = order.priceCny ?? order.price;

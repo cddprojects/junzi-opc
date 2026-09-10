@@ -9,7 +9,7 @@ export async function GET() {
   } catch {
     return NextResponse.json({ error: "未登录" }, { status: 401 });
   }
-  return NextResponse.json(getReferralPlan());
+  return NextResponse.json(await getReferralPlan());
 }
 
 export async function PUT(request: Request) {
@@ -19,5 +19,5 @@ export async function PUT(request: Request) {
     return NextResponse.json({ error: "未登录" }, { status: 401 });
   }
   const body = (await request.json().catch(() => null)) as Partial<ReferralPlan> | null;
-  return NextResponse.json(updateReferralPlan(normalizeReferralPlan(body)));
+  return NextResponse.json(await updateReferralPlan(normalizeReferralPlan(body)));
 }

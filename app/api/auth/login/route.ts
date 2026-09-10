@@ -8,7 +8,7 @@ export async function POST(request: Request) {
     password?: string;
   } | null;
   try {
-    const result = loginCustomer(body?.account || "", body?.password || "");
+    const result = await loginCustomer(body?.account || "", body?.password || "");
     await setUserCookie(result.token);
     return NextResponse.json({ user: result.user });
   } catch (error) {

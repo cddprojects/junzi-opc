@@ -17,7 +17,7 @@ export async function PUT(
   }
   const { slug } = await params;
   const body = (await request.json()) as Partial<Product>;
-  const store = readStore();
+  const store = await readStore();
   const index = store.products.findIndex((item) => item.slug === slug);
   if (index < 0) return NextResponse.json({ error: "商品不存在" }, { status: 404 });
   const current = store.products[index];
@@ -57,7 +57,7 @@ export async function PUT(
         }
       : current.detail,
   });
-  writeStore(store);
+  await writeStore(store);
   releaseUnusedUploads(store, productMediaUrls(current));
   revalidatePath("/", "layout");
   revalidatePath("/courses/recorded");
@@ -75,10 +75,10 @@ export async function DELETE(
     return NextResponse.json({ error: "未登录" }, { status: 401 });
   }
   const { slug } = await params;
-  const store = readStore();
+  const store = await readStore();
   const previous = store.products.find((item) => item.slug === slug);
   store.products = store.products.filter((item) => item.slug !== slug);
-  writeStore(store);
+  await writeStore(store);
   if (previous) {
     releaseUnusedUploads(store, productMediaUrls(previous));
   }

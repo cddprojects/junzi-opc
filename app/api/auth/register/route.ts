@@ -10,7 +10,7 @@ export async function POST(request: Request) {
     referralCode?: string;
   } | null;
   try {
-    const result = registerCustomer({
+    const result = await registerCustomer({
       name: body?.name || "",
       account: body?.account || "",
       password: body?.password || "",

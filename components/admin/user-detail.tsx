@@ -12,7 +12,7 @@ import { useLocale } from "@/components/locale-provider";
 import { DownlineTree } from "@/components/admin/downline-tree";
 import { CommissionChain } from "@/components/admin/commission-chain";
 
-type AdminUser = NonNullable<ReturnType<typeof getCustomerAdmin>>;
+type AdminUser = NonNullable<Awaited<ReturnType<typeof getCustomerAdmin>>>;
 type Tab = "overview" | "orders" | "network" | "wallet" | "commission" | "withdrawal" | "security";
 
 export function AdminUserDetail({

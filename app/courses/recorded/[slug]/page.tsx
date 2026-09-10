@@ -18,7 +18,7 @@ export default async function RecordedCoursePage({
 }) {
   const locale = await getRequestLocale();
   const { slug } = await params;
-  const product = getStoreProduct(slug);
+  const product = await getStoreProduct(slug);
   if (!product?.detail?.lessons?.length) notFound();
   const access = await courseAccess(slug);
   const lessons = product.detail.lessons;

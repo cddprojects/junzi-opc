@@ -11,7 +11,7 @@ export async function GET() {
   } catch {
     return NextResponse.json({ error: "未登录" }, { status: 401 });
   }
-  return NextResponse.json(readStore().posters);
+  return NextResponse.json((await readStore()).posters);
 }
 
 export async function POST(request: Request) {
@@ -24,7 +24,7 @@ export async function POST(request: Request) {
   if (!body.title?.trim()) {
     return NextResponse.json({ error: "请填写标题" }, { status: 400 });
   }
-  const store = readStore();
+  const store = await readStore();
   const poster: Poster = {
     id: randomUUID(),
     title: body.title.trim(),
@@ -38,7 +38,7 @@ export async function POST(request: Request) {
     theme: body.theme || "qihang",
   };
   store.posters.push(poster);
-  writeStore(store);
+  await writeStore(store);
   revalidatePath("/", "layout");
   return NextResponse.json(poster);
 }

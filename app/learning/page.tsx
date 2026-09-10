@@ -23,12 +23,17 @@ export default async function LearningPage() {
       />
     );
   }
-  const orders = paidOrdersForUser(user.id);
+  const orders = await paidOrdersForUser(user.id);
   const bySlug = new Map<string, (typeof orders)[number]>();
   for (const order of orders) {
     if (!bySlug.has(order.productSlug)) bySlug.set(order.productSlug, order);
   }
   const items = [...bySlug.values()];
+  const products = new Map(
+    await Promise.all(
+      items.map(async (order) => [order.productSlug, await getStoreProduct(order.productSlug)] as const),
+    ),
+  );
 
   return (
     <div className="px-4 py-6 md:px-0">
@@ -44,7 +49,7 @@ export default async function LearningPage() {
       ) : (
         <div className="mt-4 space-y-3">
           {items.map((order) => {
-            const product = getStoreProduct(order.productSlug);
+            const product = products.get(order.productSlug);
             return (
               <article key={order.productSlug} className="flex gap-3 rounded-2xl bg-white p-3">
                 <Link href={product?.href || `/product/${order.productSlug}`} className="w-20 overflow-hidden rounded-md">

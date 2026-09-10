@@ -19,7 +19,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "请选择文件" }, { status: 400 });
     }
     console.info("[upload] legacy-single", { name: file.name, size: file.size, type: file.type });
-    const started = startChunkUpload({ filename: file.name, size: file.size, type: file.type });
+    const started = await startChunkUpload({ filename: file.name, size: file.size, type: file.type });
     const buf = Buffer.from(await file.arrayBuffer());
     const total = started.totalChunks;
     for (let i = 0; i < total; i += 1) {

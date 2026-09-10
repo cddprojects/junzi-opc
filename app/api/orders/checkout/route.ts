@@ -57,14 +57,14 @@ export async function POST(request: Request) {
 
   try {
     if (body?.payWith === "wallet") {
-      const orders = checkoutWithWallet(user.id, body?.items || [], body?.currency);
+      const orders = await checkoutWithWallet(user.id, body?.items || [], body?.currency);
       return NextResponse.json({
         mode: "wallet",
         orders: orders.map(publicOrder),
       });
     }
     if (isBillplzConfigured()) {
-      const pending = createPendingCheckout(user.id, body?.items || [], body?.currency);
+      const pending = await createPendingCheckout(user.id, body?.items || [], body?.currency);
       const origin = appBaseUrl(request);
       try {
         const bill = await createBillplzBill({
@@ -79,7 +79,7 @@ export async function POST(request: Request) {
           redirectUrl: `${origin}/pay/return?checkout=${encodeURIComponent(pending.checkoutId)}`,
           reference: pending.checkoutId,
         });
-        const orders = attachBillToCheckout(pending.checkoutId, bill);
+        const orders = await attachBillToCheckout(pending.checkoutId, bill);
         return NextResponse.json({
           mode: "billplz",
           redirectUrl: bill.url,
@@ -93,13 +93,13 @@ export async function POST(request: Request) {
           orders: orders.map(publicOrder),
         });
       } catch (error) {
-        deleteCheckout(pending.checkoutId);
+        await deleteCheckout(pending.checkoutId);
         throw error;
       }
     }
 
     if (allowDemoPay()) {
-      const orders = checkoutOrders(user.id, body?.items || [], body?.currency, "demo");
+      const orders = await checkoutOrders(user.id, body?.items || [], body?.currency, "demo");
       return NextResponse.json({
         mode: "demo",
         orders: orders.map(publicOrder),

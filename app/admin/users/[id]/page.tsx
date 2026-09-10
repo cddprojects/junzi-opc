@@ -11,8 +11,8 @@ export default async function AdminUserPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const user = getCustomerAdmin(id);
+  const user = await getCustomerAdmin(id);
   if (!user) notFound();
-  const { products } = getCatalog();
+  const { products } = await getCatalog();
   return <AdminUserDetail user={user} products={products} />;
 }

@@ -11,7 +11,7 @@ export async function GET() {
   } catch {
     return NextResponse.json({ error: "未登录" }, { status: 401 });
   }
-  return NextResponse.json(readStore().videos);
+  return NextResponse.json((await readStore()).videos);
 }
 
 export async function POST(request: Request) {
@@ -24,7 +24,7 @@ export async function POST(request: Request) {
   if (!body.title?.trim()) {
     return NextResponse.json({ error: "请填写标题" }, { status: 400 });
   }
-  const store = readStore();
+  const store = await readStore();
   const video: CatalogVideo = {
     id: randomUUID(),
     title: body.title.trim(),
@@ -36,7 +36,7 @@ export async function POST(request: Request) {
     placement: body.placement || "library",
   };
   store.videos.push(video);
-  writeStore(store);
+  await writeStore(store);
   revalidatePath("/", "layout");
   return NextResponse.json(video);
 }

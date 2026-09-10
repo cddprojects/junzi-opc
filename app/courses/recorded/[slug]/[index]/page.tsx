@@ -17,7 +17,7 @@ export default async function LessonPlayerPage({
 }) {
   const locale = await getRequestLocale();
   const { slug, index } = await params;
-  const product = getStoreProduct(slug);
+  const product = await getStoreProduct(slug);
   if (!product?.detail?.lessons?.length) notFound();
   const n = Number(index);
   const lesson = product.detail.lessons.find((item, i) => (item.index || i + 1) === n);

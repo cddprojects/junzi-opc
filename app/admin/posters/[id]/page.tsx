@@ -10,7 +10,7 @@ export default async function EditPosterPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const poster = getCatalog().posters.find((item) => item.id === id);
+  const poster = (await getCatalog()).posters.find((item) => item.id === id);
   if (!poster) notFound();
   return (
     <div>

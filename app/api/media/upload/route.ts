@@ -34,7 +34,7 @@ export async function POST(request: Request) {
         size?: number;
         type?: string;
       } | null;
-      const started = startChunkUpload({
+      const started = await startChunkUpload({
         filename: body?.filename || "",
         size: Number(body?.size || 0),
         type: body?.type || "",

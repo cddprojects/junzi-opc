@@ -1,4 +1,5 @@
 import { isOrderPaid, type Order } from "@/lib/account";
+import { computeLegacyOrderNo } from "@/lib/order-no";
 
 export const ORDER_TABS = [
   { id: "all", label: "全部" },
@@ -26,14 +27,9 @@ export function formatOrderTime(iso: string) {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
-export function displayOrderNo(order: Pick<Order, "id" | "createdAt">) {
-  const date = new Date(order.createdAt);
-  const pad = (value: number) => String(value).padStart(2, "0");
-  const stamp = Number.isNaN(date.getTime())
-    ? "000000000000"
-    : `${date.getFullYear()}${pad(date.getMonth() + 1)}${pad(date.getDate())}${pad(date.getHours())}${pad(date.getMinutes())}`;
-  const tail = order.id.replace(/^ord_/, "").replace(/-/g, "").slice(-6).toUpperCase();
-  return `GO${stamp}${tail}`;
+export function displayOrderNo(order: Pick<Order, "id" | "createdAt"> & { orderNo?: string }) {
+  if (order.orderNo) return order.orderNo;
+  return computeLegacyOrderNo(order);
 }
 
 /** Hand-named fixture in local store data (chk_refverify / bill_refverify). Not created by checkout. */

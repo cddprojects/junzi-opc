@@ -12,7 +12,7 @@ export default async function SearchPage({
 }) {
   const locale = await getRequestLocale();
   const { q = "" } = await searchParams;
-  const results = searchStoreProducts(q);
+  const results = await searchStoreProducts(q);
 
   return (
     <div className="bg-[#f6f2ea] md:bg-transparent">

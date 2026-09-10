@@ -33,7 +33,9 @@ export type PublicCustomer = {
 };
 
 export type UserSession = {
-  token: string;
+  /** Raw bearer — only present immediately after issue; never persist to Postgres. */
+  token?: string;
+  tokenHash: string;
   userId: string;
   expiresAt: string;
 };
@@ -43,6 +45,8 @@ export type PayMethod = "billplz" | "demo" | "grant" | "wallet";
 
 export type Order = {
   id: string;
+  /** Persisted public GO number. Display reads this; do not recompute after insert. */
+  orderNo?: string;
   userId: string;
   productSlug: string;
   productTitle: string;
@@ -56,6 +60,7 @@ export type Order = {
   paidAt?: string;
   payMethod?: PayMethod;
   checkoutId?: string;
+  paymentId?: string;
   billplzBillId?: string;
   billplzUrl?: string;
   amountMyr?: number;

@@ -20,8 +20,8 @@ export async function POST(request: Request) {
       ? { bank: String(body.bank || "").trim(), holder: String(body.holder || "").trim(), account: String(body.account || "").trim() }
       : undefined;
   try {
-    requestWithdrawal(user.id, amountSen, payout);
-    return NextResponse.json(getReferralDashboard(user.id));
+    await requestWithdrawal(user.id, amountSen, payout);
+    return NextResponse.json(await getReferralDashboard(user.id));
   } catch (error) {
     return NextResponse.json({ error: error instanceof Error ? error.message : "操作失败" }, { status: 400 });
   }

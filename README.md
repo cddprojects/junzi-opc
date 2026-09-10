@@ -8,6 +8,20 @@
 
 推荐分销：注册可选填推荐码（填了就锁定推荐人）。每位学员自动获得推荐码。好友用该码注册后，**已支付订单**（Billplz / 演示支付 / 后台授权）按实收令吉自动计提佣金。默认三级按比例 **10% / 5% / 2%**，每级也可改成固定令吉（不超过该单实收，并受可选单笔上限约束）。未付款不计佣。学员端只看到这 3 级；后台族谱可看完整上下级，第 4 级及更上不计佣。压缩默认关闭。佣金进余额，提现由后台人工结算，不会即时打到银行。后台「补计提」只补当时未跑计佣的旧单，不会重复发放。
 
+## 数据存储
+
+本地开发（非 Vercel、未配置完整 Supabase 环境变量）仍可使用 `data/store.json` + `data/uploads/`。
+
+**Vercel / 生产环境必须使用 Supabase**，禁止把业务数据写到 Vercel 文件系统或 `/tmp`：
+
+| 用途 | 位置 |
+| --- | --- |
+| 用户、订单、支付、佣金、钱包 | Supabase PostgreSQL（见 `supabase/migrations/`） |
+| 图片 / 视频 | Supabase Storage bucket `uploads`（库里仍存 `/uploads/文件名`） |
+| `VERIFY_SECRET` | 仅环境变量，不进数据库 |
+
+首次迁移：在 Supabase SQL 编辑器执行迁移文件，创建公开 bucket `uploads`，在本机（有 `data/store.json` 的机器）运行 `npm run import:supabase`。导入脚本**不会删除** `store.json`。步骤见 [`docs/supabase-setup.md`](docs/supabase-setup.md)。
+
 ## 本地运行
 
 需要 Node.js 18 或更新版本。

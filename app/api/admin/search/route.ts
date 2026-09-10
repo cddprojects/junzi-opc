@@ -15,9 +15,9 @@ export async function GET(request: Request) {
   const q = new URL(request.url).searchParams.get("q")?.trim().toLowerCase() || "";
   if (!q) return NextResponse.json({ items: [] });
 
-  const { products } = getCatalog();
-  const users = listCustomers();
-  const orders = listAllOrders();
+  const { products } = await getCatalog();
+  const users = await listCustomers();
+  const orders = await listAllOrders();
   const items: { href: string; title: string; hint: string }[] = [];
 
   for (const product of products) {

@@ -22,13 +22,15 @@ const serif = Noto_Serif_SC({
   display: "swap",
 });
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "君子小雅OPC",
   description: "君子小雅OPC研习社公开浏览站：一人公司课程、会员与操作指南。",
 };
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
-  const settings = getSettings();
+  const settings = await getSettings();
   const jar = await cookies();
   const locale = parseLocale(jar.get(LOCALE_COOKIE)?.value);
   const cookie = jar.get(CURRENCY_COOKIE)?.value;

@@ -49,7 +49,7 @@ export function isBillplzConfigured() {
 }
 
 export function appBaseUrl(request?: Request) {
-  const fromEnv = runtimeEnv("NEXT_PUBLIC_APP_URL").replace(/\/$/, "");
+  const fromEnv = (runtimeEnv("NEXT_PUBLIC_SITE_URL") || runtimeEnv("NEXT_PUBLIC_APP_URL")).replace(/\/$/, "");
   if (fromEnv) return fromEnv;
   if (request) {
     const host = request.headers.get("x-forwarded-host") || request.headers.get("host");
@@ -134,7 +134,9 @@ export function readRedirectBill(search: Record<string, string | string[] | unde
   const id = flat["billplz[id]"] || flat.billplzid || flat.id || "";
   const paid = /^(true|1)$/i.test(flat["billplz[paid]"] || flat.billplzpaid || flat.paid || "");
   const paidAt = flat["billplz[paid_at]"] || flat.billplzpaid_at || flat.paid_at || "";
-  return { id, paid, paidAt, params: flat };
+  const amountRaw = flat["billplz[amount]"] || flat.billplzamount || flat.amount || "";
+  const amountSen = amountRaw !== "" && Number.isFinite(Number(amountRaw)) ? Math.round(Number(amountRaw)) : null;
+  return { id, paid, paidAt, amountSen, params: flat };
 }
 
 export function formToParams(body: string) {

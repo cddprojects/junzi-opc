@@ -12,14 +12,14 @@ export const dynamic = "force-dynamic";
 
 export default async function AdminHomePage() {
   const locale = await getRequestLocale();
-  const { products, posters, videos } = getCatalog();
-  const users = listCustomers();
-  const orders = listAllOrders();
+  const { products, posters, videos } = await getCatalog();
+  const users = await listCustomers();
+  const orders = await listAllOrders();
   const billplzReady = isBillplzConfigured();
   const paid = orders.filter(isOrderPaid);
   const pending = orders.length - paid.length;
   const myr = paid.reduce((sum, order) => sum + (order.amountMyr ?? 0), 0);
-  const commission = listCommissionDesk();
+  const commission = await listCommissionDesk();
 
   return (
     <div>

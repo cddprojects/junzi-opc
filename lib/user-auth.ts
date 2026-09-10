@@ -4,7 +4,7 @@ import { customerFromToken, revokeSession } from "@/lib/user-store";
 
 export async function getCurrentUser() {
   const jar = await cookies();
-  return customerFromToken(jar.get(USER_COOKIE)?.value);
+  return await customerFromToken(jar.get(USER_COOKIE)?.value);
 }
 
 export async function requireUser() {
@@ -26,6 +26,6 @@ export async function setUserCookie(token: string) {
 export async function clearUserCookie() {
   const jar = await cookies();
   const token = jar.get(USER_COOKIE)?.value;
-  revokeSession(token);
+  await revokeSession(token);
   jar.set(USER_COOKIE, "", { httpOnly: true, sameSite: "lax", path: "/", maxAge: 0 });
 }

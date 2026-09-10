@@ -16,8 +16,8 @@ export const dynamic = "force-dynamic";
 
 export default async function AdminLedgerPage() {
   const locale = await getRequestLocale();
-  const desk = listCommissionDesk();
-  const ordersById = new Map(listAllOrders().map((order) => [order.id, order]));
+  const desk = await listCommissionDesk();
+  const ordersById = new Map((await listAllOrders()).map((order) => [order.id, order]));
   const earns = desk.earnings.filter(
     (row) => row.kind === "earn" && (!row.tier || row.tier <= MAX_COMMISSION_LEVELS),
   );

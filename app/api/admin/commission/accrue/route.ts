@@ -14,8 +14,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "缺少订单" }, { status: 400 });
   }
   try {
-    accrueCommissionForOrder(orderId);
-    return NextResponse.json(listCommissionDesk());
+    await accrueCommissionForOrder(orderId);
+    return NextResponse.json(await listCommissionDesk());
   } catch (error) {
     return NextResponse.json({ error: error instanceof Error ? error.message : "计提失败" }, { status: 400 });
   }

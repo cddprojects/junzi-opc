@@ -10,8 +10,8 @@ const PLACES = {
   library: "首页视频区",
 };
 
-export default function AdminVideosPage() {
-  const { videos } = getCatalog();
+export default async function AdminVideosPage() {
+  const { videos } = await getCatalog();
   return (
     <div>
       <div className="flex flex-wrap items-end justify-between gap-3">

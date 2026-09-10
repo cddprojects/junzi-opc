@@ -8,8 +8,8 @@ const PLACES = {
   "home-banner": "首页横幅",
 };
 
-export default function AdminPostersPage() {
-  const { posters } = getCatalog();
+export default async function AdminPostersPage() {
+  const { posters } = await getCatalog();
   return (
     <div>
       <div className="flex flex-wrap items-end justify-between gap-3">

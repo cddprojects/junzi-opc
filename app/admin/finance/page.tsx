@@ -8,8 +8,8 @@ export const dynamic = "force-dynamic";
 
 export default async function AdminFinancePage() {
   const locale = await getRequestLocale();
-  const desk = listCommissionDesk();
-  const users = listCustomers();
+  const desk = await listCommissionDesk();
+  const users = await listCustomers();
 
   return (
     <div>

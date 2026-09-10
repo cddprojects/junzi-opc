@@ -3,6 +3,7 @@ import "server-only";
 import { existsSync, readdirSync, unlinkSync } from "fs";
 import path from "path";
 import { type AppStore, UPLOAD_DIR } from "@/lib/store";
+import { usesFileStore } from "@/lib/runtime-store";
 import type { Product } from "@/lib/data";
 
 export function productMediaUrls(product?: Product | null) {
@@ -40,14 +41,16 @@ export function collectUploadRefs(store: AppStore) {
 }
 
 export function releaseUnusedUploads(store: AppStore, previousUrls: (string | undefined | null)[]) {
+  if (!usesFileStore()) return;
   const used = collectUploadRefs(store);
   for (const url of previousUrls) {
     const name = localUploadName(url);
     if (!name || used.has(name)) continue;
     const full = path.join(UPLOAD_DIR, name);
-    if (!existsSync(full)) continue;
-    unlinkSync(full);
-    console.info("[upload] deleted unused", name);
+    if (existsSync(full)) {
+      unlinkSync(full);
+      console.info("[upload] deleted unused", name);
+    }
   }
 }
 

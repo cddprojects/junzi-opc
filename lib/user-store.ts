@@ -18,11 +18,14 @@ import {
 import {
   checkPassword,
   codesMatch,
-  generateVerifySecret,
   hashPassword,
   makeVerifyCode,
   newId,
 } from "@/lib/security";
+import { computeLegacyOrderNo } from "@/lib/order-no";
+import { paymentKindForPayMethod, type Payment } from "@/lib/payments";
+import { requireVerifySecret } from "@/lib/runtime-store";
+import { hashSessionToken } from "@/lib/session-token";
 import { ensureCustomerReferral, getSettings, getStoreProduct, readStore, writeStore } from "@/lib/store";
 import { fromCny, parseCurrency } from "@/lib/currency";
 import {
@@ -42,6 +45,7 @@ import {
 } from "@/lib/referral";
 import {
   applyAdminAdjust,
+  asSen,
   applyApproveWithdrawal,
   applyCommissionEarnTx,
   applyCreditTopUp,
@@ -57,29 +61,30 @@ import {
   type WithdrawalPayout,
 } from "@/lib/wallet";
 
-export function verifySecret() {
-  return process.env.VERIFY_SECRET || readStore().verifySecret;
+export async function verifySecret() {
+  const store = await readStore();
+  return requireVerifySecret(store.verifySecret);
 }
 
-export function findCustomerById(id: string) {
-  return readStore().users.find((user) => user.id === id);
+export async function findCustomerById(id: string) {
+  return (await readStore()).users.find((user) => user.id === id);
 }
 
-export function findCustomerByAccount(account: string) {
+export async function findCustomerByAccount(account: string) {
   let parsed: { email?: string; phone?: string };
   try {
     parsed = parseAccount(account);
   } catch {
     return undefined;
   }
-  const { users } = readStore();
+  const { users } = await readStore();
   return users.find(
     (user) =>
       (parsed.email && user.email === parsed.email) || (parsed.phone && user.phone === parsed.phone),
   );
 }
 
-export function registerCustomer(input: {
+export async function registerCustomer(input: {
   name: string;
   account: string;
   password: string;
@@ -90,7 +95,7 @@ export function registerCustomer(input: {
   if (input.password.length < 6) throw new Error("密码至少 6 位");
   const account = parseAccount(input.account);
   if (!account.email && !account.phone) throw new Error("请填写邮箱或手机号");
-  const store = readStore();
+  const store = await readStore();
   if (
     store.users.some(
       (user) =>
@@ -133,56 +138,60 @@ export function registerCustomer(input: {
   store.users.push(user);
   const session = createSessionRecord(user.id);
   store.sessions.push(session);
-  writeStore(store);
+  await writeStore(store);
   return { user: publicCustomer(user), token: session.token };
 }
 
-export function loginCustomer(account: string, password: string) {
-  const user = findCustomerByAccount(account);
+export async function loginCustomer(account: string, password: string) {
+  const user = await findCustomerByAccount(account);
   if (!user || !checkPassword(password, user.passwordSalt, user.passwordHash)) {
     throw new Error("账号或密码不正确");
   }
   if (user.status === "disabled") {
     throw new Error("账号已被停用");
   }
-  const store = readStore();
+  const store = await readStore();
   const session = createSessionRecord(user.id);
   store.sessions = store.sessions.filter((item) => item.userId !== user.id || Date.parse(item.expiresAt) > Date.now());
   store.sessions.push(session);
-  writeStore(store);
+  await writeStore(store);
   return { user: publicCustomer(user), token: session.token };
 }
 
-function createSessionRecord(userId: string): UserSession {
+function createSessionRecord(userId: string): UserSession & { token: string } {
+  const token = newId("ses").replace("ses_", "") + newId("x").slice(2);
   return {
-    token: newId("ses").replace("ses_", "") + newId("x").slice(2),
+    token,
+    tokenHash: hashSessionToken(token),
     userId,
     expiresAt: sessionExpiry(),
   };
 }
 
-export function customerFromToken(token?: string | null): PublicCustomer | null {
+export async function customerFromToken(token?: string | null): Promise<PublicCustomer | null> {
   if (!token) return null;
-  const store = readStore();
-  const session = store.sessions.find((item) => item.token === token);
+  const store = await readStore();
+  const tokenHash = hashSessionToken(token);
+  const session = store.sessions.find((item) => item.tokenHash === tokenHash || item.token === token);
   if (!session || Date.parse(session.expiresAt) <= Date.now()) return null;
   const user = store.users.find((item) => item.id === session.userId);
   if (!user || user.status === "disabled") return null;
   return publicCustomer(user);
 }
 
-export function revokeSession(token?: string | null) {
+export async function revokeSession(token?: string | null) {
   if (!token) return;
-  const store = readStore();
-  store.sessions = store.sessions.filter((item) => item.token !== token);
-  writeStore(store);
+  const store = await readStore();
+  const tokenHash = hashSessionToken(token);
+  store.sessions = store.sessions.filter((item) => item.tokenHash !== tokenHash && item.token !== token);
+  await writeStore(store);
 }
 
-export function updateCustomerProfile(
+export async function updateCustomerProfile(
   userId: string,
   patch: { name?: string; email?: string; phone?: string },
 ) {
-  const store = readStore();
+  const store = await readStore();
   const index = store.users.findIndex((user) => user.id === userId);
   if (index < 0) throw new Error("用户不存在");
   const current = store.users[index];
@@ -207,11 +216,11 @@ export function updateCustomerProfile(
     throw new Error("该邮箱或手机号已被使用");
   }
   store.users[index] = { ...current, name, email, phone };
-  writeStore(store);
+  await writeStore(store);
   return publicCustomer(store.users[index]);
 }
 
-function resolveCheckoutItem(item: CheckoutItem) {
+async function resolveCheckoutItem(item: CheckoutItem) {
   if (item.slug === membership.slug) {
     return {
       slug: membership.slug,
@@ -219,26 +228,29 @@ function resolveCheckoutItem(item: CheckoutItem) {
       price: membership.campPrice,
     };
   }
-  const product = getStoreProduct(item.slug);
+  const product = await getStoreProduct(item.slug);
   if (!product) throw new Error(`商品不存在：${item.slug}`);
   return { slug: product.slug, title: product.title, price: product.price };
 }
 
-function buildPendingOrder(
+async function buildPendingOrder(
   userId: string,
   raw: CheckoutItem,
   currency: ReturnType<typeof parseCurrency>,
-  fx: ReturnType<typeof getSettings>["fx"],
+  fx: Awaited<ReturnType<typeof getSettings>>["fx"],
   checkoutId: string,
-): Order {
-  const item = resolveCheckoutItem(raw);
+  paymentId: string,
+): Promise<Order> {
+  const item = await resolveCheckoutItem(raw);
   const qty = Math.max(1, Number(raw.qty || 1));
   const priceCny = item.price;
   const price = fromCny(priceCny, currency, fx);
   const amountMyr = fromCny(priceCny * qty, "MYR", fx);
   const amountSen = Math.round(amountMyr * 100);
-  return {
-    id: newId("ord"),
+  const createdAt = new Date().toISOString();
+  const id = newId("ord");
+  const order: Order = {
+    id,
     userId,
     productSlug: item.slug,
     productTitle: item.title,
@@ -246,18 +258,20 @@ function buildPendingOrder(
     priceCny,
     currency,
     qty,
-    createdAt: new Date().toISOString(),
+    createdAt,
     status: "pending",
     checkoutId,
+    paymentId,
     amountMyr,
     amountSen,
   };
+  order.orderNo = computeLegacyOrderNo(order);
+  return order;
 }
 
-function fulfillOrderInStore(store: ReturnType<typeof readStore>, order: Order, payMethod: PayMethod, paidAt?: string) {
+function fulfillOrderInStore(store: Awaited<ReturnType<typeof readStore>>, order: Order, payMethod: PayMethod, paidAt?: string) {
   if (isOrderPaid(order) && order.verifyCode) return false;
-  const secret = process.env.VERIFY_SECRET || store.verifySecret || generateVerifySecret();
-  if (!store.verifySecret) store.verifySecret = secret;
+  const secret = requireVerifySecret(store.verifySecret);
   const user = store.users.find((item) => item.id === order.userId);
   const alreadyPaid = isOrderPaid(order);
   order.status = "paid";
@@ -293,7 +307,7 @@ function fulfillOrderInStore(store: ReturnType<typeof readStore>, order: Order, 
 }
 
 function creditReferralInStore(
-  store: ReturnType<typeof readStore>,
+  store: Awaited<ReturnType<typeof readStore>>,
   order: Order,
   accruedBy: "billplz" | "admin" | "demo" = "billplz",
 ) {
@@ -350,45 +364,60 @@ function creditReferralInStore(
   }
 }
 
-export function checkoutOrders(
+export async function checkoutOrders(
   userId: string,
   items: CheckoutItem[],
   currencyInput?: string,
   payMethod: PayMethod = "demo",
 ) {
   if (!items.length) throw new Error("没有可结算的商品");
-  const store = readStore();
+  const store = await readStore();
   const user = store.users.find((item) => item.id === userId);
   if (!user) throw new Error("请先登录");
   if (user.status === "disabled") throw new Error("账号已被停用");
-  const settings = getSettings();
+  const settings = await getSettings();
   const currency = parseCurrency(currencyInput, settings.defaultCurrency);
   const checkoutId = newId("chk");
+  const paymentId = newId("pay");
   const created: Order[] = [];
   for (const raw of items) {
-    const order = buildPendingOrder(userId, raw, currency, settings.fx, checkoutId);
+    const order = await buildPendingOrder(userId, raw, currency, settings.fx, checkoutId, paymentId);
     order.payMethod = payMethod;
     fulfillOrderInStore(store, order, payMethod);
     created.push(order);
     store.orders.push(order);
   }
-  writeStore(store);
+  const { kind, provider } = paymentKindForPayMethod(payMethod);
+  const totalSen = created.reduce((sum, order) => sum + (order.amountSen || 0), 0);
+  store.payments.push({
+    id: paymentId,
+    userId,
+    kind,
+    provider,
+    status: "paid",
+    amountSen: totalSen,
+    checkoutId,
+    createdAt: created[0]?.createdAt || new Date().toISOString(),
+    paidAt: created[0]?.paidAt || new Date().toISOString(),
+  });
+  await writeStore(store);
   return created;
 }
 
-export function createPendingCheckout(userId: string, items: CheckoutItem[], currencyInput?: string) {
+export async function createPendingCheckout(userId: string, items: CheckoutItem[], currencyInput?: string) {
   if (!items.length) throw new Error("没有可结算的商品");
-  const store = readStore();
+  const store = await readStore();
   const user = store.users.find((item) => item.id === userId);
   if (!user) throw new Error("请先登录");
   if (user.status === "disabled") throw new Error("账号已被停用");
   if (!user.email?.trim()) throw new Error("请先在个人资料填写邮箱后再付款");
-  const settings = getSettings();
+  const settings = await getSettings();
   const currency = parseCurrency(currencyInput, settings.defaultCurrency);
   const checkoutId = newId("chk");
+  const paymentId = newId("pay");
   const created: Order[] = [];
   for (const raw of items) {
-    const order = buildPendingOrder(userId, raw, currency, settings.fx, checkoutId);
+    const order = await buildPendingOrder(userId, raw, currency, settings.fx, checkoutId, paymentId);
     order.payMethod = "billplz";
     created.push(order);
     store.orders.push(order);
@@ -396,12 +425,23 @@ export function createPendingCheckout(userId: string, items: CheckoutItem[], cur
   const totalSen = created.reduce((sum, order) => sum + (order.amountSen || 0), 0);
   if (totalSen < 1) {
     store.orders = store.orders.filter((order) => !created.some((item) => item.id === order.id));
-    writeStore(store);
+    await writeStore(store);
     throw new Error("收款金额无效");
   }
-  writeStore(store);
+  store.payments.push({
+    id: paymentId,
+    userId,
+    kind: "order_cart",
+    provider: "billplz",
+    status: "pending",
+    amountSen: totalSen,
+    checkoutId,
+    createdAt: created[0].createdAt,
+  });
+  await writeStore(store);
   return {
     checkoutId,
+    paymentId,
     orders: created,
     user,
     totalSen,
@@ -409,62 +449,79 @@ export function createPendingCheckout(userId: string, items: CheckoutItem[], cur
   };
 }
 
-export function attachBillToCheckout(
+export async function attachBillToCheckout(
   checkoutId: string,
   bill: { id: string; url: string },
 ) {
-  const store = readStore();
+  const store = await readStore();
+  const payment = store.payments.find((item) => item.checkoutId === checkoutId);
   const targets = store.orders.filter((order) => order.checkoutId === checkoutId);
-  if (!targets.length) throw new Error("订单不存在");
+  if (!targets.length || !payment) throw new Error("订单不存在");
+  if (store.billplzBills.some((row) => row.paymentId === payment.id)) {
+    throw new Error("该支付已绑定 Billplz 账单");
+  }
+  store.billplzBills.push({
+    id: bill.id,
+    paymentId: payment.id,
+    url: bill.url,
+    amountSen: payment.amountSen,
+    status: "created",
+    createdAt: new Date().toISOString(),
+  });
   for (const order of targets) {
     order.billplzBillId = bill.id;
     order.billplzUrl = bill.url;
+    order.paymentId = payment.id;
   }
-  writeStore(store);
+  await writeStore(store);
   return targets;
 }
 
-export function deleteCheckout(checkoutId: string) {
-  const store = readStore();
+export async function deleteCheckout(checkoutId: string) {
+  const store = await readStore();
+  const payment = store.payments.find((item) => item.checkoutId === checkoutId);
+  if (payment?.status === "paid") return;
   store.orders = store.orders.filter((order) => order.checkoutId !== checkoutId);
-  writeStore(store);
-}
-
-export function fulfillOrdersByBillId(billId: string, paidAt?: string) {
-  const store = readStore();
-  const targets = store.orders.filter((order) => order.billplzBillId === billId);
-  if (!targets.length) throw new Error("订单不存在");
-  let changed = false;
-  for (const order of targets) {
-    if (fulfillOrderInStore(store, order, "billplz", paidAt)) changed = true;
+  if (payment && payment.status === "pending") {
+    payment.status = "cancelled";
+    payment.cancelledAt = new Date().toISOString();
+    const bill = store.billplzBills.find((row) => row.paymentId === payment.id);
+    if (bill && bill.status === "created") bill.status = "failed";
   }
-  if (changed) writeStore(store);
-  return targets;
+  await writeStore(store);
 }
 
-export function paidOrdersForUser(userId: string) {
-  return ordersForUser(userId).filter((order) => isOrderPaid(order));
+export async function fulfillOrdersByBillId(billId: string, paidAt?: string) {
+  const result = await fulfillBillplzPayment(billId, paidAt, null);
+  return result.orders;
 }
 
-export function ordersForUser(userId: string) {
-  return readStore()
+export async function paidOrdersForUser(userId: string) {
+  return (await ordersForUser(userId)).filter((order) => isOrderPaid(order));
+}
+
+export async function ordersForUser(userId: string) {
+  return (await readStore())
     .orders.filter((order) => order.userId === userId)
     .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
 }
 
-export function orderForUser(userId: string, orderId: string) {
-  return readStore().orders.find((order) => order.id === orderId && order.userId === userId);
+export async function orderForUser(userId: string, orderId: string) {
+  return (await readStore()).orders.find((order) => order.id === orderId && order.userId === userId);
 }
 
-export function ordersByBillId(billId: string) {
-  return readStore().orders.filter((order) => order.billplzBillId === billId);
+export async function ordersByBillId(billId: string) {
+  const store = await readStore();
+  const bill = store.billplzBills.find((item) => item.id === billId);
+  if (bill) return store.orders.filter((order) => order.paymentId === bill.paymentId);
+  return store.orders.filter((order) => order.billplzBillId === billId);
 }
 
-export function lookupVerifyCode(code: string) {
+export async function lookupVerifyCode(code: string) {
   const normalized = normalizeCode(code);
   if (normalized.length < 8) return null;
-  const store = readStore();
-  const secret = process.env.VERIFY_SECRET || store.verifySecret;
+  const store = await readStore();
+  const secret = requireVerifySecret(store.verifySecret);
   const order = store.orders.find(
     (item) => item.verifyCode && isOrderPaid(item) && codesMatch(item.verifyCode, normalized),
   );
@@ -479,8 +536,8 @@ export function lookupVerifyCode(code: string) {
   return { order, user };
 }
 
-export function listAllOrders() {
-  const store = readStore();
+export async function listAllOrders() {
+  const store = await readStore();
   return [...store.orders]
     .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt))
     .map((order) => {
@@ -504,8 +561,8 @@ export function listAllOrders() {
     });
 }
 
-export function listCustomers(query = "") {
-  const store = readStore();
+export async function listCustomers(query = "") {
+  const store = await readStore();
   const q = query.trim().toLowerCase();
   return store.users
     .filter((user) => {
@@ -540,8 +597,8 @@ export function listCustomers(query = "") {
     .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
 }
 
-export function getCustomerAdmin(userId: string) {
-  const store = readStore();
+export async function getCustomerAdmin(userId: string) {
+  const store = await readStore();
   const user = store.users.find((item) => item.id === userId);
   if (!user) return null;
   const plan = normalizeReferralPlan(store.referralPlan);
@@ -573,17 +630,17 @@ export function getCustomerAdmin(userId: string) {
       .filter((row) => row.userId === user.id)
       .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt)),
     plan,
-    orders: ordersForUser(userId),
+    orders: await ordersForUser(userId),
   };
 }
 
-export function setCustomerReferrer(userId: string, referralCode: string | null) {
-  const store = readStore();
+export async function setCustomerReferrer(userId: string, referralCode: string | null) {
+  const store = await readStore();
   const user = store.users.find((item) => item.id === userId);
   if (!user) throw new Error("用户不存在");
   if (!referralCode || !normalizeReferralCode(referralCode)) {
     user.referrerId = undefined;
-    writeStore(store);
+    await writeStore(store);
     return publicCustomer(user);
   }
   const referrer = findCustomerByReferralCode(store.users, referralCode);
@@ -591,12 +648,12 @@ export function setCustomerReferrer(userId: string, referralCode: string | null)
   if (referrer.id === user.id) throw new Error("不能填写自己的推荐码");
   if (wouldCreateReferralCycle(store.users, user.id, referrer.id)) throw new Error("推荐关系会形成循环");
   user.referrerId = referrer.id;
-  writeStore(store);
+  await writeStore(store);
   return publicCustomer(user);
 }
 
-export function getReferralDashboard(userId: string) {
-  const store = readStore();
+export async function getReferralDashboard(userId: string) {
+  const store = await readStore();
   const user = store.users.find((item) => item.id === userId);
   if (!user) throw new Error("请先登录");
   const plan = normalizeReferralPlan(store.referralPlan);
@@ -638,19 +695,19 @@ export function getReferralDashboard(userId: string) {
   };
 }
 
-export function requestWithdrawal(userId: string, amountSen: number, payout?: WithdrawalPayout) {
-  const store = readStore();
+export async function requestWithdrawal(userId: string, amountSen: number, payout?: WithdrawalPayout) {
+  const store = await readStore();
   store.walletTransactions ||= [];
   store.topUps ||= [];
   const user = store.users.find((item) => item.id === userId);
   if (!user) throw new Error("请先登录");
   const row = applyRequestWithdrawal(store, { userId, amountSen, payout, newId });
-  writeStore(store);
+  await writeStore(store);
   return row;
 }
 
-export function listCommissionDesk() {
-  const store = readStore();
+export async function listCommissionDesk() {
+  const store = await readStore();
   const usersById = new Map(store.users.map((user) => [user.id, user]));
   const ordersById = new Map(store.orders.map((order) => [order.id, order]));
   const earnings = [...store.commissionLedger]
@@ -728,16 +785,16 @@ export function listCommissionDesk() {
   };
 }
 
-export function settleWithdrawal(id: string, action: "settle" | "reject" | "approve" | "pay", note?: string) {
-  const store = readStore();
+export async function settleWithdrawal(id: string, action: "settle" | "reject" | "approve" | "pay", note?: string) {
+  const store = await readStore();
   if (action === "reject") {
     const row = applyRejectWithdrawal(store, { id, note, newId });
-    writeStore(store);
+    await writeStore(store);
     return row;
   }
   if (action === "approve") {
     const row = applyApproveWithdrawal(store, id);
-    writeStore(store);
+    await writeStore(store);
     return row;
   }
   const row = applyPayWithdrawal(store, { id, note, newId });
@@ -755,12 +812,12 @@ export function settleWithdrawal(id: string, action: "settle" | "reject" | "appr
       note: `withdrawal:${row.id}`,
     });
   }
-  writeStore(store);
+  await writeStore(store);
   return row;
 }
 
-export function getWalletDashboard(userId: string) {
-  const store = readStore();
+export async function getWalletDashboard(userId: string) {
+  const store = await readStore();
   const user = store.users.find((item) => item.id === userId);
   if (!user) throw new Error("请先登录");
   const wallet = computeWalletBuckets(user, store.withdrawals);
@@ -781,80 +838,207 @@ export function getWalletDashboard(userId: string) {
   };
 }
 
-export function createPendingTopUp(userId: string, amountSen: number) {
-  const store = readStore();
+export async function createPendingTopUp(userId: string, amountSen: number) {
+  const store = await readStore();
   const user = store.users.find((item) => item.id === userId);
   if (!user) throw new Error("请先登录");
   if (user.status === "disabled") throw new Error("账号已被停用");
   if (!user.email?.trim()) throw new Error("请先在个人资料填写邮箱后再付款");
   const amount = asNonNegSen(amountSen);
   if (amount < 100) throw new Error("充值金额无效");
+  const paymentId = newId("pay");
   const row: TopUpRecord = {
     id: newId("tup"),
     userId,
+    paymentId,
     amountSen: amount,
     status: "pending",
     createdAt: new Date().toISOString(),
   };
+  store.payments.push({
+    id: paymentId,
+    userId,
+    kind: "topup",
+    provider: "billplz",
+    status: "pending",
+    amountSen: amount,
+    createdAt: row.createdAt,
+  });
   store.topUps.push(row);
-  writeStore(store);
+  await writeStore(store);
   return { topUp: row, user };
 }
 
-export function attachBillToTopUp(topUpId: string, bill: { id: string; url: string }) {
-  const store = readStore();
+export async function attachBillToTopUp(topUpId: string, bill: { id: string; url: string }) {
+  const store = await readStore();
   const row = store.topUps.find((item) => item.id === topUpId);
   if (!row) throw new Error("充值单不存在");
+  const payment = store.payments.find((item) => item.id === row.paymentId);
+  if (!payment) throw new Error("充值支付单不存在");
+  if (store.billplzBills.some((item) => item.paymentId === payment.id)) {
+    throw new Error("该支付已绑定 Billplz 账单");
+  }
   row.billplzBillId = bill.id;
   row.billplzUrl = bill.url;
-  writeStore(store);
+  store.billplzBills.push({
+    id: bill.id,
+    paymentId: payment.id,
+    url: bill.url,
+    amountSen: payment.amountSen,
+    status: "created",
+    createdAt: new Date().toISOString(),
+  });
+  await writeStore(store);
   return row;
 }
 
-export function deletePendingTopUp(topUpId: string) {
-  const store = readStore();
+export async function deletePendingTopUp(topUpId: string) {
+  const store = await readStore();
   store.topUps = store.topUps.filter((row) => row.id !== topUpId || row.status === "credited");
-  writeStore(store);
+  await writeStore(store);
 }
 
-export function creditTopUpByBillId(billId: string, reportedAmountSen?: number | null, paidAt?: string) {
-  const store = readStore();
-  const row = store.topUps.find((item) => item.billplzBillId === billId);
-  if (!row) return null;
-  applyCreditTopUp(store, {
-    topUpId: row.id,
-    reportedAmountSen,
-    paidAt,
-    newId,
-  });
-  writeStore(store);
-  return store.topUps.find((item) => item.id === row.id) || row;
+export async function creditTopUpByBillId(billId: string, reportedAmountSen?: number | null, paidAt?: string) {
+  const result = await fulfillBillplzPayment(billId, paidAt, reportedAmountSen);
+  return result.kind === "topup" ? result.topUp : null;
 }
 
-export function topUpByBillId(billId: string) {
-  return readStore().topUps.find((item) => item.billplzBillId === billId);
+export async function topUpByBillId(billId: string) {
+  const store = await readStore();
+  const bill = store.billplzBills.find((item) => item.id === billId);
+  if (bill) return store.topUps.find((item) => item.paymentId === bill.paymentId);
+  return store.topUps.find((item) => item.billplzBillId === billId);
 }
 
-export function fulfillBillplzPayment(billId: string, paidAt?: string, reportedAmountSen?: number | null) {
-  const credited = creditTopUpByBillId(billId, reportedAmountSen, paidAt);
-  if (credited) return { kind: "topup" as const, topUp: credited, orders: [] };
-  const orders = fulfillOrdersByBillId(billId, paidAt);
-  return { kind: "order" as const, topUp: null, orders };
+export type FulfillBillplzResult = {
+  kind: "topup" | "order" | "amount_mismatch" | "already_paid" | "ignored" | "awaiting_amount";
+  topUp: TopUpRecord | null;
+  orders: Order[];
+  payment?: Payment;
+};
+
+function persistAmountMismatch(
+  store: Awaited<ReturnType<typeof readStore>>,
+  payment: Payment,
+  billId: string,
+  expected: number,
+  received: number | null,
+) {
+  const now = new Date().toISOString();
+  payment.status = "amount_mismatch";
+  payment.expectedAmountSen = expected;
+  payment.receivedAmountSen = received;
+  payment.mismatchBillplzBillId = billId;
+  payment.callbackReceivedAt = now;
 }
 
-export function checkoutWithWallet(userId: string, items: CheckoutItem[], currencyInput?: string) {
+export async function fulfillBillplzPayment(
+  billId: string,
+  paidAt?: string,
+  reportedAmountSen?: number | null,
+): Promise<FulfillBillplzResult> {
+  const store = await readStore();
+  const bill = store.billplzBills.find((item) => item.id === billId);
+  const payment = bill
+    ? store.payments.find((item) => item.id === bill.paymentId)
+    : store.payments.find((item) =>
+        store.orders.some((order) => order.billplzBillId === billId && order.paymentId === item.id),
+      ) || store.topUps.find((row) => row.billplzBillId === billId)?.paymentId
+      ? store.payments.find(
+          (item) => item.id === store.topUps.find((row) => row.billplzBillId === billId)?.paymentId,
+        )
+      : undefined;
+
+  if (!payment) {
+    throw new Error("订单不存在");
+  }
+  if (bill) bill.lastCallbackAt = new Date().toISOString();
+
+  const relatedOrders = store.orders.filter((order) => order.paymentId === payment.id);
+  const relatedTopUp = store.topUps.find((row) => row.paymentId === payment.id);
+
+  if (payment.status === "paid") {
+    await writeStore(store);
+    return {
+      kind: "already_paid",
+      topUp: relatedTopUp || null,
+      orders: relatedOrders,
+      payment,
+    };
+  }
+  if (payment.status === "cancelled" || payment.status === "failed") {
+    await writeStore(store);
+    return { kind: "ignored", topUp: relatedTopUp || null, orders: relatedOrders, payment };
+  }
+
+  if (reportedAmountSen == null) {
+    await writeStore(store);
+    return { kind: "awaiting_amount", topUp: relatedTopUp || null, orders: relatedOrders, payment };
+  }
+
+  const expected = asSen(payment.amountSen);
+  const received = asSen(reportedAmountSen);
+  if (received !== expected) {
+    persistAmountMismatch(store, payment, billId, expected, received);
+    await writeStore(store);
+    return { kind: "amount_mismatch", topUp: relatedTopUp || null, orders: relatedOrders, payment };
+  }
+
+  if (payment.status === "amount_mismatch") {
+    payment.status = "pending";
+  }
+
+  if (payment.kind === "topup") {
+    if (!relatedTopUp) throw new Error("充值单不存在");
+    applyCreditTopUp(store, {
+      topUpId: relatedTopUp.id,
+      reportedAmountSen: received,
+      paidAt,
+      newId,
+    });
+    payment.status = "paid";
+    payment.paidAt = paidAt || new Date().toISOString();
+    if (bill) {
+      bill.status = "paid";
+      bill.paidAt = payment.paidAt;
+    }
+    await writeStore(store);
+    return {
+      kind: "topup",
+      topUp: store.topUps.find((item) => item.id === relatedTopUp.id) || relatedTopUp,
+      orders: [],
+      payment,
+    };
+  }
+
+  if (!relatedOrders.length) throw new Error("订单不存在");
+  for (const order of relatedOrders) {
+    fulfillOrderInStore(store, order, "billplz", paidAt);
+  }
+  payment.status = "paid";
+  payment.paidAt = paidAt || new Date().toISOString();
+  if (bill) {
+    bill.status = "paid";
+    bill.paidAt = payment.paidAt;
+  }
+  await writeStore(store);
+  return { kind: "order", topUp: null, orders: relatedOrders, payment };
+}
+
+export async function checkoutWithWallet(userId: string, items: CheckoutItem[], currencyInput?: string) {
   if (!items.length) throw new Error("没有可结算的商品");
-  const store = readStore();
+  const store = await readStore();
   const user = store.users.find((item) => item.id === userId);
   if (!user) throw new Error("请先登录");
   if (user.status === "disabled") throw new Error("账号已被停用");
-  const settings = getSettings();
+  const settings = await getSettings();
   const currency = parseCurrency(currencyInput, settings.defaultCurrency);
   const checkoutId = newId("chk");
+  const paymentId = newId("pay");
   const created: Order[] = [];
   let totalSen = 0;
   for (const raw of items) {
-    const order = buildPendingOrder(userId, raw, currency, settings.fx, checkoutId);
+    const order = await buildPendingOrder(userId, raw, currency, settings.fx, checkoutId, paymentId);
     order.payMethod = "wallet";
     created.push(order);
     totalSen += order.amountSen || 0;
@@ -870,15 +1054,26 @@ export function checkoutWithWallet(userId: string, items: CheckoutItem[], curren
     fulfillOrderInStore(store, order, "wallet");
     store.orders.push(order);
   }
-  writeStore(store);
+  store.payments.push({
+    id: paymentId,
+    userId,
+    kind: "wallet_cart",
+    provider: "wallet",
+    status: "paid",
+    amountSen: totalSen,
+    checkoutId,
+    createdAt: created[0]?.createdAt || new Date().toISOString(),
+    paidAt: new Date().toISOString(),
+  });
+  await writeStore(store);
   return created;
 }
 
-export function adjustUserWallet(
+export async function adjustUserWallet(
   userId: string,
   input: { bucket: WalletBucket; amountSen: number; reason: string },
 ) {
-  const store = readStore();
+  const store = await readStore();
   const wallet = applyAdminAdjust(store, { ...input, userId, newId });
   if (input.bucket === "commission") {
     store.commissionLedger.push({
@@ -891,12 +1086,12 @@ export function adjustUserWallet(
       note: input.reason,
     });
   }
-  writeStore(store);
+  await writeStore(store);
   return wallet;
 }
 
-export function listReferralNetwork(rootId?: string) {
-  const store = readStore();
+export async function listReferralNetwork(rootId?: string) {
+  const store = await readStore();
   const roots = rootId
     ? store.users.filter((user) => user.id === rootId)
     : store.users.filter((user) => !user.referrerId);
@@ -919,8 +1114,8 @@ export function listReferralNetwork(rootId?: string) {
   };
 }
 
-export function getOrderAdmin(orderId: string) {
-  const store = readStore();
+export async function getOrderAdmin(orderId: string) {
+  const store = await readStore();
   const order = store.orders.find((item) => item.id === orderId);
   if (!order) return null;
   const buyer = store.users.find((item) => item.id === order.userId);
@@ -934,54 +1129,54 @@ export function getOrderAdmin(orderId: string) {
   };
 }
 
-export function setCustomerStatus(userId: string, status: "active" | "disabled") {
-  const store = readStore();
+export async function setCustomerStatus(userId: string, status: "active" | "disabled") {
+  const store = await readStore();
   const user = store.users.find((item) => item.id === userId);
   if (!user) throw new Error("用户不存在");
   user.status = status;
   if (status === "disabled") {
     store.sessions = store.sessions.filter((session) => session.userId !== userId);
   }
-  writeStore(store);
+  await writeStore(store);
   return publicCustomer(user);
 }
 
-export function resetCustomerPassword(userId: string, password: string) {
+export async function resetCustomerPassword(userId: string, password: string) {
   if (password.length < 6) throw new Error("密码至少 6 位");
-  const store = readStore();
+  const store = await readStore();
   const user = store.users.find((item) => item.id === userId);
   if (!user) throw new Error("用户不存在");
   const { salt, hash } = hashPassword(password);
   user.passwordSalt = salt;
   user.passwordHash = hash;
   store.sessions = store.sessions.filter((session) => session.userId !== userId);
-  writeStore(store);
+  await writeStore(store);
   return { ok: true };
 }
 
-export function setCustomerMembership(userId: string, memberUntil?: string | null) {
-  const store = readStore();
+export async function setCustomerMembership(userId: string, memberUntil?: string | null) {
+  const store = await readStore();
   const user = store.users.find((item) => item.id === userId);
   if (!user) throw new Error("用户不存在");
   user.memberUntil = memberUntil || undefined;
-  writeStore(store);
+  await writeStore(store);
   return publicCustomer(user);
 }
 
-export function grantCourse(userId: string, productSlug: string, currencyInput?: string) {
+export async function grantCourse(userId: string, productSlug: string, currencyInput?: string) {
   const item =
     productSlug === membership.slug
       ? { slug: membership.slug, title: membership.title, price: membership.campPrice, qty: 1 }
-      : (() => {
-          const product = getStoreProduct(productSlug);
+      : await (async () => {
+          const product = await getStoreProduct(productSlug);
           if (!product) throw new Error("课程不存在");
           return { slug: product.slug, title: product.title, price: product.price, qty: 1 };
         })();
   return checkoutOrders(userId, [item], currencyInput, "grant");
 }
 
-export function accrueCommissionForOrder(orderId: string) {
-  const store = readStore();
+export async function accrueCommissionForOrder(orderId: string) {
+  const store = await readStore();
   const order = store.orders.find((item) => item.id === orderId);
   if (!order) throw new Error("订单不存在");
   if (!isOrderPaid(order)) throw new Error("订单未支付，不能计提");
@@ -994,15 +1189,23 @@ export function accrueCommissionForOrder(orderId: string) {
   const source =
     order.payMethod === "billplz" ? "billplz" : order.payMethod === "demo" ? "demo" : "admin";
   creditReferralInStore(store, order, source);
-  writeStore(store);
+  await writeStore(store);
   return order;
 }
 
-export function revokeOrder(userId: string, orderId: string) {
-  const store = readStore();
+export async function revokeOrder(userId: string, orderId: string) {
+  const store = await readStore();
   const order = store.orders.find((item) => item.id === orderId && item.userId === userId);
   if (!order) throw new Error("订单不存在");
   store.orders = store.orders.filter((item) => item.id !== orderId);
+  if (order.paymentId) {
+    const payment = store.payments.find((item) => item.id === order.paymentId);
+    const remaining = store.orders.filter((item) => item.paymentId === order.paymentId);
+    if (payment && payment.status !== "paid" && remaining.length === 0) {
+      payment.status = "cancelled";
+      payment.cancelledAt = new Date().toISOString();
+    }
+  }
   if (order.productSlug === membership.slug) {
     const user = store.users.find((item) => item.id === userId);
     const stillMember = store.orders.some(
@@ -1010,7 +1213,7 @@ export function revokeOrder(userId: string, orderId: string) {
     );
     if (user && !stillMember) user.memberUntil = undefined;
   }
-  writeStore(store);
+  await writeStore(store);
   return { ok: true };
 }
 

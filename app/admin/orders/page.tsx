@@ -5,9 +5,9 @@ import { AdminOrdersTable } from "@/components/admin/orders-table";
 
 export const dynamic = "force-dynamic";
 
-export default function AdminOrdersPage() {
-  const orders = listAllOrders();
-  const users = listCustomers();
+export default async function AdminOrdersPage() {
+  const orders = await listAllOrders();
+  const users = await listCustomers();
 
   return (
     <div>

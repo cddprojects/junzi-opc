@@ -28,7 +28,7 @@ export default async function AdminUsersPage({
 }) {
   const locale = await getRequestLocale();
   const { q = "" } = await searchParams;
-  const users = listCustomers(q);
+  const users = await listCustomers(q);
 
   return (
     <div>

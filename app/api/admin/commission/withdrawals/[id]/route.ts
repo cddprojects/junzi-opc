@@ -18,8 +18,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       ? body.action
       : "settle";
   try {
-    settleWithdrawal(id, action, body?.note);
-    return NextResponse.json(listCommissionDesk());
+    await settleWithdrawal(id, action, body?.note);
+    return NextResponse.json(await listCommissionDesk());
   } catch (error) {
     return NextResponse.json({ error: error instanceof Error ? error.message : "操作失败" }, { status: 400 });
   }

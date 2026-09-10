@@ -20,7 +20,7 @@ export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
   const locale = await getRequestLocale();
-  const { products, posters, videos } = getCatalog();
+  const { products, posters, videos } = await getCatalog();
   const joinProducts = products.filter((item) => item.categoryId === "opc");
   const carousel = posters.filter((item) => item.placement === "home-carousel");
   const homeBanners = posters.filter((item) => item.placement === "home-banner");

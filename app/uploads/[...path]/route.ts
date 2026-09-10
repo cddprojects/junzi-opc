@@ -2,6 +2,8 @@ import { existsSync, readFileSync } from "fs";
 import path from "path";
 import { NextResponse } from "next/server";
 import { UPLOAD_DIR } from "@/lib/store";
+import { usesSupabaseStore } from "@/lib/runtime-store";
+import { storagePublicObjectUrl } from "@/lib/supabase-admin";
 
 const TYPES: Record<string, string> = {
   ".jpg": "image/jpeg",
@@ -23,6 +25,9 @@ export async function GET(
   const file = path.normalize(segments.join("/"));
   if (file.includes("..") || file.startsWith(".") || file.includes("/.")) {
     return NextResponse.json({ error: "无效路径" }, { status: 400 });
+  }
+  if (usesSupabaseStore()) {
+    return NextResponse.redirect(storagePublicObjectUrl(file), 302);
   }
   const full = path.join(UPLOAD_DIR, file);
   if (!full.startsWith(UPLOAD_DIR) || !existsSync(full)) {

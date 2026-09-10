@@ -16,12 +16,12 @@ export async function POST(request: Request) {
   } | null;
   try {
     if (!body?.userId) throw new Error("用户不存在");
-    adjustUserWallet(body.userId, {
+    await adjustUserWallet(body.userId, {
       bucket: body.bucket === "topup" ? "topup" : "commission",
       amountSen: Number(body.amountSen || 0),
       reason: String(body.reason || ""),
     });
-    return NextResponse.json({ user: getCustomerAdmin(body.userId) });
+    return NextResponse.json({ user: await getCustomerAdmin(body.userId) });
   } catch (error) {
     return NextResponse.json({ error: error instanceof Error ? error.message : "操作失败" }, { status: 400 });
   }
