@@ -14,13 +14,13 @@ export default async function RecordedCoursesPage() {
   const courses = recordedProducts(products);
 
   return (
-    <div className="px-3 py-4 md:px-0">
-      <h1 className="font-serif text-[24px]">{t(locale, "recordedTitle")}</h1>
-      <p className="mt-2 text-[13px] text-[#777]">{t(locale, "recordedHint")}</p>
+    <div className="px-4 py-8 md:px-0">
+      <h1 className="front-h2 font-serif">{t(locale, "recordedTitle")}</h1>
+      <p className="mt-3 text-[15px] text-[var(--front-text-soft)]">{t(locale, "recordedHint")}</p>
       {courses.length === 0 ? (
-        <p className="mt-8 text-center text-[14px] text-[#888]">{t(locale, "recordedEmpty")}</p>
+        <p className="mt-10 text-center text-[15px] text-[var(--front-text-muted)]">{t(locale, "recordedEmpty")}</p>
       ) : (
-        <div className="mt-4 flex flex-col gap-3 md:grid md:grid-cols-2">
+        <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {courses.map((product) => {
             const count = product.detail?.lessons.length || 0;
             return (
@@ -28,12 +28,12 @@ export default async function RecordedCoursesPage() {
                 key={product.slug}
                 href={`/courses/recorded/${product.slug}`}
                 prefetch
-                className="overflow-hidden rounded-xl bg-white shadow-sm transition duration-150 hover:-translate-y-0.5 hover:shadow-md active:opacity-70"
+                className="front-card overflow-hidden transition duration-150 hover:shadow-md active:opacity-70"
               >
                 <CoverArt theme={product.cover} image={product.coverImage} showVideoBadge />
-                <div className="px-4 py-3">
-                  <h2 className="font-serif text-[16px] font-medium">{locProductTitle(product, locale)}</h2>
-                  <p className="mt-1 text-[12px] text-[#888]">
+                <div className="px-5 py-4">
+                  <h2 className="front-h3 font-serif">{locProductTitle(product, locale)}</h2>
+                  <p className="mt-2 text-[13px] text-[var(--front-text-muted)]">
                     {t(locale, "recordedMeta", { n: count, sales: product.sales || 0 })}
                   </p>
                 </div>

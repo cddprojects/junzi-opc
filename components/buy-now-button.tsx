@@ -25,7 +25,7 @@ export function BuyNowButton({
       disabled={loading}
       onClick={() => openPay(product)}
       className={cn(
-        "relative z-20 inline-flex cursor-pointer items-center justify-center rounded-lg bg-[#8a5a20] text-[15px] font-medium text-white transition hover:bg-[#6f4818] active:opacity-80 disabled:cursor-not-allowed disabled:opacity-60",
+        "front-btn-primary relative z-20 cursor-pointer disabled:cursor-not-allowed disabled:opacity-60",
         className,
       )}
     >

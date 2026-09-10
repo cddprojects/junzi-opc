@@ -55,24 +55,24 @@ export default function ProfilePage() {
   }
 
   return (
-    <form onSubmit={onSubmit} className="mx-auto max-w-md space-y-4 px-4 py-6 md:px-0">
-      <div className="rounded-2xl bg-white p-5">
-        <h1 className="font-serif text-[22px]">{t("profileTitle")}</h1>
-        <label className="mt-4 block text-[13px]">
+    <form onSubmit={onSubmit} className="mx-auto max-w-md space-y-4 px-4 py-10 md:px-0">
+      <div className="front-card p-6 md:p-8">
+        <h1 className="front-h2 font-serif">{t("profileTitle")}</h1>
+        <label className="mt-5 block text-[14px] text-[var(--front-text-soft)]">
           {t("authName")}
-          <Input name="name" required defaultValue={user.name} className="mt-1 h-10" />
+          <Input name="name" required defaultValue={user.name} className="mt-1.5 h-12" />
         </label>
-        <label className="mt-3 block text-[13px]">
+        <label className="mt-4 block text-[14px] text-[var(--front-text-soft)]">
           {t("profileEmail")}
-          <Input name="email" defaultValue={user.email || ""} className="mt-1 h-10" />
+          <Input name="email" defaultValue={user.email || ""} className="mt-1.5 h-12" />
         </label>
-        <label className="mt-3 block text-[13px]">
+        <label className="mt-4 block text-[14px] text-[var(--front-text-soft)]">
           {t("profilePhone")}
-          <Input name="phone" defaultValue={user.phone || ""} className="mt-1 h-10" />
+          <Input name="phone" defaultValue={user.phone || ""} className="mt-1.5 h-12" />
         </label>
-        {error && <p className="mt-3 text-[13px] text-[#fa3534]">{error}</p>}
-        {saved && <p className="mt-3 text-[13px] text-[#2f7d4a]">{t("saved")}</p>}
-        <Button type="submit" disabled={busy} className="mt-4 h-10 w-full bg-[#8a5a20] text-white hover:bg-[#6f4818]">
+        {error && <p className="mt-3 text-[14px] text-[var(--front-accent)]">{error}</p>}
+        {saved && <p className="mt-3 text-[14px] text-[#2f7d4a]">{t("saved")}</p>}
+        <Button type="submit" disabled={busy} className="front-btn-primary mt-5 h-12 w-full border-0 hover:bg-[var(--front-accent-hover)]">
           {busy ? t("saving") : t("save")}
         </Button>
       </div>

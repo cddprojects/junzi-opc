@@ -175,11 +175,11 @@ export function CheckoutClient({
         : t("payConfirmBody");
 
   return (
-    <div className="mx-auto max-w-md px-4 py-8 md:px-0">
+    <div className="mx-auto max-w-md px-4 py-10 md:px-0">
       {busy ? <PayBusyOverlay title={t("connectingPay")} cancelLabel={t("cancelPay")} onCancel={cancelPay} /> : null}
-      <div className="rounded-xl bg-white p-5 shadow-sm">
-        <h1 className="font-serif text-[22px] text-[#3a2c10]">{title}</h1>
-        <p className="mt-2 text-[13px] leading-6 text-[#666]">{body}</p>
+      <div className="front-card p-6 md:p-8">
+        <h1 className="front-h2 font-serif">{title}</h1>
+        <p className="mt-3 text-[15px] leading-7 text-[var(--front-text-soft)]">{body}</p>
         {items.length > 0 ? (
           <ul className="mt-4 space-y-2 text-[14px] text-[#333]">
             {items.map((item) => (
@@ -213,13 +213,13 @@ export function CheckoutClient({
                   product ? `/product/${product.slug}` : member ? "/member" : "/checkout",
                   "/checkout",
                 )}
-                className="block rounded-md bg-[#8a5a20] py-2.5 text-center text-[14px] text-white"
+                className="front-btn-primary"
               >
                 {t("goLogin")}
               </Link>
               <Link
                 href={`/register?next=${encodeURIComponent(safeReturnPath(product ? `/product/${product.slug}` : "/checkout", "/checkout"))}`}
-                className="block rounded-md bg-[#f3ead8] py-2.5 text-center text-[14px] text-[#8a5a20]"
+                className="front-btn-secondary"
               >
                 {t("registerAccount")}
               </Link>
@@ -231,7 +231,7 @@ export function CheckoutClient({
                 type="button"
                 disabled={busy || loading || !items.length || Math.round(chargeMyr * 100) > topUpSen}
                 onClick={() => confirmPay("wallet")}
-                className="rounded-md border border-[#8a5a20] bg-[#f7efe3] py-2.5 text-[14px] text-[#8a5a20] disabled:opacity-60"
+                className="front-btn-secondary disabled:opacity-60"
               >
                 {t("payWithWallet")}
               </button>
@@ -241,7 +241,7 @@ export function CheckoutClient({
               type="button"
               disabled={busy || loading || !items.length || (payConfig != null && !canPay)}
               onClick={() => confirmPay()}
-              className="rounded-md bg-[#fa3534] py-2.5 text-[14px] text-white disabled:opacity-60"
+              className="front-btn-primary disabled:opacity-60"
             >
               {payConfig?.billplz
                 ? busy
@@ -256,11 +256,11 @@ export function CheckoutClient({
             </>
           )}
           {product ? (
-            <Link href={`/product/${product.slug}`} className="py-2 text-center text-[13px] text-[#8a5a20]">
+            <Link href={`/product/${product.slug}`} className="py-2 text-center text-[14px] text-[var(--front-accent)]">
               {t("back")}
             </Link>
           ) : (
-            <Link href="/cart" className="py-2 text-center text-[13px] text-[#8a5a20]">
+            <Link href="/cart" className="py-2 text-center text-[14px] text-[var(--front-accent)]">
               {t("cart")}
             </Link>
           )}

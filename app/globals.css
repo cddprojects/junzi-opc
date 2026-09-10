@@ -197,10 +197,27 @@
 }
 
 .storefront {
+  --front-bg: #f7f3ea;
+  --front-surface: #fffdfa;
+  --front-surface-soft: #f3ecdf;
+  --front-text: #1b1d1f;
+  --front-text-soft: #6f675d;
+  --front-text-muted: #918779;
+  --front-accent: #a84636;
+  --front-accent-hover: #913a2d;
+  --front-border: #e7ddcd;
+  --front-border-strong: #d9ccb8;
+  --front-radius-sm: 10px;
+  --front-radius-md: 14px;
+  --front-radius-lg: 18px;
+  --front-content-max: 1200px;
+  --front-shadow: 0 12px 36px rgb(27 29 31 / 6%);
   font-family: "Noto Sans SC", var(--font-noto-sans), -apple-system, BlinkMacSystemFont, "PingFang SC",
     "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
-  font-size: 14px;
-  line-height: 1.55;
+  font-size: 16px;
+  line-height: 1.65;
+  color: var(--front-text);
+  background: var(--front-bg);
 }
 
 .storefront h1,
@@ -209,8 +226,164 @@
 .storefront .font-serif,
 .storefront .font-heading,
 .storefront .opc-section-title,
-.storefront .opc-price {
+.storefront .opc-price,
+.storefront .front-price {
   font-family: "Noto Serif SC", var(--font-noto-serif), "Songti SC", "STSong", serif;
+}
+
+.storefront .front-wrap {
+  width: 100%;
+  max-width: var(--front-content-max);
+  margin-inline: auto;
+}
+
+.storefront .front-section {
+  padding: 48px 20px;
+}
+
+.storefront .front-section-tight {
+  padding: 28px 20px;
+}
+
+@media (min-width: 768px) {
+  .storefront .front-section {
+    padding: 88px 0;
+  }
+  .storefront .front-section-tight {
+    padding: 40px 0;
+  }
+}
+
+.storefront .front-section-band {
+  background: var(--front-surface);
+}
+
+.storefront .front-h1 {
+  font-size: 34px;
+  line-height: 1.15;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--front-text);
+}
+
+.storefront .front-h2 {
+  font-size: 28px;
+  line-height: 1.25;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--front-text);
+}
+
+.storefront .front-h3 {
+  font-size: 18px;
+  line-height: 1.35;
+  font-weight: 600;
+  color: var(--front-text);
+}
+
+@media (min-width: 768px) {
+  .storefront .front-h1 {
+    font-size: 54px;
+  }
+  .storefront .front-h2 {
+    font-size: 34px;
+  }
+  .storefront .front-h3 {
+    font-size: 21px;
+  }
+}
+
+.storefront .front-card {
+  border-radius: var(--front-radius-md);
+  background: var(--front-surface);
+  border: 1px solid var(--front-border);
+  box-shadow: var(--front-shadow);
+}
+
+.storefront .front-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 46px;
+  padding: 0 22px;
+  border-radius: var(--front-radius-sm);
+  background: var(--front-accent);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 500;
+  transition: background 160ms ease;
+}
+
+.storefront .front-btn-primary:hover {
+  background: var(--front-accent-hover);
+}
+
+.storefront .front-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 46px;
+  padding: 0 22px;
+  border-radius: var(--front-radius-sm);
+  background: var(--front-surface-soft);
+  color: var(--front-accent);
+  border: 1px solid var(--front-border);
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.storefront .front-input,
+.storefront [data-slot="input"] {
+  min-height: 46px;
+  border-radius: var(--front-radius-sm);
+  border-color: var(--front-border);
+  background: var(--front-surface);
+}
+
+.storefront .front-price,
+.storefront .opc-price {
+  color: var(--front-accent);
+}
+
+.storefront .front-tab {
+  position: relative;
+  padding: 10px 2px;
+  color: var(--front-text-muted);
+}
+
+.storefront .front-tab.is-active {
+  color: var(--front-accent);
+  font-weight: 500;
+}
+
+.storefront .front-tab.is-active::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background: var(--front-accent);
+}
+
+.storefront .opc-section-title {
+  color: var(--front-text);
+}
+
+.storefront .opc-btn-brown {
+  background: var(--front-accent);
+}
+
+.storefront .opc-btn-beige {
+  background: var(--front-surface-soft);
+  color: var(--front-accent);
+}
+
+.storefront .opc-card {
+  border-radius: var(--front-radius-md);
+  background: var(--front-surface);
+  border: 1px solid var(--front-border);
+  box-shadow: var(--front-shadow);
 }
 
 .toaster {

@@ -53,28 +53,28 @@ export function CourseDetailView({
       : video;
 
   return (
-    <div className="bg-[#f6f2ea] pb-4 md:bg-transparent">
-      <div className="md:grid md:grid-cols-[1.15fr_0.85fr] md:items-start md:gap-6">
-        <div className="overflow-hidden md:rounded-2xl">
+    <div className="pb-6">
+      <div className="md:grid md:grid-cols-[1.15fr_0.85fr] md:items-start md:gap-10 md:py-8">
+        <div className="front-card overflow-hidden">
           <Hero product={view} detail={detail} video={heroVideo} />
         </div>
-        <div className="bg-white px-4 pt-4 pb-5 md:rounded-2xl md:px-6 md:py-6">
+        <div className="front-card px-5 pt-6 pb-6 md:px-8 md:py-8">
           <div className="flex items-end justify-between">
             <div className="flex items-baseline gap-2">
-              <span className="text-[24px] font-semibold text-[#fa3534]">
+              <span className="front-price font-serif text-[28px] font-semibold md:text-[32px]">
                 <Money cny={product.price} />
               </span>
               {product.originalPrice ? (
-                <span className="text-[13px] text-[#999] line-through">
+                <span className="text-[14px] text-[var(--front-text-muted)] line-through">
                   <Money cny={product.originalPrice} />
                 </span>
               ) : null}
             </div>
-            <span className="text-[12px] text-[#999]">{t("soldCount", { n: product.sales })}</span>
+            <span className="text-[13px] text-[var(--front-text-muted)]">{t("soldCount", { n: product.sales })}</span>
           </div>
-          <div className="mt-3 flex items-start justify-between gap-3">
-            <h1 className="font-serif text-[18px] leading-7 font-semibold md:text-[26px]">{view.title}</h1>
-            <div className="relative z-20 flex shrink-0 gap-3 text-center text-[10px] text-[#888]">
+          <div className="mt-5 flex items-start justify-between gap-3">
+            <h1 className="front-h2 font-serif leading-tight">{view.title}</h1>
+            <div className="relative z-20 flex shrink-0 gap-3 text-center text-[11px] text-[var(--front-text-muted)]">
               <button
                 type="button"
                 className="flex flex-col items-center gap-0.5"
@@ -96,24 +96,24 @@ export function CourseDetailView({
                 onClick={() => toggleFavorite(product.slug)}
                 className="flex flex-col items-center gap-0.5"
               >
-                <Star className={cn("size-4", favored && "fill-[#fa3534] text-[#fa3534]")} />
+                <Star className={cn("size-4", favored && "fill-[var(--front-accent)] text-[var(--front-accent)]")} />
                 {t("favorite")}
               </button>
             </div>
           </div>
-          {view.subtitle && <p className="mt-2 text-[13px] text-[#666]">{view.subtitle}</p>}
-          {detail.lecturer && <p className="mt-2 text-[13px] text-[#8a7048]">{t("taughtBy", { name: detail.lecturer })}</p>}
+          {view.subtitle && <p className="mt-3 text-[15px] leading-7 text-[var(--front-text-soft)]">{view.subtitle}</p>}
+          {detail.lecturer && <p className="mt-2 text-[14px] text-[var(--front-text-soft)]">{t("taughtBy", { name: detail.lecturer })}</p>}
           {view.giftNote && (
-            <div className="mt-3 flex items-center gap-2 text-[12px]">
-              <span className="rounded-full bg-[#fa3534] px-2 py-0.5 text-white">{t("gift")}</span>
-              <span className="text-[#555]">{view.giftNote}</span>
+            <div className="mt-4 flex items-center gap-2 text-[13px]">
+              <span className="rounded-full bg-[var(--front-accent)] px-2.5 py-0.5 text-white">{t("gift")}</span>
+              <span className="text-[var(--front-text-soft)]">{view.giftNote}</span>
             </div>
           )}
-          <ProductCtaRow product={product} className="mt-5" />
+          <ProductCtaRow product={product} className="mt-7" />
         </div>
       </div>
 
-      <p className="py-3 text-center text-[12px] text-[#999] md:pt-8">{t("productDetail")}</p>
+      <p className="front-tab is-active mx-auto mt-8 mb-2 w-fit text-[15px] md:mt-12">{t("productDetail")}</p>
       <ProductDetailBody product={view} />
       <div className="md:hidden">
         <BuyBar product={product} />

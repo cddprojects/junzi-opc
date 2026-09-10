@@ -16,18 +16,15 @@ export function LoginPrompt({
   const t = useT();
   const safeNext = safeReturnPath(next, "/mine");
   return (
-    <div className="px-4 py-10">
-      <div className="mx-auto max-w-md rounded-2xl bg-white px-5 py-8 text-center">
-        <h2 className="font-serif text-[22px]">{title}</h2>
-        <p className="mt-3 text-[14px] leading-6 text-[#666]">{body}</p>
-        <div className="mt-6 flex flex-col gap-2">
-          <Link href={loginHref(safeNext, "/mine")} className="rounded-md bg-[#8a5a20] py-2.5 text-[14px] text-white">
+    <div className="px-4 py-14">
+      <div className="front-card mx-auto max-w-md px-6 py-10 text-center md:px-10">
+        <h2 className="front-h2 font-serif">{title}</h2>
+        <p className="mt-4 text-[15px] leading-7 text-[var(--front-text-soft)]">{body}</p>
+        <div className="mt-8 flex flex-col gap-3">
+          <Link href={loginHref(safeNext, "/mine")} className="front-btn-primary">
             {t("loginPromptLogin")}
           </Link>
-          <Link
-            href={`/register?next=${encodeURIComponent(safeNext)}`}
-            className="rounded-md bg-[#f3ead8] py-2.5 text-[14px] text-[#8a5a20]"
-          >
+          <Link href={`/register?next=${encodeURIComponent(safeNext)}`} className="front-btn-secondary">
             {t("loginPromptRegister")}
           </Link>
         </div>

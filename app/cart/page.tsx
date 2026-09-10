@@ -14,24 +14,24 @@ export default function CartPage() {
   const total = cart.reduce((sum, row) => sum + row.product.price * row.qty, 0);
 
   return (
-    <div className="min-h-[60vh] bg-white md:overflow-hidden md:rounded-2xl md:shadow-sm">
+    <div className="front-card min-h-[60vh] overflow-hidden">
       {cart.length === 0 ? (
         <EmptyHint>{t("cartEmpty")}</EmptyHint>
       ) : (
         <div>
           {cart.map((row) => (
-            <div key={row.slug} className="flex gap-3 border-b border-[#f3f3f3] px-3 py-3 md:px-6">
-              <Link href={row.product.href} className="w-20 overflow-hidden rounded-md">
+            <div key={row.slug} className="flex gap-4 border-b border-[var(--front-border)] px-5 py-5 md:px-8">
+              <Link href={row.product.href} className="w-24 overflow-hidden rounded-[var(--front-radius-sm)]">
                 <CoverArt theme={row.product.cover} image={row.product.coverImage} compact />
               </Link>
               <div className="min-w-0 flex-1">
-                <Link href={row.product.href} className="block font-serif text-[14px] font-medium">
+                <Link href={row.product.href} className="block font-serif text-[17px] font-medium">
                   {locProductTitle(row.product, locale)}
                 </Link>
-                <p className="mt-2 text-[15px] text-[#fa3534]">
+                <p className="front-price mt-3 text-[18px]">
                   <Money cny={row.product.price} />
                 </p>
-                <div className="mt-2 flex items-center justify-between text-[12px] text-[#888]">
+                <div className="mt-3 flex items-center justify-between text-[13px] text-[var(--front-text-muted)]">
                   <span>{t("qty", { n: row.qty })}</span>
                   <button type="button" onClick={() => removeFromCart(row.slug)}>
                     {t("remove")}
@@ -40,18 +40,14 @@ export default function CartPage() {
               </div>
             </div>
           ))}
-          <div className="flex items-center justify-between px-3 py-3 md:px-6">
-            <p className="text-[14px]">
+          <div className="flex items-center justify-between px-5 py-5 md:px-8">
+            <p className="text-[15px]">
               {t("total")}{" "}
-              <span className="text-[18px] text-[#fa3534]">
+              <span className="front-price font-serif text-[22px]">
                 <Money cny={total} />
               </span>
             </p>
-            <button
-              type="button"
-              onClick={() => openPay()}
-              className="rounded-lg bg-[#fa3534] px-4 py-2 text-[14px] text-white"
-            >
+            <button type="button" onClick={() => openPay()} className="front-btn-primary">
               {t("checkout")}
             </button>
           </div>

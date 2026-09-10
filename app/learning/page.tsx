@@ -32,22 +32,22 @@ export default async function LearningPage() {
   const products = await getStoreProductsBySlugs(items.map((order) => order.productSlug));
 
   return (
-    <div className="px-4 py-6 md:px-0">
-      <h1 className="font-serif text-[24px]">{t(locale, "learningTitle")}</h1>
-      <p className="mt-2 text-[13px] text-[#777]">{t(locale, "learningHint")}</p>
+    <div className="px-4 py-8 md:px-0">
+      <h1 className="front-h2 font-serif">{t(locale, "learningTitle")}</h1>
+      <p className="mt-3 text-[15px] text-[var(--front-text-soft)]">{t(locale, "learningHint")}</p>
       {items.length === 0 ? (
-        <div className="mt-6 rounded-2xl bg-white px-4 py-8 text-center text-[14px] text-[#666]">
+        <div className="front-card mt-8 px-5 py-10 text-center text-[15px] text-[var(--front-text-soft)]">
           <p>{t(locale, "learningEmpty")}</p>
-          <Link href="/product/qihang" className="mt-3 inline-block text-[#8a5a20]">
+          <Link href="/product/qihang" className="mt-4 inline-block text-[var(--front-accent)]">
             {t(locale, "learningViewQihang")}
           </Link>
         </div>
       ) : (
-        <div className="mt-4 space-y-3">
+        <div className="mt-6 space-y-4">
           {items.map((order) => {
             const product = products.get(order.productSlug);
             return (
-              <article key={order.productSlug} className="flex gap-3 rounded-2xl bg-white p-3">
+              <article key={order.productSlug} className="front-card flex gap-4 p-4">
                 <Link href={product?.href || `/product/${order.productSlug}`} className="w-20 overflow-hidden rounded-md">
                   <CoverArt
                     theme={product?.cover || "qihang"}
@@ -62,14 +62,14 @@ export default async function LearningPage() {
                   {product?.detail?.lessons?.length ? (
                     <Link
                       href={`/courses/recorded/${order.productSlug}`}
-                      className="mt-2 inline-block text-[13px] text-[#8a5a20]"
+                      className="mt-2 inline-block text-[14px] text-[var(--front-accent)]"
                     >
                       {t(locale, "enterLessons")}
                     </Link>
                   ) : null}
-                  <p className="mt-1 text-[12px] text-[#888]">{t(locale, "courseCode")}</p>
+                  <p className="mt-1 text-[12px] text-[var(--front-text-muted)]">{t(locale, "courseCode")}</p>
                   {order.verifyCode ? (
-                    <CopyCode code={order.verifyCode} className="font-mono text-[13px] text-[#8a5a20]" />
+                    <CopyCode code={order.verifyCode} className="font-mono text-[13px] text-[var(--front-accent)]" />
                   ) : null}
                 </div>
               </article>

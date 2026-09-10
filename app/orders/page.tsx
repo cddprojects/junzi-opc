@@ -40,11 +40,11 @@ export default async function OrdersPage({
   const products = await getStoreProductsBySlugs(orders.map((order) => order.productSlug));
 
   return (
-    <div className="px-4 py-5 md:px-0 md:py-2">
-      <div className="mx-auto max-w-2xl md:rounded-2xl md:bg-white md:px-6 md:py-6">
-        <h1 className="text-center font-serif text-[17px] font-medium md:text-left md:text-[24px]">{t(locale, "ordersList")}</h1>
+    <div className="px-4 py-6 md:px-0 md:py-8">
+      <div className="front-card mx-auto max-w-2xl px-5 py-6 md:px-8 md:py-8">
+        <h1 className="front-h2 text-center font-serif md:text-left">{t(locale, "ordersList")}</h1>
 
-        <nav className="-mx-1 mt-3 flex gap-1 overflow-x-auto px-1 text-[13px] md:mt-5 md:gap-4">
+        <nav className="-mx-1 mt-4 flex gap-5 overflow-x-auto px-1 text-[15px] md:mt-6">
           {ORDER_TABS.map((item) => {
             const href = item.id === "all" ? "/orders" : `/orders?tab=${item.id}`;
             const active = tab === item.id;
@@ -52,10 +52,7 @@ export default async function OrdersPage({
               <Link
                 key={item.id}
                 href={href}
-                className={cn(
-                  "shrink-0 px-2 py-2",
-                  active ? "border-b-2 border-[#8a5a20] font-medium text-[#8a5a20]" : "text-[#888]",
-                )}
+                className={cn("front-tab shrink-0", active && "is-active")}
               >
                 {t(locale, TAB_KEYS[item.id])}
               </Link>
@@ -64,11 +61,11 @@ export default async function OrdersPage({
         </nav>
 
         {orders.length === 0 ? (
-          <div className="mt-6 rounded-xl bg-white px-4 py-10 text-center text-[14px] text-[#888]">
+          <div className="mt-8 px-2 py-10 text-center text-[15px] text-[var(--front-text-muted)]">
             {all.length === 0 ? (
               <>
                 <p>{t(locale, "orderEmpty")}</p>
-                <Link href="/categories" className="mt-3 inline-block text-[#8a5a20]">
+                <Link href="/categories" className="mt-3 inline-block text-[var(--front-accent)]">
                   {t(locale, "orderGoShop")}
                 </Link>
               </>
@@ -84,7 +81,7 @@ export default async function OrdersPage({
                 <Link
                   key={order.id}
                   href={`/orders/${order.id}`}
-                  className="block rounded-xl bg-white px-3 py-3 shadow-[0_1px_6px_rgba(0,0,0,0.04)] md:px-4 md:py-4"
+                  className="block rounded-[var(--front-radius-md)] border border-[var(--front-border)] bg-[var(--front-surface)] px-4 py-4"
                 >
                   <div className="flex items-center justify-between border-b border-[#f3f3f3] pb-2 text-[12px]">
                     <span className="text-[#888]">{formatOrderTime(order.createdAt)}</span>
@@ -104,7 +101,7 @@ export default async function OrdersPage({
                       </p>
                       <div className="mt-2 flex items-end justify-between">
                         <Money
-                          className="text-[15px] text-[#fa3534]"
+                          className="front-price text-[15px]"
                           cny={order.priceCny ?? order.price}
                           recorded={{ amount: order.price, currency: order.currency }}
                         />
@@ -115,7 +112,7 @@ export default async function OrdersPage({
                   <p className="mt-3 text-right text-[13px] text-[#555]">
                     {isOrderPaid(order) ? t(locale, "orderPaid") : t(locale, "orderPayable")}{" "}
                     <Money
-                      className="text-[16px] font-semibold text-[#fa3534]"
+                      className="front-price text-[16px] font-semibold"
                       cny={(order.priceCny ?? order.price) * order.qty}
                       recorded={{ amount: order.price * order.qty, currency: order.currency }}
                     />

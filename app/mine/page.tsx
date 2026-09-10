@@ -39,9 +39,9 @@ export default function MinePage() {
   const t = useT();
 
   return (
-    <div className="overflow-hidden bg-white md:rounded-2xl">
-      <div className="flex items-center gap-3 bg-[#3a2c10] px-4 py-6 text-[#fffdf8] md:px-8 md:py-8">
-        <div className="flex size-14 items-center justify-center rounded-full bg-[#8a5a20]">
+    <div className="front-card overflow-hidden">
+      <div className="flex items-center gap-4 bg-[var(--front-text)] px-5 py-8 text-[var(--front-surface)] md:px-10 md:py-10">
+        <div className="flex size-16 items-center justify-center rounded-full bg-[var(--front-accent)]">
           <svg viewBox="0 0 48 48" className="size-8 text-[#d8d8d8]" aria-hidden>
             <circle cx="24" cy="18" r="8" fill="currentColor" />
             <path d="M8 40c2-10 8-14 16-14s14 4 16 14" fill="currentColor" />
@@ -52,7 +52,7 @@ export default function MinePage() {
             <p className="text-[16px]">{t("loading")}</p>
           ) : user ? (
             <>
-              <p className="truncate font-serif text-[16px] font-medium">{user.name}</p>
+              <p className="truncate font-serif text-[20px] font-medium">{user.name}</p>
               <p className="mt-0.5 text-[13px] text-white/80">{user.email || user.phone}</p>
               <p className="mt-1 text-[12px] text-white/70">
                 {user.memberActive ? t("mineMemberOn") : t("mineMemberOff")}
@@ -60,7 +60,7 @@ export default function MinePage() {
             </>
           ) : (
             <>
-              <p className="font-serif text-[16px] font-medium">{t("mineGuest")}</p>
+              <p className="font-serif text-[20px] font-medium">{t("mineGuest")}</p>
               <p className="mt-0.5 text-[13px] text-white/80">{t("mineGuestHint")}</p>
               <div className="mt-2 flex gap-3 text-[13px]">
                 <Link href="/login?next=/mine" className="underline">
@@ -82,32 +82,32 @@ export default function MinePage() {
 
       {user ? <ReferralSummary /> : null}
 
-      <section className="bg-white px-3 pt-4 pb-5 md:px-8">
-        <h2 className="mb-4 text-[15px] font-medium">{t("minePersonal")}</h2>
+      <section className="bg-[var(--front-surface)] px-4 pt-6 pb-6 md:px-10">
+        <h2 className="front-h3 mb-5 font-serif">{t("minePersonal")}</h2>
         <div className="grid grid-cols-4">
           {mineBlocks.personal.map((item, index) => {
             const Icon = personalIcons[index] || ReceiptText;
             return (
               <Link key={item.href} href={item.href} className="flex flex-col items-center gap-2">
-                <Icon className="size-7 text-[#8a5a20]" strokeWidth={1.5} />
-                <span className="text-[13px] text-[#444]">{t(MINE_LABELS[item.href] || "mineOrders")}</span>
+                <Icon className="size-7 text-[var(--front-accent)]" strokeWidth={1.5} />
+                <span className="text-[13px] text-[var(--front-text-soft)]">{t(MINE_LABELS[item.href] || "mineOrders")}</span>
               </Link>
             );
           })}
         </div>
       </section>
 
-      <section className="mt-2 bg-white px-3 pt-4 pb-6 md:mt-0 md:px-8 md:pb-10">
-        <h2 className="mb-4 text-[15px] font-medium">{t("mineServices")}</h2>
+      <section className="bg-[var(--front-surface)] px-4 pt-2 pb-8 md:px-10 md:pb-12">
+        <h2 className="front-h3 mb-5 font-serif">{t("mineServices")}</h2>
         <div className="grid grid-cols-5">
           {mineBlocks.services.map((item, index) => {
             const Icon = serviceIcons[index] || CircleHelp;
             return (
               <Link key={item.href} href={item.href} className="flex flex-col items-center gap-2">
-                <span className="flex size-11 items-center justify-center rounded-full bg-[#f4efe6]">
-                  <Icon className="size-5 text-[#8a5a20]" strokeWidth={1.5} />
+                <span className="flex size-12 items-center justify-center rounded-full bg-[var(--front-surface-soft)]">
+                  <Icon className="size-5 text-[var(--front-accent)]" strokeWidth={1.5} />
                 </span>
-                <span className="text-[11px] text-[#444]">{t(MINE_LABELS[item.href] || "mineLearning")}</span>
+                <span className="text-[12px] text-[var(--front-text-soft)]">{t(MINE_LABELS[item.href] || "mineLearning")}</span>
               </Link>
             );
           })}
@@ -115,7 +115,7 @@ export default function MinePage() {
         {user && (
           <button
             type="button"
-            className="mt-6 w-full rounded-md border border-[#eadfca] py-2.5 text-[14px] text-[#666]"
+            className="front-btn-secondary mt-8 w-full text-[var(--front-text-soft)]"
             onClick={async () => {
               await logout();
               router.refresh();

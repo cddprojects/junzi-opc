@@ -14,20 +14,20 @@ export function BuyBar({ product }: { product?: Product }) {
   const t = useT();
 
   return (
-    <div className="fixed bottom-0 left-0 z-50 flex h-[58px] w-full items-center border-t border-black/6 bg-white pr-2 pl-1 md:left-1/2 md:max-w-6xl md:-translate-x-1/2 md:rounded-t-xl md:shadow-lg">
-      <Link href="/" className="flex w-12 flex-col items-center gap-0.5 text-[10px] text-[#666]">
+    <div className="fixed bottom-0 left-0 z-50 flex h-[64px] w-full items-center border-t border-[var(--front-border)] bg-[var(--front-surface)] pr-2 pl-1 md:left-1/2 md:max-w-[1200px] md:-translate-x-1/2 md:rounded-t-[var(--front-radius-md)] md:shadow-[var(--front-shadow)]">
+      <Link href="/" className="flex w-12 flex-col items-center gap-0.5 text-[10px] text-[var(--front-text-soft)]">
         <Home className="size-5" />
         {t("navHome")}
       </Link>
-      <Link href="/service" className="flex w-12 flex-col items-center gap-0.5 text-[10px] text-[#666]">
+      <Link href="/service" className="flex w-12 flex-col items-center gap-0.5 text-[10px] text-[var(--front-text-soft)]">
         <Headset className="size-5" />
         {t("service")}
       </Link>
-      <Link href="/cart" className="relative flex w-12 flex-col items-center gap-0.5 text-[10px] text-[#666]">
+      <Link href="/cart" className="relative flex w-12 flex-col items-center gap-0.5 text-[10px] text-[var(--front-text-soft)]">
         <ShoppingCart className="size-5" />
         {t("cart")}
         {count > 0 && (
-          <span className="absolute top-[-2px] right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#8a5a20] px-1 text-[10px] text-white">
+          <span className="absolute top-[-2px] right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-[var(--front-accent)] px-1 text-[10px] text-white">
             {count}
           </span>
         )}

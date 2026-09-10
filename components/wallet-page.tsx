@@ -164,9 +164,9 @@ export function WalletPage() {
       {busy === "topup" ? (
         <PayBusyOverlay title={t("connectingPay")} cancelLabel={t("cancelPay")} onCancel={cancelTopUp} />
       ) : null}
-      <section className="rounded-2xl bg-white px-4 py-5 md:px-6">
-        <h1 className="font-serif text-[24px]">{t("walletTitle")}</h1>
-        <p className="mt-2 text-[13px] leading-6 text-[#666]">{t("walletIntro")}</p>
+      <section className="front-card px-5 py-6 md:px-8">
+        <h1 className="front-h2 font-serif">{t("walletTitle")}</h1>
+        <p className="mt-2 text-[15px] leading-7 text-[var(--front-text-soft)]">{t("walletIntro")}</p>
         <div className="mt-4 grid grid-cols-4 gap-2 sm:gap-3">
           <Bucket label={t("adminWalletTotal")} value={data.totalSen} />
           <Bucket label={t("adminWalletTopUp")} value={data.topUpBalanceSen} />
@@ -179,7 +179,7 @@ export function WalletPage() {
         <p className="mt-3 text-[12px] text-[#888]">{t("walletSpendNote")}</p>
       </section>
 
-      <section className="rounded-2xl bg-white px-4 py-5 md:px-6">
+      <section className="front-card px-5 py-6 md:px-8">
         <h2 className="font-serif text-[18px]">{t("walletTopUp")}</h2>
         {error ? <p className="mt-2 text-[13px] text-[#fa3534]">{error}</p> : null}
         <div className="mt-3 flex flex-wrap gap-2">
@@ -219,7 +219,7 @@ export function WalletPage() {
         </form>
       </section>
 
-      <section className="rounded-2xl bg-white px-4 py-5 md:px-6">
+      <section className="front-card px-5 py-6 md:px-8">
         <h2 className="font-serif text-[18px]">{t("walletWithdraw")}</h2>
         <p className="mt-1 text-[13px] text-[#777]">{t("referralWithdrawHint")}</p>
         <form onSubmit={withdraw} className="mt-3 grid gap-2 md:grid-cols-2">
@@ -269,7 +269,7 @@ export function WalletPage() {
         ) : null}
       </section>
 
-      <section className="rounded-2xl bg-white px-4 py-5 md:px-6">
+      <section className="front-card px-5 py-6 md:px-8">
         <h2 className="font-serif text-[18px]">{t("walletTx")}</h2>
         {data.transactions.length === 0 ? (
           <p className="mt-2 text-[13px] text-[#777]">{t("walletTxEmpty")}</p>

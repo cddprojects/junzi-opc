@@ -11,17 +11,17 @@ import { useCurrency } from "@/components/currency-provider";
 import { useLocale } from "@/components/locale-provider";
 import { localized } from "@/lib/i18n";
 import { locProductSubtitle, locProductTitle } from "@/lib/localize";
-import type { CoverTheme, Product } from "@/lib/data";
+import { brand, type CoverTheme, type Product } from "@/lib/data";
 
 export function NoticeBar({ href, text }: { href: string; text: string }) {
   return (
     <Link
       href={href}
-      className="flex items-center gap-2 rounded-none bg-[#f7f1e4] px-4 py-2 text-[12px] text-[#6a5840] md:rounded-xl"
+      className="flex items-center gap-2 rounded-[var(--front-radius-sm)] bg-[var(--front-surface-soft)] px-4 py-3 text-[13px] text-[var(--front-text-soft)]"
     >
-      <Megaphone className="size-3.5 shrink-0 text-[#888]" />
+      <Megaphone className="size-3.5 shrink-0 text-[var(--front-accent)]" />
       <span className="min-w-0 flex-1 truncate">{text}</span>
-      <span className="text-[#bbb]">&gt;</span>
+      <span className="text-[var(--front-text-muted)]">&gt;</span>
     </Link>
   );
 }
@@ -38,16 +38,16 @@ export function SearchBox({
   action?: string;
 }) {
   return (
-    <form action={action} className="px-3 py-2 md:px-0">
+    <form action={action} className="px-4 py-3 md:px-0">
       <div className="relative">
-        <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-[#bbb]" />
+        <Search className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-[var(--front-text-muted)]" />
         <Input
           name="q"
           defaultValue={defaultValue}
           placeholder={placeholder}
           className={cn(
-            "h-9 rounded-full border-none bg-white pr-3 text-[13px] shadow-none placeholder:text-[#bbb]",
-            center ? "pl-9 text-center placeholder:text-center" : "pl-9",
+            "h-12 rounded-[var(--front-radius-sm)] border-[var(--front-border)] bg-[var(--front-surface)] pr-3 text-[15px] shadow-none placeholder:text-[var(--front-text-muted)]",
+            center ? "pl-10 text-center placeholder:text-center" : "pl-10",
           )}
         />
       </div>
@@ -71,10 +71,10 @@ export function ProductRow({
     <Link
       href={href}
       prefetch
-      className="relative z-10 flex cursor-pointer gap-3 bg-white px-3 py-3 transition duration-150 hover:bg-[#fffdf8] active:opacity-70"
+      className="relative z-10 flex cursor-pointer gap-4 bg-[var(--front-surface)] px-4 py-4 transition duration-150 hover:bg-[var(--front-surface-soft)] active:opacity-70"
       aria-label={title}
     >
-      <span className="block w-[88px] shrink-0 overflow-hidden rounded-md">
+      <span className="block w-[96px] shrink-0 overflow-hidden rounded-[var(--front-radius-sm)]">
         <CoverArt
           theme={product.cover}
           image={product.coverImage}
@@ -84,21 +84,21 @@ export function ProductRow({
         />
       </span>
       <div className="min-w-0 flex-1">
-        <p className="font-serif text-[15px] leading-6 font-medium">{title}</p>
+        <p className="font-serif text-[17px] leading-6 font-medium">{title}</p>
         <div className="mt-5 flex items-end justify-between">
           <div>
-            <p className="text-[18px] leading-none font-semibold text-[#fa3534]">
+            <p className="front-price text-[20px] leading-none font-semibold">
               <Money cny={product.price} />
             </p>
             {showOriginal && product.originalPrice ? (
-              <p className="mt-1 text-[11px] text-[#999] line-through">
+              <p className="mt-1 text-[12px] text-[var(--front-text-muted)] line-through">
                 {t("originalPrice")} <Money cny={product.originalPrice} />
               </p>
             ) : null}
-            <p className="mt-1 text-[11px] text-[#999]">{t("salesCount", { n: product.sales })}</p>
+            <p className="mt-1 text-[12px] text-[var(--front-text-muted)]">{t("salesCount", { n: product.sales })}</p>
           </div>
           <span
-            className="flex size-7 items-center justify-center rounded-full bg-[#fa3534] text-white"
+            className="flex size-8 items-center justify-center rounded-full bg-[var(--front-accent)] text-white"
             aria-hidden
           >
             <Plus className="size-4" />
@@ -127,13 +127,13 @@ export function CourseListCard({
       href={href}
       prefetch
       className={cn(
-        "block cursor-pointer overflow-hidden rounded-xl bg-white shadow-sm transition-[box-shadow,opacity] duration-[var(--motion-hover)] ease-[var(--ease-standard)] hover:shadow-md active:opacity-80",
+        "front-card block cursor-pointer overflow-hidden transition-[box-shadow,opacity] duration-[var(--motion-hover)] ease-[var(--ease-standard)] hover:shadow-md active:opacity-80",
         className,
       )}
     >
       <CoverArt theme={cover} showVideoBadge />
-      <div className="px-3 py-2.5">
-        <h3 className="font-serif text-[15px] leading-6 font-medium">{title}</h3>
+      <div className="px-4 py-4">
+        <h3 className="front-h3 font-serif">{title}</h3>
         <CourseLearners count={learners} />
       </div>
     </Link>
@@ -142,7 +142,7 @@ export function CourseListCard({
 
 function CourseLearners({ count }: { count: number }) {
   const { t } = useLocale();
-  return <p className="mt-1 text-[12px] text-[#999]">{t("learnersCount", { n: count })}</p>;
+  return <p className="mt-2 text-[13px] text-[var(--front-text-muted)]">{t("learnersCount", { n: count })}</p>;
 }
 
 export function CategoryIcons({
@@ -152,13 +152,15 @@ export function CategoryIcons({
 }) {
   const { locale } = useLocale();
   return (
-    <div className="grid grid-cols-5 bg-white px-1 py-4 md:rounded-xl md:px-6 md:py-5">
+    <div className="grid grid-cols-5 gap-2 px-1 py-2 md:gap-6 md:px-0">
       {items.map((item) => (
-        <Link key={item.id} href={item.href} className="flex flex-col items-center gap-1.5">
-          <span className="flex size-12 items-center justify-center overflow-hidden rounded-full bg-[#f4efe6] md:size-16">
+        <Link key={item.id} href={item.href} className="flex flex-col items-center gap-2.5 text-center">
+          <span className="flex size-14 items-center justify-center overflow-hidden rounded-full bg-[var(--front-surface-soft)] md:size-[72px]">
             <CategoryGlyph id={item.id} />
           </span>
-          <span className="text-[11px] text-[#444] md:text-sm">{localized(locale, item.label, item.labelEn)}</span>
+          <span className="max-w-[7.5rem] text-[12px] leading-4 text-[var(--front-text-soft)] md:text-[14px]">
+            {localized(locale, item.label, item.labelEn)}
+          </span>
         </Link>
       ))}
     </div>
@@ -220,7 +222,7 @@ export function ProductCard({ product }: { product: Product }) {
     <Link
       href={href}
       prefetch
-      className="relative z-10 block cursor-pointer overflow-hidden rounded-xl bg-white shadow-sm transition-[box-shadow,opacity] duration-[var(--motion-hover)] ease-[var(--ease-standard)] hover:shadow-md active:opacity-80"
+      className="front-card relative z-10 block cursor-pointer overflow-hidden transition-[box-shadow,opacity] duration-[var(--motion-hover)] ease-[var(--ease-standard)] hover:shadow-md active:opacity-80"
       aria-label={title}
     >
       <CoverArt
@@ -229,23 +231,23 @@ export function ProductCard({ product }: { product: Product }) {
         showPrice
         priceLabel={format(product.price)}
       />
-      <div className="p-4">
-        <p className="font-serif text-[16px] leading-6 font-medium">{title}</p>
-        {subtitle && <p className="mt-1 line-clamp-2 text-[13px] text-[#777]">{subtitle}</p>}
-        <div className="mt-4 flex items-end justify-between">
+      <div className="p-5">
+        <p className="front-h3 font-serif">{title}</p>
+        {subtitle && <p className="mt-2 line-clamp-2 text-[14px] leading-6 text-[var(--front-text-soft)]">{subtitle}</p>}
+        <div className="mt-6 flex items-end justify-between">
           <div>
-            <p className="text-[20px] font-semibold text-[#fa3534]">
+            <p className="front-price text-[22px] font-semibold">
               <Money cny={product.price} />
             </p>
             {product.originalPrice ? (
-              <p className="text-[12px] text-[#999] line-through">
+              <p className="text-[13px] text-[var(--front-text-muted)] line-through">
                 {t("originalPrice")} <Money cny={product.originalPrice} />
               </p>
             ) : null}
-            <p className="mt-1 text-[12px] text-[#999]">{t("salesCount", { n: product.sales })}</p>
+            <p className="mt-1 text-[13px] text-[var(--front-text-muted)]">{t("salesCount", { n: product.sales })}</p>
           </div>
           <span
-            className="flex size-8 items-center justify-center rounded-full bg-[#fa3534] text-white"
+            className="flex size-9 items-center justify-center rounded-full bg-[var(--front-accent)] text-white"
             aria-hidden
           >
             <Plus className="size-4" />
@@ -268,6 +270,7 @@ export function HomeCarousel({
 }) {
   const [index, setIndex] = React.useState(0);
   const slideLabel = useSlideLabel();
+  const { locale, t } = useLocale();
   const safeSlides = slides.length ? slides : [];
 
   React.useEffect(() => {
@@ -282,16 +285,30 @@ export function HomeCarousel({
   if (!slide) return null;
 
   return (
-    <div className="relative mx-4 overflow-hidden rounded-xl md:mx-0 md:rounded-2xl">
-      <Link href={slide.href} prefetch className="block transition active:opacity-80">
-        <CoverArt
-          theme={slide.theme}
-          image={slide.image}
-          priceCny={slide.priceCny}
-          className="aspect-[16/9] md:aspect-[21/8]"
-        />
-      </Link>
-      <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-1.5">
+    <div className="relative">
+      <div className="grid items-center gap-8 md:grid-cols-2 md:gap-14">
+        <div className="order-2 px-1 md:order-1 md:px-0">
+          <p className="text-[12px] tracking-[0.16em] text-[var(--front-text-muted)] uppercase md:text-[13px]">
+            {localized(locale, brand.society, brand.societyEn)}
+          </p>
+          <h1 className="front-h1 mt-3 font-serif">{slide.title}</h1>
+          <p className="mt-4 max-w-md text-[16px] leading-7 text-[var(--front-text-soft)] md:text-[17px]">
+            {localized(locale, brand.mottoWay, brand.mottoWayEn)}
+          </p>
+          <Link href={slide.href} prefetch className="front-btn-primary mt-8">
+            {t("buyNow")}
+          </Link>
+        </div>
+        <Link href={slide.href} prefetch className="front-card order-1 overflow-hidden md:order-2">
+          <CoverArt
+            theme={slide.theme}
+            image={slide.image}
+            priceCny={slide.priceCny}
+            className="aspect-[16/10] md:aspect-[5/4]"
+          />
+        </Link>
+      </div>
+      <div className="mt-6 flex justify-center gap-2 md:mt-10 md:justify-start">
         {slides.map((item, i) => (
           <button
             key={item.id}
@@ -300,7 +317,7 @@ export function HomeCarousel({
             onClick={() => setIndex(i)}
             className={cn(
               "h-1.5 rounded-full transition-all",
-              i === index ? "w-3.5 bg-white" : "w-1.5 bg-white/50",
+              i === index ? "w-7 bg-[var(--front-accent)]" : "w-2 bg-[var(--front-border-strong)]",
             )}
           />
         ))}
@@ -311,14 +328,14 @@ export function HomeCarousel({
 
 export function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
-    <h2 className="opc-section-title px-4 pt-6 pb-2 text-[16px] font-semibold tracking-tight text-[#3a2c10] md:px-0 md:pt-8 md:text-[20px]">
+    <h2 className="opc-section-title front-h2 px-0 pb-5 font-semibold tracking-tight">
       {children}
     </h2>
   );
 }
 
 export function EmptyHint({ children }: { children: React.ReactNode }) {
-  return <p className="px-3 py-10 text-center text-[13px] text-[#999]">{children}</p>;
+  return <p className="px-3 py-14 text-center text-[15px] text-[var(--front-text-muted)]">{children}</p>;
 }
 
 export function PlusPrice({
@@ -332,11 +349,11 @@ export function PlusPrice({
 }) {
   return (
     <div>
-      <p className="text-[20px] font-semibold text-[#fa3534]">
+      <p className="front-price text-[22px] font-semibold">
         <Money cny={price} />
       </p>
       {originalPrice ? (
-        <p className="text-[12px] text-[#999] line-through">
+        <p className="text-[13px] text-[var(--front-text-muted)] line-through">
           <Money cny={originalPrice} />
         </p>
       ) : null}
@@ -347,5 +364,5 @@ export function PlusPrice({
 
 function SoldLine({ sales }: { sales: number }) {
   const { t } = useLocale();
-  return <p className="text-[12px] text-[#999]">{t("soldCount", { n: sales })}</p>;
+  return <p className="text-[13px] text-[var(--front-text-muted)]">{t("soldCount", { n: sales })}</p>;
 }

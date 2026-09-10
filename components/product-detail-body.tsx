@@ -100,7 +100,7 @@ export default function ProductDetailBody({ product }: { product: Product }) {
               );
             })}
           </div>
-          <Link href={`/courses/recorded/${product.slug}`} className="mt-3 inline-block text-[13px] text-[#8a5a20]">
+          <Link href={`/courses/recorded/${product.slug}`} className="mt-3 inline-block text-[14px] text-[var(--front-accent)]">
             {t("goRecordedLessons")}
           </Link>
         </div>
@@ -240,7 +240,7 @@ function ImageDetail({ product, hasLessons }: { product: Product; hasLessons: bo
       </div>
       {hasLessons ? (
         <div className="px-4 pt-3 md:px-0">
-          <Link href={`/courses/recorded/${product.slug}`} className="inline-block text-[13px] text-[#8a5a20]">
+          <Link href={`/courses/recorded/${product.slug}`} className="inline-block text-[14px] text-[var(--front-accent)]">
             {t("goRecordedLessons")}
           </Link>
         </div>
