@@ -557,7 +557,7 @@
 }
 
 .storefront .mp-section-title {
-  padding: 16px 16px 8px;
+  padding: 16px;
 }
 
 .storefront .mp-full-bleed {
@@ -572,10 +572,6 @@
     margin-top: 24px;
     padding: 16px;
     border-radius: 12px;
-  }
-
-  .storefront .mp-section-title {
-    padding: 16px 0;
   }
 
   .storefront .mp-full-bleed {
