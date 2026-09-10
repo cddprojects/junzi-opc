@@ -8,7 +8,8 @@
     "start": "next start --port 43180 --hostname 0.0.0.0",
     "lint": "eslint",
     "verify": "npx tsx scripts/verify-referral.ts && npx tsx scripts/verify-wallet.ts && npx tsx scripts/verify-payments.ts",
-    "import:supabase": "npx tsx scripts/import-supabase.ts"
+    "import:supabase": "npx tsx scripts/import-supabase.ts",
+    "seed:posters": "npx tsx scripts/seed-slot-posters.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",

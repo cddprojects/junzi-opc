@@ -95,6 +95,9 @@ function ensureSlotPosters(posters: Poster[]): Poster[] {
       continue;
     }
     if (!existing.image && seed.image) existing.image = seed.image;
+    if ((!existing.detailImages || existing.detailImages.length === 0) && seed.detailImages?.length) {
+      existing.detailImages = [...seed.detailImages];
+    }
     if (existing.placement !== seed.placement) existing.placement = seed.placement;
   }
   return next;

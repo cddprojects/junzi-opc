@@ -125,6 +125,16 @@ export const DEFAULT_SLOT_POSTERS: Poster[] = [
     kicker: "点击进入",
     kickerEn: "Enter",
   },
+  {
+    id: "member",
+    title: "会员中心",
+    titleEn: "Membership",
+    href: "/member",
+    sort: 0,
+    placement: "member",
+    productSlug: "member",
+    detailImages: ["/posters/member-detail-1.jpg"],
+  },
 ];
 
 export type VideoPlacement = "home-intro" | "home-case" | "product-hero" | "library";
