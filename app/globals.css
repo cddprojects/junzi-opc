@@ -217,6 +217,47 @@
   --width: min(360px, calc(100vw - 24px));
 }
 
+.jx-nav-progress {
+  pointer-events: none;
+  position: fixed;
+  top: 0;
+  right: 0;
+  left: 0;
+  z-index: 400;
+  height: 2px;
+  opacity: 0;
+  transition: opacity var(--motion-fast) var(--ease-standard);
+}
+
+.jx-nav-progress.is-on {
+  opacity: 1;
+}
+
+.jx-nav-progress-bar {
+  height: 100%;
+  width: 36%;
+  background: linear-gradient(90deg, #c9a24a, #8a5a20);
+  transform: translateX(-120%);
+}
+
+.jx-nav-progress.is-on .jx-nav-progress-bar {
+  animation: jx-nav-indet 1.05s var(--ease-standard) infinite;
+}
+
+@keyframes jx-nav-indet {
+  0% {
+    transform: translateX(-120%);
+    width: 28%;
+  }
+  50% {
+    width: 52%;
+  }
+  100% {
+    transform: translateX(340%);
+    width: 28%;
+  }
+}
+
 .jx-expand {
   display: grid;
   grid-template-rows: 0fr;
@@ -315,6 +356,8 @@
     --motion-sidebar: 1ms;
   }
 
+  .jx-nav-progress,
+  .jx-nav-progress-bar,
   .jx-expand,
   .jx-expand-inner,
   .jx-disclosure-chevron,

@@ -1,11 +1,12 @@
+import { cache } from "react";
 import { cookies } from "next/headers";
 import { USER_COOKIE } from "@/lib/account";
 import { customerFromToken, revokeSession } from "@/lib/user-store";
 
-export async function getCurrentUser() {
+export const getCurrentUser = cache(async function getCurrentUser() {
   const jar = await cookies();
   return await customerFromToken(jar.get(USER_COOKIE)?.value);
-}
+});
 
 export async function requireUser() {
   const user = await getCurrentUser();

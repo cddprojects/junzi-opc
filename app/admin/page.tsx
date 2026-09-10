@@ -1,9 +1,8 @@
 import Link from "next/link";
 import { getCatalog } from "@/lib/store";
-import { listAllOrders, listCommissionDesk, listCustomers } from "@/lib/user-store";
+import { getAdminHomeStats } from "@/lib/user-store";
 import { formatMyrSen } from "@/lib/referral";
 import { isBillplzConfigured } from "@/lib/billplz";
-import { isOrderPaid } from "@/lib/account";
 import { formatMoneyAmount } from "@/lib/currency";
 import { getRequestLocale } from "@/lib/i18n-server";
 import { t } from "@/lib/messages";
@@ -13,13 +12,8 @@ export const dynamic = "force-dynamic";
 export default async function AdminHomePage() {
   const locale = await getRequestLocale();
   const { products, posters, videos } = await getCatalog();
-  const users = await listCustomers();
-  const orders = await listAllOrders();
+  const stats = await getAdminHomeStats();
   const billplzReady = isBillplzConfigured();
-  const paid = orders.filter(isOrderPaid);
-  const pending = orders.length - paid.length;
-  const myr = paid.reduce((sum, order) => sum + (order.amountMyr ?? 0), 0);
-  const commission = await listCommissionDesk();
 
   return (
     <div>
@@ -37,15 +31,15 @@ export default async function AdminHomePage() {
         </Link>
         <Link href="/admin/users" className="jx-panel jx-ledger-card">
           <p className="jx-ledger-label">{t(locale, "adminUsers")}</p>
-          <p className="jx-ledger-value">{users.length}</p>
+          <p className="jx-ledger-value">{stats.userCount}</p>
         </Link>
         <Link href="/admin/orders" className="jx-panel jx-ledger-card">
           <p className="jx-ledger-label">{t(locale, "adminOrders")}</p>
-          <p className="jx-ledger-value">{orders.length}</p>
+          <p className="jx-ledger-value">{stats.orderCount}</p>
         </Link>
         <Link href="/admin/orders" className="jx-panel jx-ledger-card">
           <p className="jx-ledger-label">{locale === "en" ? "Collected (MYR)" : "已收令吉"}</p>
-          <p className="jx-ledger-value is-seal">{formatMoneyAmount(myr, "MYR")}</p>
+          <p className="jx-ledger-value is-seal">{formatMoneyAmount(stats.paidMyr, "MYR")}</p>
         </Link>
         <Link href="/admin/posters" className="jx-panel jx-ledger-card">
           <p className="jx-ledger-label">{t(locale, "adminPosters")}</p>
@@ -58,8 +52,8 @@ export default async function AdminHomePage() {
         <div className="jx-panel jx-ledger-card">
           <p className="jx-ledger-label">{locale === "en" ? "Paid / pending" : "已付 / 待付"}</p>
           <p className="jx-ledger-value">
-            {paid.length}
-            <span className="text-[16px] text-[var(--mute)]"> / {pending}</span>
+            {stats.paidCount}
+            <span className="text-[16px] text-[var(--mute)]"> / {stats.pendingCount}</span>
           </p>
         </div>
         <Link href="/admin/billplz" className="jx-panel jx-ledger-card">
@@ -68,7 +62,7 @@ export default async function AdminHomePage() {
         </Link>
         <Link href="/admin/finance" className="jx-panel jx-ledger-card">
           <p className="jx-ledger-label">{t(locale, "adminCommissionAccrued")}</p>
-          <p className="jx-ledger-value is-seal">{formatMyrSen(commission.accruedSen)}</p>
+          <p className="jx-ledger-value is-seal">{formatMyrSen(stats.accruedSen)}</p>
         </Link>
       </div>
 

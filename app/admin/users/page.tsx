@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { listCustomers } from "@/lib/user-store";
+import { ADMIN_LIST_LIMIT, listCustomers } from "@/lib/user-store";
 import { formatMyrSen } from "@/lib/referral";
 import { getRequestLocale } from "@/lib/i18n-server";
 import { t } from "@/lib/messages";
@@ -34,6 +34,9 @@ export default async function AdminUsersPage({
     <div>
       <h1>{t(locale, "adminUsers")}</h1>
       <p className="jx-lede">{t(locale, "adminUsersIntro")}</p>
+      {users.length >= ADMIN_LIST_LIMIT ? (
+        <p className="mt-2 text-[12px] text-[var(--mute)]">显示最近 {ADMIN_LIST_LIMIT} 位用户。</p>
+      ) : null}
       <form className="jx-toolbar">
         <input name="q" defaultValue={q} placeholder={t(locale, "adminUsersSearch")} />
         <button type="submit" className="jx-btn">

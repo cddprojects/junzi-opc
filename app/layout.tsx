@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { cookies } from "next/headers";
 import { Noto_Sans_SC, Noto_Serif_SC } from "next/font/google";
 import { Providers } from "@/components/providers";
 import { AppShell } from "@/components/shell";
+import { NavProgress } from "@/components/nav-progress";
 import { CURRENCY_COOKIE, parseCurrency } from "@/lib/currency";
 import { htmlLang, LOCALE_COOKIE, parseLocale } from "@/lib/i18n";
 import { getSettings } from "@/lib/store";
@@ -50,6 +52,9 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
           currency={parseCurrency(cookie, settings.defaultCurrency)}
           settings={settings}
         >
+          <Suspense fallback={null}>
+            <NavProgress />
+          </Suspense>
           <AppShell>{children}</AppShell>
         </Providers>
       </body>

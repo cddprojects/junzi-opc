@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { listAllOrders, listCustomers } from "@/lib/user-store";
+import { ADMIN_LIST_LIMIT, listAllOrders, listCustomers } from "@/lib/user-store";
 import { AdminVerifyForm } from "@/components/admin/verify-form";
 import { AdminOrdersTable } from "@/components/admin/orders-table";
 
@@ -13,6 +13,9 @@ export default async function AdminOrdersPage() {
     <div>
       <h1>订单 / 课程码</h1>
       <p className="jx-lede">前台账号与后台密码分开。这里可核对学员购买记录，并验证加密课程码。</p>
+      {orders.length >= ADMIN_LIST_LIMIT ? (
+        <p className="mt-2 text-[12px] text-[var(--mute)]">订单表显示最近 {ADMIN_LIST_LIMIT} 单。</p>
+      ) : null}
 
       <div className="jx-panel mt-6 p-5">
         <h2>验证课程码</h2>

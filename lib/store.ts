@@ -1,5 +1,6 @@
 import "server-only";
 
+import { cache } from "react";
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "fs";
 import path from "path";
 import {
@@ -524,26 +525,30 @@ function shapeCatalog(input: {
   };
 }
 
-export async function getCatalog() {
+export const getCatalog = cache(async function getCatalog() {
   if (usesSupabaseStore()) {
     const { loadCatalogFromPg } = await import("@/lib/store-pg");
     return shapeCatalog(await loadCatalogFromPg());
   }
   const store = await readStore();
   return shapeCatalog(store);
-}
+});
 
-export async function getSettings() {
+export const getSettings = cache(async function getSettings() {
   if (usesSupabaseStore()) {
     const { loadSettingsFromPg } = await import("@/lib/store-pg");
     return normalizeSettings(await loadSettingsFromPg());
   }
   return normalizeSettings((await readStore()).settings);
-}
+});
 
-export async function getReferralPlan() {
+export const getReferralPlan = cache(async function getReferralPlan() {
+  if (usesSupabaseStore()) {
+    const { loadReferralPlanFromPg } = await import("@/lib/store-pg");
+    return normalizeReferralPlan(await loadReferralPlanFromPg());
+  }
   return normalizeReferralPlan((await readStore()).referralPlan);
-}
+});
 
 export async function updateReferralPlan(patch: Partial<ReferralPlan>) {
   const store = await readStore();
@@ -559,23 +564,50 @@ export async function updateSettings(patch: Partial<StoreSettings>) {
   return store.settings;
 }
 
+function shapeProduct(raw: Product) {
+  return {
+    ...ensureProductDetail(raw),
+    href: raw.href || `/product/${raw.slug}`,
+    shortTitle: raw.shortTitle || raw.title,
+  };
+}
+
+export const getProductPage = cache(async function getProductPage(slug: string) {
+  if (usesSupabaseStore()) {
+    const { loadProductPageFromPg } = await import("@/lib/store-pg");
+    const loaded = await loadProductPageFromPg(slug);
+    return {
+      product: loaded.product ? shapeProduct(loaded.product) : undefined,
+      video: loaded.video,
+    };
+  }
+  const store = await readStore();
+  const raw = store.products.find((item) => item.slug === slug);
+  return {
+    product: raw ? shapeProduct(raw) : undefined,
+    video: store.videos.find((item) => item.placement === "product-hero" && item.productSlug === slug),
+  };
+});
+
 export async function getStoreProduct(slug: string) {
   return (await getProductPage(slug)).product;
 }
 
-export async function getProductPage(slug: string) {
+export async function getStoreProductsBySlugs(slugs: string[]) {
+  const unique = [...new Set(slugs.filter(Boolean))];
+  if (!unique.length) return new Map<string, Product>();
+  if (usesSupabaseStore()) {
+    const { loadProductsBySlugsFromPg } = await import("@/lib/store-pg");
+    const products = await loadProductsBySlugsFromPg(unique);
+    return new Map(products.map((product) => [product.slug, shapeProduct(product)]));
+  }
   const store = await readStore();
-  const raw = store.products.find((item) => item.slug === slug);
-  return {
-    product: raw
-      ? {
-          ...ensureProductDetail(raw),
-          href: raw.href || `/product/${raw.slug}`,
-          shortTitle: raw.shortTitle || raw.title,
-        }
-      : undefined,
-    video: store.videos.find((item) => item.placement === "product-hero" && item.productSlug === slug),
-  };
+  return new Map(
+    unique
+      .map((slug) => store.products.find((item) => item.slug === slug))
+      .filter((item): item is Product => Boolean(item))
+      .map((item) => [item.slug, shapeProduct(item)]),
+  );
 }
 
 export async function searchStoreProducts(query: string) {

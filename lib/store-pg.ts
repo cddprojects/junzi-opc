@@ -1,11 +1,12 @@
 import "server-only";
 
+import { cache } from "react";
 import type { Customer, Order, UserSession } from "@/lib/account";
 import type { CatalogVideo, Poster, Product } from "@/lib/data";
 import { asFiniteNumber, asIso, asOptionalNumber, requireIso, sqlRows, withStoreTx } from "@/lib/db";
 import { hydrateOrderFromPayment, hydrateTopUpFromPayment } from "@/lib/migrate-payments";
 import type { BillplzBill, Payment } from "@/lib/payments";
-import type { CommissionEntry, ReferralPlan, Withdrawal } from "@/lib/referral";
+import { DEFAULT_REFERRAL_PLAN, type CommissionEntry, type ReferralPlan, type Withdrawal } from "@/lib/referral";
 import type { AppStore } from "@/lib/store";
 import type { TopUpRecord, WalletTransaction } from "@/lib/wallet";
 import { normalizeWithdrawalStatus } from "@/lib/wallet";
@@ -242,10 +243,10 @@ function mapSettings(row?: Record<string, unknown>): AppStore["settings"] {
 
 type Row = Record<string, unknown>;
 
-export async function loadSettingsFromPg(): Promise<AppStore["settings"]> {
+export const loadSettingsFromPg = cache(async function loadSettingsFromPg(): Promise<AppStore["settings"]> {
   const settingsRows = await sqlRows<Row>("settings", (sql) => sql`select * from settings where id = 1`);
   return mapSettings(settingsRows[0]);
-}
+});
 
 export async function loadCatalogFromPg(): Promise<{
   products: Product[];
@@ -311,6 +312,219 @@ export async function loadAppStoreFromPg(): Promise<AppStore> {
     withdrawals: withdrawals.map(mapWithdrawal),
     walletTransactions: walletTx.map(mapWalletTx),
     topUps: mappedTopUps,
+  };
+}
+
+export async function loadReferralPlanFromPg(): Promise<ReferralPlan> {
+  const planRows = await sqlRows<Row>("referral_plan", (sql) => sql`select * from referral_plan where id = 1`);
+  const planRow = planRows[0];
+  if (!planRow) return { ...DEFAULT_REFERRAL_PLAN, tiers: DEFAULT_REFERRAL_PLAN.tiers.map((tier) => ({ ...tier })) };
+  return {
+    compression: Boolean(planRow.compression),
+    maxPayoutSen: planRow.max_payout_sen == null ? null : asFiniteNumber(planRow.max_payout_sen),
+    tiers: planRow.tiers as ReferralPlan["tiers"],
+  };
+}
+
+export async function loadProductPageFromPg(slug: string) {
+  const products = await sqlRows<Row>("product", (sql) => sql`select * from products where slug = ${slug} limit 1`);
+  const videos = await sqlRows<Row>(
+    "product_hero_video",
+    (sql) => sql`select * from videos where placement = ${"product-hero"} and product_slug = ${slug} limit 1`,
+  );
+  return {
+    product: products[0] ? mapProduct(products[0]) : undefined,
+    video: videos[0] ? mapVideo(videos[0]) : undefined,
+  };
+}
+
+export async function loadProductsBySlugsFromPg(slugs: string[]) {
+  const unique = [...new Set(slugs.filter(Boolean))];
+  if (!unique.length) return [] as Product[];
+  const products = await sqlRows<Row>("products_by_slug", (sql) => sql`select * from products where slug in ${sql(unique)}`);
+  const bySlug = new Map(products.map((row) => [String(row.slug), mapProduct(row)]));
+  return unique.map((slug) => bySlug.get(slug)).filter(Boolean) as Product[];
+}
+
+export async function loadUserBySessionHashFromPg(tokenHash: string) {
+  const rows = await sqlRows<Row>(
+    "session_user",
+    (sql) => sql`
+      select u.*
+      from users u
+      inner join sessions s on s.user_id = u.id
+      where s.token_hash = ${tokenHash}
+        and s.expires_at > now()
+      limit 1
+    `,
+  );
+  return rows[0] ? mapUser(rows[0]) : undefined;
+}
+
+async function hydrateOrders(orderRows: Row[]) {
+  const mapped = orderRows.map(mapOrder);
+  const paymentIds = [...new Set(mapped.map((order) => order.paymentId).filter((id): id is string => Boolean(id)))];
+  if (!paymentIds.length) {
+    return mapped.map((order) => hydrateOrderFromPayment(order, [], []));
+  }
+  const payments = await sqlRows<Row>(
+    "payments_for_orders",
+    (sql) => sql`select * from payments where id in ${sql(paymentIds)}`,
+  );
+  const bills = await sqlRows<Row>(
+    "bills_for_orders",
+    (sql) => sql`select * from billplz_bills where payment_id in ${sql(paymentIds)}`,
+  );
+  const paymentRows = payments.map(mapPayment);
+  const billRows = bills.map(mapBill);
+  return mapped.map((order) => hydrateOrderFromPayment(order, paymentRows, billRows));
+}
+
+export async function loadOrdersForUserFromPg(userId: string) {
+  const orders = await sqlRows<Row>(
+    "orders_for_user",
+    (sql) => sql`select * from orders where user_id = ${userId} order by created_at desc`,
+  );
+  return hydrateOrders(orders);
+}
+
+export async function loadOrderForUserFromPg(userId: string, orderId: string) {
+  const orders = await sqlRows<Row>(
+    "order_for_user",
+    (sql) => sql`select * from orders where id = ${orderId} and user_id = ${userId} limit 1`,
+  );
+  const hydrated = await hydrateOrders(orders);
+  return hydrated[0];
+}
+
+export type CustomerListRow = ReturnType<typeof mapUser> & { referrerName?: string };
+
+export async function loadCustomerListFromPg(query: string, limit: number) {
+  const q = query.trim();
+  const users = q
+    ? await sqlRows<Row>(
+        "users_search",
+        (sql) => sql`
+          select u.*, r.name as referrer_name
+          from users u
+          left join users r on r.id = u.referrer_id
+          where u.name ilike ${"%" + q + "%"}
+            or coalesce(u.email, '') ilike ${"%" + q + "%"}
+            or coalesce(u.phone, '') ilike ${"%" + q + "%"}
+            or u.id ilike ${"%" + q + "%"}
+            or coalesce(u.referral_code, '') ilike ${"%" + q + "%"}
+          order by u.created_at desc
+          limit ${limit}
+        `,
+      )
+    : await sqlRows<Row>(
+        "users_list",
+        (sql) => sql`
+          select u.*, r.name as referrer_name
+          from users u
+          left join users r on r.id = u.referrer_id
+          order by u.created_at desc
+          limit ${limit}
+        `,
+      );
+  const stats = await sqlRows<Row>(
+    "order_stats",
+    (sql) => sql`select user_id, status, pay_method, referral_settled from orders`,
+  );
+  return { users: users.map((row) => ({ ...mapUser(row), referrerName: text(row.referrer_name) })), stats };
+}
+
+export async function loadOrderListFromPg(limit: number) {
+  const orders = await sqlRows<Row>(
+    "orders_list",
+    (sql) => sql`
+      select o.*, u.name as user_name, u.email as user_email, u.phone as user_phone
+      from orders o
+      left join users u on u.id = o.user_id
+      order by o.created_at desc
+      limit ${limit}
+    `,
+  );
+  const users = await sqlRows<Row>("users_for_orders", (sql) => sql`select * from users`);
+  const hydrated = await hydrateOrders(orders);
+  return {
+    orders: hydrated,
+    extras: orders.map((row) => ({
+      id: String(row.id),
+      userName: text(row.user_name),
+      userEmail: text(row.user_email),
+      userPhone: text(row.user_phone),
+    })),
+    users: users.map(mapUser),
+  };
+}
+
+export async function loadAdminHomeStatsFromPg() {
+  const userRows = await sqlRows<Row>("count_users", (sql) => sql`select count(*)::int as n from users`);
+  const orderRows = await sqlRows<Row>(
+    "count_orders",
+    (sql) => sql`
+      select
+        count(*)::int as n,
+        count(*) filter (where coalesce(status, 'paid') <> 'pending')::int as paid,
+        coalesce(sum(amount_myr) filter (where coalesce(status, 'paid') <> 'pending'), 0) as myr
+      from orders
+    `,
+  );
+  const ledgerRows = await sqlRows<Row>(
+    "sum_accrued",
+    (sql) => sql`
+      select coalesce(sum(amount_sen), 0) as sen
+      from commission_ledger
+      where kind = 'earn' and paid = true
+    `,
+  );
+  const orderCount = asFiniteNumber(orderRows[0]?.n);
+  const paidCount = asFiniteNumber(orderRows[0]?.paid);
+  return {
+    userCount: asFiniteNumber(userRows[0]?.n),
+    orderCount,
+    paidCount,
+    pendingCount: Math.max(0, orderCount - paidCount),
+    paidMyr: asFiniteNumber(orderRows[0]?.myr),
+    accruedSen: asFiniteNumber(ledgerRows[0]?.sen),
+  };
+}
+
+export async function loadCommissionDeskTablesFromPg() {
+  const users = await sqlRows<Row>("desk_users", (sql) => sql`select * from users`);
+  const orders = await sqlRows<Row>("desk_orders", (sql) => sql`select * from orders`);
+  const ledger = await sqlRows<Row>("desk_ledger", (sql) => sql`select * from commission_ledger`);
+  const withdrawals = await sqlRows<Row>("desk_withdrawals", (sql) => sql`select * from withdrawals`);
+  const plan = await loadReferralPlanFromPg();
+  return {
+    users: users.map(mapUser),
+    orders: orders.map(mapOrder),
+    commissionLedger: ledger.map(mapLedger),
+    withdrawals: withdrawals.map(mapWithdrawal),
+    referralPlan: plan,
+  };
+}
+
+export async function loadWalletDashboardFromPg(userId: string) {
+  const users = await sqlRows<Row>("wallet_user", (sql) => sql`select * from users where id = ${userId} limit 1`);
+  const withdrawals = await sqlRows<Row>(
+    "wallet_withdrawals",
+    (sql) => sql`select * from withdrawals where user_id = ${userId} order by created_at desc`,
+  );
+  const walletTx = await sqlRows<Row>(
+    "wallet_tx",
+    (sql) => sql`select * from wallet_transactions where user_id = ${userId} order by created_at desc limit 40`,
+  );
+  const topUps = await sqlRows<Row>(
+    "wallet_topups",
+    (sql) => sql`select * from top_ups where user_id = ${userId} order by created_at desc limit 20`,
+  );
+  return {
+    user: users[0] ? mapUser(users[0]) : undefined,
+    withdrawals: withdrawals.map(mapWithdrawal),
+    walletTransactions: walletTx.map(mapWalletTx),
+    topUps: topUps.map(mapTopUp),
   };
 }
 

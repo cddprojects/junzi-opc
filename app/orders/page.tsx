@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/user-auth";
 import { ordersForUser } from "@/lib/user-store";
-import { getStoreProduct } from "@/lib/store";
+import { getStoreProductsBySlugs } from "@/lib/store";
 import { CoverArt } from "@/components/covers";
 import { Money } from "@/components/money";
 import { isOrderPaid } from "@/lib/account";
@@ -37,11 +37,7 @@ export default async function OrdersPage({
   const tab = parseOrderTab(tabParam);
   const all = await ordersForUser(user.id);
   const orders = filterOrders(all, tab);
-  const products = new Map(
-    await Promise.all(
-      [...new Set(orders.map((order) => order.productSlug))].map(async (slug) => [slug, await getStoreProduct(slug)] as const),
-    ),
-  );
+  const products = await getStoreProductsBySlugs(orders.map((order) => order.productSlug));
 
   return (
     <div className="px-4 py-5 md:px-0 md:py-2">

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { getCurrentUser } from "@/lib/user-auth";
 import { paidOrdersForUser } from "@/lib/user-store";
-import { getStoreProduct } from "@/lib/store";
+import { getStoreProductsBySlugs } from "@/lib/store";
 import { LoginPrompt } from "@/components/login-prompt";
 import { CopyCode } from "@/components/copy-code";
 import { CoverArt } from "@/components/covers";
@@ -29,11 +29,7 @@ export default async function LearningPage() {
     if (!bySlug.has(order.productSlug)) bySlug.set(order.productSlug, order);
   }
   const items = [...bySlug.values()];
-  const products = new Map(
-    await Promise.all(
-      items.map(async (order) => [order.productSlug, await getStoreProduct(order.productSlug)] as const),
-    ),
-  );
+  const products = await getStoreProductsBySlugs(items.map((order) => order.productSlug));
 
   return (
     <div className="px-4 py-6 md:px-0">

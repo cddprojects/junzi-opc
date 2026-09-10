@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/components/auth-provider";
 import { useLocale } from "@/components/locale-provider";
+import { startNavigationProgress } from "@/components/nav-progress";
 import { loginHref, safeReturnPath } from "@/lib/safe-path";
 import { translateApiError } from "@/lib/messages";
 
@@ -54,6 +55,7 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
       return;
     }
     await refresh();
+    startNavigationProgress();
     router.push(next);
     router.refresh();
   }

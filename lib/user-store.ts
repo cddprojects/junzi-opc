@@ -1,8 +1,10 @@
 import "server-only";
 
+import { cache } from "react";
 import { membership } from "@/lib/data";
 import {
   type CheckoutItem,
+  type Customer,
   type Order,
   type PayMethod,
   type PublicCustomer,
@@ -24,7 +26,7 @@ import {
 } from "@/lib/security";
 import { computeLegacyOrderNo } from "@/lib/order-no";
 import { paymentKindForPayMethod, type Payment } from "@/lib/payments";
-import { requireVerifySecret } from "@/lib/runtime-store";
+import { requireVerifySecret, usesSupabaseStore } from "@/lib/runtime-store";
 import { hashSessionToken } from "@/lib/session-token";
 import { ensureCustomerReferral, getSettings, getStoreProduct, readStore, writeStore } from "@/lib/store";
 import { fromCny, parseCurrency } from "@/lib/currency";
@@ -168,16 +170,24 @@ function createSessionRecord(userId: string): UserSession & { token: string } {
   };
 }
 
-export async function customerFromToken(token?: string | null): Promise<PublicCustomer | null> {
+export const customerFromToken = cache(async function customerFromToken(
+  token?: string | null,
+): Promise<PublicCustomer | null> {
   if (!token) return null;
-  const store = await readStore();
   const tokenHash = hashSessionToken(token);
+  if (usesSupabaseStore()) {
+    const { loadUserBySessionHashFromPg } = await import("@/lib/store-pg");
+    const user = await loadUserBySessionHashFromPg(tokenHash);
+    if (!user || user.status === "disabled") return null;
+    return publicCustomer(user);
+  }
+  const store = await readStore();
   const session = store.sessions.find((item) => item.tokenHash === tokenHash || item.token === token);
   if (!session || Date.parse(session.expiresAt) <= Date.now()) return null;
   const user = store.users.find((item) => item.id === session.userId);
   if (!user || user.status === "disabled") return null;
   return publicCustomer(user);
-}
+});
 
 export async function revokeSession(token?: string | null) {
   if (!token) return;
@@ -501,12 +511,20 @@ export async function paidOrdersForUser(userId: string) {
 }
 
 export async function ordersForUser(userId: string) {
+  if (usesSupabaseStore()) {
+    const { loadOrdersForUserFromPg } = await import("@/lib/store-pg");
+    return loadOrdersForUserFromPg(userId);
+  }
   return (await readStore())
     .orders.filter((order) => order.userId === userId)
     .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
 }
 
 export async function orderForUser(userId: string, orderId: string) {
+  if (usesSupabaseStore()) {
+    const { loadOrderForUserFromPg } = await import("@/lib/store-pg");
+    return loadOrderForUserFromPg(userId, orderId);
+  }
   return (await readStore()).orders.find((order) => order.id === orderId && order.userId === userId);
 }
 
@@ -536,7 +554,65 @@ export async function lookupVerifyCode(code: string) {
   return { order, user };
 }
 
+export const ADMIN_LIST_LIMIT = 200;
+
+function customerListRow(
+  user: Customer & { referrerName?: string },
+  orders: { userId: string; status?: string; payMethod?: string; referralSettled?: Order["referralSettled"] }[],
+) {
+  const mine = orders.filter((order) => order.userId === user.id);
+  const paid = mine.filter((order) => order.status !== "pending");
+  return {
+    ...publicCustomer(user),
+    account: maskAccount(user),
+    email: user.email,
+    phone: user.phone,
+    orderCount: mine.length,
+    paidOrderCount: paid.length,
+    billplzPaidCount: paid.filter((order) => order.payMethod === "billplz").length,
+    accruedOrderCount: mine.filter((order) =>
+      Boolean(order.referralSettled?.tiers.some((tier) => tier.paid && tier.amountSen > 0)),
+    ).length,
+    createdAt: user.createdAt,
+    referralCode: user.referralCode,
+    referrerId: user.referrerId,
+    referrerName: user.referrerName,
+    commissionBalanceSen: user.commissionBalanceSen || 0,
+    topUpBalanceSen: user.topUpBalanceSen || 0,
+  };
+}
+
 export async function listAllOrders() {
+  if (usesSupabaseStore()) {
+    const { loadOrderListFromPg } = await import("@/lib/store-pg");
+    const { orders, extras, users } = await loadOrderListFromPg(ADMIN_LIST_LIMIT);
+    const extraById = new Map(extras.map((row) => [row.id, row]));
+    return orders.map((order) => {
+      const extra = extraById.get(order.id);
+      const user = users.find((item) => item.id === order.userId);
+      const accountUser = user || {
+        name: extra?.userName || "",
+        email: extra?.userEmail,
+        phone: extra?.userPhone,
+      };
+      return {
+        ...order,
+        userName: extra?.userName || user?.name,
+        userAccount: user || extra?.userName ? maskAccount(accountUser) : "已删除用户",
+        userEmail: extra?.userEmail || user?.email,
+        userPhone: extra?.userPhone || user?.phone,
+        referralSettled: order.referralSettled
+          ? {
+              ...order.referralSettled,
+              genealogy:
+                order.referralSettled.genealogy && order.referralSettled.genealogy.length > 0
+                  ? order.referralSettled.genealogy
+                  : walkFullUpline(users, user),
+            }
+          : order.referralSettled,
+      };
+    });
+  }
   const store = await readStore();
   return [...store.orders]
     .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt))
@@ -562,6 +638,17 @@ export async function listAllOrders() {
 }
 
 export async function listCustomers(query = "") {
+  if (usesSupabaseStore()) {
+    const { loadCustomerListFromPg } = await import("@/lib/store-pg");
+    const { users, stats } = await loadCustomerListFromPg(query, ADMIN_LIST_LIMIT);
+    const slim = stats.map((row) => ({
+      userId: String(row.user_id),
+      status: row.status == null ? undefined : String(row.status),
+      payMethod: row.pay_method == null ? undefined : String(row.pay_method),
+      referralSettled: row.referral_settled as Order["referralSettled"],
+    }));
+    return users.map((user) => customerListRow(user, slim));
+  }
   const store = await readStore();
   const q = query.trim().toLowerCase();
   return store.users
@@ -570,31 +657,37 @@ export async function listCustomers(query = "") {
       return [user.name, user.email ?? "", user.phone ?? "", user.id, user.referralCode ?? ""]
         .some((field) => field.toLowerCase().includes(q));
     })
-    .map((user) => ({
-      ...publicCustomer(user),
-      account: maskAccount(user),
-      email: user.email,
-      phone: user.phone,
-      orderCount: store.orders.filter((order) => order.userId === user.id).length,
-      paidOrderCount: store.orders.filter((order) => order.userId === user.id && isOrderPaid(order)).length,
-      billplzPaidCount: store.orders.filter(
-        (order) => order.userId === user.id && isOrderPaid(order) && order.payMethod === "billplz",
-      ).length,
-      accruedOrderCount: store.orders.filter(
-        (order) =>
-          order.userId === user.id &&
-          Boolean(order.referralSettled?.tiers.some((tier) => tier.paid && tier.amountSen > 0)),
-      ).length,
-      createdAt: user.createdAt,
-      referralCode: user.referralCode,
-      referrerId: user.referrerId,
-      referrerName: user.referrerId
-        ? store.users.find((item) => item.id === user.referrerId)?.name
-        : undefined,
-      commissionBalanceSen: user.commissionBalanceSen || 0,
-      topUpBalanceSen: user.topUpBalanceSen || 0,
-    }))
+    .map((user) =>
+      customerListRow(
+        {
+          ...user,
+          referrerName: user.referrerId
+            ? store.users.find((item) => item.id === user.referrerId)?.name
+            : undefined,
+        },
+        store.orders,
+      ),
+    )
     .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
+}
+
+export async function getAdminHomeStats() {
+  if (usesSupabaseStore()) {
+    const { loadAdminHomeStatsFromPg } = await import("@/lib/store-pg");
+    return loadAdminHomeStatsFromPg();
+  }
+  const store = await readStore();
+  const paid = store.orders.filter(isOrderPaid);
+  return {
+    userCount: store.users.length,
+    orderCount: store.orders.length,
+    paidCount: paid.length,
+    pendingCount: store.orders.length - paid.length,
+    paidMyr: paid.reduce((sum, order) => sum + (order.amountMyr ?? 0), 0),
+    accruedSen: store.commissionLedger
+      .filter((row) => row.kind === "earn" && row.paid)
+      .reduce((sum, row) => sum + row.amountSen, 0),
+  };
 }
 
 export async function getCustomerAdmin(userId: string) {
@@ -706,8 +799,13 @@ export async function requestWithdrawal(userId: string, amountSen: number, payou
   return row;
 }
 
-export async function listCommissionDesk() {
-  const store = await readStore();
+async function commissionDeskFromSlice(store: {
+  users: Awaited<ReturnType<typeof readStore>>["users"];
+  orders: Awaited<ReturnType<typeof readStore>>["orders"];
+  commissionLedger: Awaited<ReturnType<typeof readStore>>["commissionLedger"];
+  withdrawals: Awaited<ReturnType<typeof readStore>>["withdrawals"];
+  referralPlan: Awaited<ReturnType<typeof readStore>>["referralPlan"];
+}) {
   const usersById = new Map(store.users.map((user) => [user.id, user]));
   const ordersById = new Map(store.orders.map((order) => [order.id, order]));
   const earnings = [...store.commissionLedger]
@@ -785,6 +883,14 @@ export async function listCommissionDesk() {
   };
 }
 
+export async function listCommissionDesk() {
+  if (usesSupabaseStore()) {
+    const { loadCommissionDeskTablesFromPg } = await import("@/lib/store-pg");
+    return commissionDeskFromSlice(await loadCommissionDeskTablesFromPg());
+  }
+  return commissionDeskFromSlice(await readStore());
+}
+
 export async function settleWithdrawal(id: string, action: "settle" | "reject" | "approve" | "pay", note?: string) {
   const store = await readStore();
   if (action === "reject") {
@@ -817,6 +923,18 @@ export async function settleWithdrawal(id: string, action: "settle" | "reject" |
 }
 
 export async function getWalletDashboard(userId: string) {
+  if (usesSupabaseStore()) {
+    const { loadWalletDashboardFromPg } = await import("@/lib/store-pg");
+    const loaded = await loadWalletDashboardFromPg(userId);
+    if (!loaded.user) throw new Error("请先登录");
+    const wallet = computeWalletBuckets(loaded.user, loaded.withdrawals);
+    return {
+      ...wallet,
+      transactions: loaded.walletTransactions,
+      topUps: loaded.topUps,
+      withdrawals: loaded.withdrawals.slice(0, 20),
+    };
+  }
   const store = await readStore();
   const user = store.users.find((item) => item.id === userId);
   if (!user) throw new Error("请先登录");
