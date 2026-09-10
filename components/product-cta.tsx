@@ -65,9 +65,9 @@ export function ProductCtaRow({
   className?: string;
 }) {
   return (
-    <div className={cn("flex items-stretch gap-3", className)}>
-      <AddToCartButton product={product} iconOnly className="size-14 rounded-[14px]" />
-      <BuyNowButton product={product} className="h-14 min-h-14 flex-[1_1_80%] rounded-[14px] text-[16px]" />
+    <div className={cn("flex items-center gap-3", className)}>
+      <AddToCartButton product={product} iconOnly className="size-12 rounded-[16px] bg-[#fff1f0]" />
+      <BuyNowButton product={product} className="h-12 min-h-12 flex-1 rounded-full text-[15px]" />
     </div>
   );
 }
