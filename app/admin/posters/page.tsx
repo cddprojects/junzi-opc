@@ -12,7 +12,7 @@ export default async function AdminPostersPage() {
         <div>
           <h1>海报 / 轮播</h1>
           <p className="jx-lede">
-            共 {posters.length} 张。位置：首页轮播、中部横幅、线下工作坊、活动报名、会员中心、AI工具小程序。
+            本页管首页轮播、中部横幅、AI工具小程序。线下工作坊、活动报名、会员中心请走左侧「内容」对应页。
           </p>
         </div>
         <Link href="/admin/posters/new" className="jx-btn">
@@ -49,7 +49,18 @@ export default async function AdminPostersPage() {
                 <td>{poster.sort}</td>
                 <td className="max-w-[160px] truncate text-[12px]">{poster.href}</td>
                 <td>
-                  <Link href={`/admin/posters/${poster.id}`} className="jx-link">
+                  <Link
+                    href={
+                      poster.placement === "workshop"
+                        ? "/admin/workshop"
+                        : poster.placement === "events"
+                          ? "/admin/events"
+                          : poster.placement === "member"
+                            ? "/admin/member"
+                            : `/admin/posters/${poster.id}`
+                    }
+                    className="jx-link"
+                  >
                     编辑
                   </Link>
                 </td>
