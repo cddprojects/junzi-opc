@@ -54,20 +54,7 @@ export function CourseDetailView({
         </div>
         <div className="bg-white px-3 pt-3 pb-4 md:rounded-xl md:px-6 md:py-6">
           <div className="flex items-start justify-between gap-3">
-            <div>
-              <p className="text-[24px] leading-none font-semibold text-[#fa3534]">
-                <Money cny={product.price} />
-              </p>
-              {product.originalPrice ? (
-                <p className="mt-1 text-[13px] leading-none text-[#bbb] line-through">
-                  <Money cny={product.originalPrice} />
-                </p>
-              ) : null}
-            </div>
-            <span className="text-[12px] text-[#999]">{t("soldCount", { n: product.sales })}</span>
-          </div>
-          <div className="mt-3 flex items-start justify-between gap-3">
-            <h1 className="text-[17px] leading-6 font-semibold text-[#333]">{view.title}</h1>
+            <h1 className="min-w-0 text-[17px] leading-6 font-semibold text-[#333]">{view.title}</h1>
             <div className="relative flex shrink-0 gap-3 text-center text-[10px] text-[#888]">
               <button
                 type="button"
@@ -95,14 +82,29 @@ export function CourseDetailView({
               </button>
             </div>
           </div>
-          {view.giftNote && (
-            <div className="mt-3 flex items-center gap-2 text-[12px]">
+          {view.subtitle ? <p className="mt-2 text-[13px] leading-5 text-[#666]">{view.subtitle}</p> : null}
+          {detail.lecturer ? <p className="mt-2 text-[13px] text-[#888]">{t("taughtBy", { name: detail.lecturer })}</p> : null}
+          {view.giftNote ? (
+            <div className="mt-2 flex items-center gap-2 text-[12px]">
               <span className="rounded-sm bg-[#fa3534] px-1.5 py-0.5 text-white">{t("gift")}</span>
               <span className="text-[#666]">{view.giftNote}</span>
             </div>
-          )}
-          <div className="mt-5 hidden md:block">
-            <ProductCtaRow product={product} />
+          ) : null}
+          <p className="mt-3 text-right text-[12px] text-[#999]">{t("soldCount", { n: product.sales })}</p>
+          <div className="mt-3 flex items-end gap-3">
+            <div className="shrink-0">
+              <p className="text-[24px] leading-none font-semibold text-[#fa3534]">
+                <Money cny={product.price} />
+              </p>
+              {product.originalPrice ? (
+                <p className="mt-1 text-[13px] leading-none text-[#bbb] line-through">
+                  <Money cny={product.originalPrice} />
+                </p>
+              ) : null}
+            </div>
+            <div className="hidden min-w-0 flex-1 md:block">
+              <ProductCtaRow product={product} />
+            </div>
           </div>
         </div>
       </div>
