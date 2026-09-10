@@ -8,21 +8,23 @@ import { t } from "@/lib/messages";
 export default async function LiveCoursesPage() {
   const locale = await getRequestLocale();
   return (
-    <div className="bg-white md:grid md:grid-cols-2 md:gap-5 md:bg-transparent">
-      {liveCourses.map((course, index) => (
-        <Link
-          key={course.slug}
-          href={course.href}
-          prefetch
-          className={index > 0 ? "block cursor-pointer border-t border-[#eadfca] transition active:opacity-70 md:overflow-hidden md:rounded-2xl md:border-0 md:bg-white md:shadow-sm" : "block cursor-pointer transition active:opacity-70 md:overflow-hidden md:rounded-2xl md:bg-white md:shadow-sm"}
-        >
-          <CoverArt theme={course.cover} className="rounded-none" />
-          <div className="px-3 py-3">
-            <h3 className="font-serif text-[15px] leading-6 font-medium">{localized(locale, course.title, course.titleEn)}</h3>
-            <p className="mt-1 text-[12px] text-[#999]">{t(locale, "learnersCount", { n: course.learners })}</p>
-          </div>
-        </Link>
-      ))}
+    <div className="bg-[#f5f5f5] pb-4 md:bg-transparent md:px-0 md:py-6">
+      <div className="mp-card-list mp-card-list--grid">
+        {liveCourses.map((course) => (
+          <Link
+            key={course.slug}
+            href={course.href}
+            prefetch
+            className="mp-stack-card cursor-pointer active:opacity-80"
+          >
+            <CoverArt theme={course.cover} className="rounded-none" />
+            <div className="px-3 py-3">
+              <h3 className="font-serif text-[15px] leading-6 font-medium">{localized(locale, course.title, course.titleEn)}</h3>
+              <p className="mt-1 text-[12px] text-[#999]">{t(locale, "learnersCount", { n: course.learners })}</p>
+            </div>
+          </Link>
+        ))}
+      </div>
     </div>
   );
 }

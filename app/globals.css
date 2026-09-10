@@ -203,6 +203,7 @@
 
 .storefront {
   --front-bg: #f5f5f5;
+  --front-card-gap: 8px;
   --front-surface: #ffffff;
   --front-surface-soft: #f7f7f7;
   --front-text: #333333;
@@ -535,6 +536,41 @@
   border-radius: 999px;
   background: var(--front-accent);
   color: #fff;
+}
+
+/* Shared stacked-card lists: 录播课 / 直播课 / 年度会员 */
+.storefront .mp-card-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--front-card-gap);
+}
+
+.storefront .mp-stack-card {
+  display: block;
+  overflow: hidden;
+  background: #fff;
+}
+
+.storefront .mp-header-ctrl {
+  margin: 0;
+}
+
+.storefront .mp-header-ctrl select {
+  field-sizing: content;
+}
+
+@media (min-width: 768px) {
+  .storefront .mp-card-list--grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .storefront .mp-card-list--grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
 
 .mp-modal-root {

@@ -19,7 +19,7 @@ export default async function RecordedCoursesPage() {
       {courses.length === 0 ? (
         <p className="px-4 py-16 text-center text-[14px] text-[#999]">{t(locale, "recordedEmpty")}</p>
       ) : (
-        <div className="space-y-2 md:grid md:grid-cols-2 md:gap-4 md:space-y-0 lg:grid-cols-3">
+        <div className="mp-card-list mp-card-list--grid">
           {courses.map((product) => {
             const count = product.detail?.lessons.length || product.sales || 0;
             return (
@@ -27,7 +27,7 @@ export default async function RecordedCoursesPage() {
                 key={product.slug}
                 href={`/courses/recorded/${product.slug}`}
                 prefetch
-                className="block overflow-hidden bg-white active:opacity-80"
+                className="mp-stack-card active:opacity-80"
               >
                 <CoverArt theme={product.cover} image={product.coverImage} showVideoBadge className="aspect-[16/9]" />
                 <div className="px-3 py-3">
