@@ -12,7 +12,7 @@ export function CurrencySwitcher({ compact, header }: { compact?: boolean; heade
     <label
       className={cn(
         "inline-flex items-center text-[var(--front-text-soft)]",
-        header ? "mp-header-ctrl" : compact ? "gap-2 text-[12px]" : "mb-[10px] gap-2 text-[13px]",
+        header ? "mp-header-ctrl mp-header-ctrl--currency" : compact ? "gap-2 text-[12px]" : "mb-[10px] gap-2 text-[13px]",
       )}
     >
       {!compact && !header && <span className="text-[var(--front-text-muted)]">{t("currency")}</span>}
@@ -23,7 +23,7 @@ export function CurrencySwitcher({ compact, header }: { compact?: boolean; heade
         className={cn(
           "rounded-full border border-[var(--front-border)] bg-[var(--front-surface)] outline-none",
           header
-            ? "h-7 max-w-[3.25rem] bg-[#f7f7f7] px-1.5 text-[11px] leading-7"
+            ? "text-[11px]"
             : compact
               ? "max-w-[88px] px-2 py-1 text-[12px]"
               : "px-2 py-1 text-[13px]",
