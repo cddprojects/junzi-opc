@@ -2,7 +2,7 @@ import "server-only";
 
 import type { Customer, Order, UserSession } from "@/lib/account";
 import type { CatalogVideo, Poster, Product } from "@/lib/data";
-import { asFiniteNumber, asIso, asOptionalNumber, getSql, requireIso, withStoreTx } from "@/lib/db";
+import { asFiniteNumber, asIso, asOptionalNumber, requireIso, sqlRows, withStoreTx } from "@/lib/db";
 import { hydrateOrderFromPayment, hydrateTopUpFromPayment } from "@/lib/migrate-payments";
 import type { BillplzBill, Payment } from "@/lib/payments";
 import type { CommissionEntry, ReferralPlan, Withdrawal } from "@/lib/referral";
@@ -233,46 +233,59 @@ function mapTopUp(row: Record<string, unknown>): TopUpRecord {
   };
 }
 
+function mapSettings(row?: Record<string, unknown>): AppStore["settings"] {
+  return {
+    defaultCurrency: (row?.default_currency as "CNY") || "CNY",
+    fx: (row?.fx as AppStore["settings"]["fx"]) || { CNY: 1, MYR: 1.64, USD: 7.2, SGD: 5.3 },
+  };
+}
+
+type Row = Record<string, unknown>;
+
+export async function loadSettingsFromPg(): Promise<AppStore["settings"]> {
+  const settingsRows = await sqlRows<Row>("settings", (sql) => sql`select * from settings where id = 1`);
+  return mapSettings(settingsRows[0]);
+}
+
+export async function loadCatalogFromPg(): Promise<{
+  products: Product[];
+  posters: Poster[];
+  videos: CatalogVideo[];
+  settings: AppStore["settings"];
+}> {
+  const products = await sqlRows<Row>("products", (sql) => sql`select * from products`);
+  const posters = await sqlRows<Row>("posters", (sql) => sql`select * from posters`);
+  const videos = await sqlRows<Row>("videos", (sql) => sql`select * from videos`);
+  const settings = await loadSettingsFromPg();
+  return {
+    products: products.map(mapProduct),
+    posters: posters.map(mapPoster),
+    videos: videos.map(mapVideo),
+    settings,
+  };
+}
+
 export async function loadAppStoreFromPg(): Promise<AppStore> {
-  const sql = getSql();
-  const [
-    users,
-    sessions,
-    products,
-    posters,
-    videos,
-    settingsRows,
-    planRows,
-    payments,
-    bills,
-    orders,
-    ledger,
-    walletTx,
-    withdrawals,
-    topUps,
-  ] = await Promise.all([
-    sql<Record<string, unknown>[]>`select * from users`,
-    sql<Record<string, unknown>[]>`select * from sessions`,
-    sql<Record<string, unknown>[]>`select * from products`,
-    sql<Record<string, unknown>[]>`select * from posters`,
-    sql<Record<string, unknown>[]>`select * from videos`,
-    sql<Record<string, unknown>[]>`select * from settings where id = 1`,
-    sql<Record<string, unknown>[]>`select * from referral_plan where id = 1`,
-    sql<Record<string, unknown>[]>`select * from payments`,
-    sql<Record<string, unknown>[]>`select * from billplz_bills`,
-    sql<Record<string, unknown>[]>`select * from orders`,
-    sql<Record<string, unknown>[]>`select * from commission_ledger`,
-    sql<Record<string, unknown>[]>`select * from wallet_transactions`,
-    sql<Record<string, unknown>[]>`select * from withdrawals`,
-    sql<Record<string, unknown>[]>`select * from top_ups`,
-  ]);
+  const users = await sqlRows<Row>("users", (sql) => sql`select * from users`);
+  const sessions = await sqlRows<Row>("sessions", (sql) => sql`select * from sessions`);
+  const products = await sqlRows<Row>("products", (sql) => sql`select * from products`);
+  const posters = await sqlRows<Row>("posters", (sql) => sql`select * from posters`);
+  const videos = await sqlRows<Row>("videos", (sql) => sql`select * from videos`);
+  const settingsRows = await sqlRows<Row>("settings", (sql) => sql`select * from settings where id = 1`);
+  const planRows = await sqlRows<Row>("referral_plan", (sql) => sql`select * from referral_plan where id = 1`);
+  const payments = await sqlRows<Row>("payments", (sql) => sql`select * from payments`);
+  const bills = await sqlRows<Row>("billplz_bills", (sql) => sql`select * from billplz_bills`);
+  const orders = await sqlRows<Row>("orders", (sql) => sql`select * from orders`);
+  const ledger = await sqlRows<Row>("commission_ledger", (sql) => sql`select * from commission_ledger`);
+  const walletTx = await sqlRows<Row>("wallet_transactions", (sql) => sql`select * from wallet_transactions`);
+  const withdrawals = await sqlRows<Row>("withdrawals", (sql) => sql`select * from withdrawals`);
+  const topUps = await sqlRows<Row>("top_ups", (sql) => sql`select * from top_ups`);
 
   const paymentRows = payments.map(mapPayment);
   const billRows = bills.map(mapBill);
   const mappedOrders = orders.map((row) => hydrateOrderFromPayment(mapOrder(row), paymentRows, billRows));
   const mappedTopUps = topUps.map((row) => hydrateTopUpFromPayment(mapTopUp(row), billRows));
 
-  const settingsRow = settingsRows[0];
   const planRow = planRows[0];
 
   return {
@@ -286,10 +299,7 @@ export async function loadAppStoreFromPg(): Promise<AppStore> {
     payments: paymentRows,
     billplzBills: billRows,
     verifySecret: "",
-    settings: {
-      defaultCurrency: (settingsRow?.default_currency as "CNY") || "CNY",
-      fx: (settingsRow?.fx as AppStore["settings"]["fx"]) || { CNY: 1, MYR: 1.64, USD: 7.2, SGD: 5.3 },
-    },
+    settings: mapSettings(settingsRows[0]),
     referralPlan: (planRow
       ? {
           compression: Boolean(planRow.compression),

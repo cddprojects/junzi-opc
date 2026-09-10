@@ -504,9 +504,13 @@ export async function writeStore(store: AppStore) {
   rememberStore(next);
 }
 
-export async function getCatalog() {
-  const store = await readStore();
-  const products = store.products.map((product) => ({
+function shapeCatalog(input: {
+  products: Product[];
+  posters: Poster[];
+  videos: CatalogVideo[];
+  settings: StoreSettings;
+}) {
+  const products = input.products.map((product) => ({
     ...ensureProductDetail(product),
     href: product.href || `/product/${product.slug}`,
     shortTitle: product.shortTitle || product.title,
@@ -514,13 +518,26 @@ export async function getCatalog() {
   return {
     brand,
     products,
-    posters: [...store.posters].sort((a, b) => a.sort - b.sort),
-    videos: store.videos,
-    settings: normalizeSettings(store.settings),
+    posters: [...input.posters].sort((a, b) => a.sort - b.sort),
+    videos: input.videos,
+    settings: normalizeSettings(input.settings),
   };
 }
 
+export async function getCatalog() {
+  if (usesSupabaseStore()) {
+    const { loadCatalogFromPg } = await import("@/lib/store-pg");
+    return shapeCatalog(await loadCatalogFromPg());
+  }
+  const store = await readStore();
+  return shapeCatalog(store);
+}
+
 export async function getSettings() {
+  if (usesSupabaseStore()) {
+    const { loadSettingsFromPg } = await import("@/lib/store-pg");
+    return normalizeSettings(await loadSettingsFromPg());
+  }
   return normalizeSettings((await readStore()).settings);
 }
 

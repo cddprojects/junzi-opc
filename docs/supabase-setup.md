@@ -8,7 +8,7 @@ The app does **not** deploy itself. You apply SQL, import data from a machine th
 2. SQL Editor → paste and run [`supabase/migrations/20260910_000001_init.sql`](../supabase/migrations/20260910_000001_init.sql).
 3. Storage → New bucket → name `uploads` → **Public**.
 4. Settings → API: copy Project URL and `service_role` key.
-5. Settings → Database: copy the Postgres URI into `DATABASE_URL` (SSL). Prefer the transaction pooler if the host allows it; direct also works for import.
+5. Settings → Database: copy the Postgres URI into `DATABASE_URL` (SSL). Use the **transaction pooler (`:6543`)** for Vercel. Writes use `BEGIN` + `pg_advisory_xact_lock` (transaction-scoped). Reads are sequential, one query at a time, `prepare: false`. Session pooler (`:5432`) or direct are not required.
 6. Copy `VERIFY_SECRET` from local `data/store.json` (`verifySecret`) **once** into env. Do not store it in Postgres.
 
 ## 2. Vercel env vars
@@ -48,7 +48,8 @@ If import reports `mixed_status` / `bill_shared`, fix those groups in `store.jso
 
 ## 5. Production verification
 
-- Homepage loads (no `ENOENT mkdir /var/task/data`).
+- Homepage loads in a few seconds (no `ENOENT mkdir /var/task/data`, no 300s task timeout).
+- Vercel Logs show `[store] connect start` → `[store] connect ok` and sequential `[store] query start|ok` for `settings` / `products` / `posters` / `videos` (not 14 parallel full-table dumps).
 - Catalog products match import counts.
 - Login with an imported user still works (session cookie hashed on import).
 - Open a paid order: **订单号** is the persisted `GO…`, not recomputed.
