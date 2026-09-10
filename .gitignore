@@ -48,6 +48,6 @@ next-env.d.ts
 
 # local catalog + uploads
 /data/store.json
+/data/store.backup*.json
 /data/uploads/*
 !/data/uploads/.gitkeep
-/data/store.backup*.json
