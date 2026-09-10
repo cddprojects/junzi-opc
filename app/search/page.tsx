@@ -24,7 +24,7 @@ export default async function SearchPage({
       ) : (
         <p className="px-1 pt-5 text-[14px] text-[var(--front-text-muted)]">{t(locale, "searchHint")}</p>
       )}
-      <div className="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="mt-5 grid grid-cols-1 items-stretch gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {results.length === 0 ? (
           <div className="sm:col-span-2 lg:col-span-3">
             <EmptyHint>{t(locale, "noProducts")}</EmptyHint>

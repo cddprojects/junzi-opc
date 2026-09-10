@@ -217,7 +217,7 @@ export function ProductCard({ product }: { product: Product }) {
     <Link
       href={href}
       prefetch
-      className="relative block overflow-hidden bg-white shadow-[0_1px_4px_rgb(0_0_0/6%)] active:opacity-80"
+      className="relative flex h-full flex-col overflow-hidden bg-white shadow-[0_1px_4px_rgb(0_0_0/6%)] active:opacity-80"
       aria-label={title}
     >
       <CoverArt
@@ -226,10 +226,10 @@ export function ProductCard({ product }: { product: Product }) {
         showPrice
         priceLabel={format(product.price)}
       />
-      <div className="p-4">
+      <div className="flex flex-1 flex-col p-4">
         <p className="text-[15px] font-medium">{title}</p>
         {subtitle && <p className="mt-1 line-clamp-2 text-[13px] leading-5 text-[#888]">{subtitle}</p>}
-        <div className="mt-4 flex items-end justify-between">
+        <div className="mt-auto flex items-end justify-between pt-4">
           <div>
             <p className="text-[18px] font-semibold text-[#fa3534]">
               <Money cny={product.price} />
