@@ -13,7 +13,7 @@ export default function ProductDetailBody({ product }: { product: Product }) {
 
   const images = normalizeDetailImages(product.detailImages);
   return (
-    <section className="bg-white pb-[2px]">
+    <section className="grid grid-cols-2 gap-0.5 bg-white pb-[2px]">
       {images.map((src, index) => (
         // eslint-disable-next-line @next/next/no-img-element
         <img
@@ -22,8 +22,7 @@ export default function ProductDetailBody({ product }: { product: Product }) {
           alt=""
           loading="lazy"
           decoding="async"
-          className="block w-full"
-          style={{ marginBottom: index === images.length - 1 ? 0 : 2 }}
+          className="block h-auto w-full"
         />
       ))}
     </section>

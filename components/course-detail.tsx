@@ -53,15 +53,15 @@ export function CourseDetailView({
           <Hero product={view} video={heroVideo} />
         </div>
         <div className="bg-white px-3 pt-3 pb-4 md:rounded-xl md:px-6 md:py-6">
-          <div className="flex items-end justify-between">
-            <div className="flex items-baseline gap-2">
-              <span className="text-[24px] font-semibold text-[#fa3534]">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-[24px] leading-none font-semibold text-[#fa3534]">
                 <Money cny={product.price} />
-              </span>
+              </p>
               {product.originalPrice ? (
-                <span className="text-[13px] text-[#bbb] line-through">
+                <p className="mt-1 text-[13px] leading-none text-[#bbb] line-through">
                   <Money cny={product.originalPrice} />
-                </span>
+                </p>
               ) : null}
             </div>
             <span className="text-[12px] text-[#999]">{t("soldCount", { n: product.sales })}</span>
