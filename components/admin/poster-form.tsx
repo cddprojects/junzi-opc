@@ -100,7 +100,9 @@ export function PosterForm({ poster }: { poster?: Poster }) {
         </label>
       </div>
       <UploadField label="海报图片" value={image} onChange={setImage} accept="image/*" />
-      <p className="text-[12px] text-[#888]">首页轮播只展示已上传图片的海报，按排序从小到大播放。无图则前台隐藏。</p>
+      <p className="text-[12px] text-[#888]">
+        首页轮播只展示已上传图片，无图隐藏。首页横幅为通栏：有图用上传图，无图显示默认操作指南样式，链接默认可填 /guides。
+      </p>
       <label className="block text-[13px]">
         副标题
         <Input name="subtitle" defaultValue={poster?.subtitle} className="mt-1 h-9" />

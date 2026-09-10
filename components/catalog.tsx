@@ -4,7 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { Megaphone, Plus, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { CoverArt } from "@/components/covers";
+import { CoverArt, GuideBanner } from "@/components/covers";
 import { cn } from "@/lib/utils";
 import { Money } from "@/components/money";
 import { useCurrency } from "@/components/currency-provider";
@@ -357,6 +357,62 @@ export function HomeCarousel({
         </div>
       ) : null}
     </section>
+  );
+}
+
+export function HomeGuideBanners({
+  banners,
+}: {
+  banners: { id: string; href: string; title: string; image?: string }[];
+}) {
+  const uploaded = banners.filter((item) => item.image);
+  if (uploaded.length > 0) {
+    return (
+      <div className="w-full space-y-2">
+        {uploaded.map((banner) => {
+          const media = (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={banner.image}
+              alt={banner.title}
+              className="block aspect-[16/5] w-full object-cover md:aspect-[21/6]"
+            />
+          );
+          if (isExternalHref(banner.href)) {
+            return (
+              <a
+                key={banner.id}
+                href={banner.href}
+                target="_blank"
+                rel="noreferrer"
+                className="block w-full overflow-hidden rounded-lg"
+              >
+                {media}
+              </a>
+            );
+          }
+          return (
+            <Link key={banner.id} href={banner.href || "/guides"} prefetch className="block w-full overflow-hidden rounded-lg">
+              {media}
+            </Link>
+          );
+        })}
+      </div>
+    );
+  }
+
+  const href = banners[0]?.href || "/guides";
+  if (isExternalHref(href)) {
+    return (
+      <a href={href} target="_blank" rel="noreferrer" className="block w-full">
+        <GuideBanner />
+      </a>
+    );
+  }
+  return (
+    <Link href={href} prefetch className="block w-full">
+      <GuideBanner />
+    </Link>
   );
 }
 

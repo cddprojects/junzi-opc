@@ -1,8 +1,9 @@
 import Link from "next/link";
-import { AiToolBanner, GuideBanner } from "@/components/covers";
+import { AiToolBanner } from "@/components/covers";
 import {
   CategoryIcons,
   HomeCarousel,
+  HomeGuideBanners,
   NoticeBar,
   ProductCard,
   ProductRow,
@@ -27,7 +28,10 @@ export default async function HomePage() {
     .filter((item) => item.placement === "home-carousel" && item.image)
     .slice()
     .sort((a, b) => a.sort - b.sort);
-  const homeBanners = posters.filter((item) => item.placement === "home-banner");
+  const homeBanners = posters
+    .filter((item) => item.placement === "home-banner")
+    .slice()
+    .sort((a, b) => a.sort - b.sort);
   const intro = videos.find((item) => item.placement === "home-intro");
   const story = videos.find((item) => item.placement === "home-case");
   const extraVideos = videos.filter((item) => item.placement === "library");
@@ -54,24 +58,14 @@ export default async function HomePage() {
       </section>
 
       <section className="mt-2 px-3 md:mt-6 md:px-0">
-        {homeBanners.length > 0 ? (
-          <div className="grid gap-2 md:grid-cols-2 md:gap-4">
-            {homeBanners.map((banner) => (
-              <Link key={banner.id} href={banner.href} className="block overflow-hidden rounded-lg bg-white">
-                {banner.image ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={banner.image} alt={locPosterTitle(banner, locale)} className="aspect-[16/6] w-full object-cover" />
-                ) : (
-                  <GuideBanner />
-                )}
-              </Link>
-            ))}
-          </div>
-        ) : (
-          <Link href="/guides" className="block overflow-hidden rounded-lg bg-white">
-            <GuideBanner />
-          </Link>
-        )}
+        <HomeGuideBanners
+          banners={homeBanners.map((item) => ({
+            id: item.id,
+            href: item.href || "/guides",
+            title: locPosterTitle(item, locale),
+            image: item.image,
+          }))}
+        />
       </section>
 
       <section className="mt-2 bg-white md:mt-6 md:rounded-xl md:px-4 md:py-4">

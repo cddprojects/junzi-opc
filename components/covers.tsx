@@ -4,7 +4,9 @@ import { cn } from "@/lib/utils";
 import type { CoverTheme } from "@/lib/data";
 import { membership } from "@/lib/data";
 import { useCurrency } from "@/components/currency-provider";
-import { useT } from "@/components/locale-provider";
+import { useLocale, useT } from "@/components/locale-provider";
+import { brand } from "@/lib/data";
+import { localized } from "@/lib/i18n";
 
 const THEME_PRICE_CNY: Partial<Record<CoverTheme, number>> = {
   qihang: 9.9,
@@ -268,26 +270,31 @@ function LiveShizhanArt() {
 }
 
 export function GuideBanner() {
-  const t = useT();
+  const { locale, t } = useLocale();
   return (
-    <div className="relative overflow-hidden rounded-md bg-[#f3ead8] px-4 py-4">
-      <div
-        className="absolute inset-0 opacity-30"
-        style={{
-          backgroundImage:
-            "repeating-linear-gradient(90deg, transparent, transparent 20px, #c9b48a33 20px, #c9b48a33 21px)",
-        }}
-      />
-      <div className="relative flex items-center justify-between">
-        <div>
-          <h3 className="font-serif text-[20px] text-[#2f271c]">{t("coverGuideBanner")}</h3>
-          <p className="mt-1 text-[12px] text-[#7a6a50]">{t("coverGuideBannerSub")}</p>
+    <div className="relative w-full overflow-hidden rounded-lg bg-[#f4ead6] px-4 py-5 md:px-8 md:py-6">
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,#fff8ea,transparent_70%)]" />
+      <div className="relative flex items-center justify-between gap-4">
+        <div className="min-w-0">
+          <p className="flex items-center gap-1.5 text-[11px] text-[#8a7048] md:text-[12px]">
+            <span className="flex size-5 items-center justify-center rounded-full bg-[#2b2418] text-[9px] text-[#f3ead8]">
+              雅
+            </span>
+            {localized(locale, brand.society, brand.societyEn)}
+          </p>
+          <h3 className="mt-1.5 text-[22px] leading-7 font-semibold text-[#2f271c] md:text-[26px]">
+            {t("coverGuideBanner")}
+          </h3>
+          <p className="mt-1 text-[12px] text-[#7a6a50] md:text-[13px]">{t("coverGuideBannerSub")}</p>
         </div>
-        <div className="mr-1 flex h-14 w-12 flex-col justify-center gap-1 rounded-sm border border-[#c9b48a] bg-white/70 p-1.5">
-          <span className="h-1 rounded bg-[#c9b48a]" />
-          <span className="h-1 w-3/4 rounded bg-[#d8c9a8]" />
-          <span className="h-1 rounded bg-[#d8c9a8]" />
-          <span className="h-1 w-2/3 rounded bg-[#d8c9a8]" />
+        <div className="mr-1 flex shrink-0 flex-col items-center">
+          <div className="flex h-14 w-11 flex-col justify-center gap-1 rounded-sm border border-[#e0d2b4] bg-white p-1.5 shadow-sm">
+            <span className="h-1 rounded bg-[#d4c4a0]" />
+            <span className="h-1 w-3/4 rounded bg-[#e4d8bc]" />
+            <span className="h-1 rounded bg-[#e4d8bc]" />
+            <span className="h-1 w-2/3 rounded bg-[#e4d8bc]" />
+          </div>
+          <div className="mt-1 h-2 w-12 rounded-sm bg-[#c4a06a] shadow-inner" />
         </div>
       </div>
     </div>
