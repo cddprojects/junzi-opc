@@ -553,7 +553,7 @@
 .storefront .mp-home-block {
   margin-top: 8px;
   background: #fff;
-  padding-top: 12px;
+  padding-top: 0;
 }
 
 .storefront .mp-section-title {
@@ -570,7 +570,7 @@
 @media (min-width: 768px) {
   .storefront .mp-home-block {
     margin-top: 24px;
-    padding: 16px;
+    padding: 0 16px 16px;
     border-radius: 12px;
   }
 
