@@ -17,7 +17,7 @@ import { translateApiError } from "@/lib/messages";
 import { loginHref, safeReturnPath } from "@/lib/safe-path";
 import { fromCny, formatMoneyAmount } from "@/lib/currency";
 import { PayBusyOverlay } from "@/components/pay-busy-overlay";
-import { Portal } from "@/components/portal";
+import { PayLayer } from "@/components/pay-layer";
 import { canFollowPayRedirect, isAbortError } from "@/lib/pay-redirect";
 
 export type CartItem = { slug: string; qty: number; product: Product };
@@ -260,19 +260,11 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
       {busy && !result ? (
         <PayBusyOverlay title={t("connectingPay")} cancelLabel={t("cancelPay")} onCancel={closePay} />
       ) : null}
-      {visible ? (
-        <Portal>
-          <div className="mp-modal-root">
-            <button
-              type="button"
-              className="mp-modal-backdrop"
-              aria-label={t("close")}
-              onClick={closePay}
-            />
-            <div role="dialog" aria-modal="true" className="mp-pay-sheet">
+      {visible && !busy ? (
+        <PayLayer open={visible} onClose={closePay} labelledBy="pay-dialog-title">
             {result ? (
               <>
-                <h2 className="text-[17px] font-semibold">{t("paySuccess")}</h2>
+                <h2 id="pay-dialog-title" className="text-[17px] font-semibold">{t("paySuccess")}</h2>
                 <p className="mt-2 text-[13px] text-[#666]">{t("paySuccessBody")}</p>
                 <div className="mt-3 space-y-3">
                   {result.map((order) => (
@@ -309,7 +301,7 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
               </>
             ) : (
               <>
-                <h2 className="text-[17px] font-semibold">
+                <h2 id="pay-dialog-title" className="text-[17px] font-semibold">
                   {!loading && !user ? t("payNeedLogin") : t("payConfirm")}
                 </h2>
                 <p className="mt-2 text-[13px] leading-6 text-[#666]">
@@ -376,9 +368,7 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
                 </div>
               </>
             )}
-            </div>
-          </div>
-        </Portal>
+        </PayLayer>
       ) : null}
     </StoreContext.Provider>
   );

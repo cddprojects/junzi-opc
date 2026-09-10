@@ -80,6 +80,7 @@ export const zh = {
   addToCart: "加入购物车",
   learnersCount: "{n}人学习",
   carouselSlide: "轮播 {n}",
+  homeCarousel: "首页轮播",
   videoBadge: "视频",
   free: "免费",
 
@@ -683,6 +684,7 @@ export const en: Record<MessageKey, string> = {
   addToCart: "Add to cart",
   learnersCount: "{n} learners",
   carouselSlide: "Slide {n}",
+  homeCarousel: "Home banner",
   videoBadge: "Video",
   free: "Free",
 

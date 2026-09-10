@@ -10,7 +10,7 @@ import {
   SectionTitle,
 } from "@/components/catalog";
 import { VideoBlock } from "@/components/video-block";
-import { brand, caseStudy, homeCategories, introVideo, membership } from "@/lib/data";
+import { brand, caseStudy, homeCategories, introVideo } from "@/lib/data";
 import { getCatalog } from "@/lib/store";
 import { getRequestLocale } from "@/lib/i18n-server";
 import { localized } from "@/lib/i18n";
@@ -23,7 +23,10 @@ export default async function HomePage() {
   const locale = await getRequestLocale();
   const { products, posters, videos } = await getCatalog();
   const joinProducts = products.filter((item) => item.categoryId === "opc");
-  const carousel = posters.filter((item) => item.placement === "home-carousel");
+  const carousel = posters
+    .filter((item) => item.placement === "home-carousel" && item.image)
+    .slice()
+    .sort((a, b) => a.sort - b.sort);
   const homeBanners = posters.filter((item) => item.placement === "home-banner");
   const intro = videos.find((item) => item.placement === "home-intro");
   const story = videos.find((item) => item.placement === "home-case");
@@ -37,24 +40,12 @@ export default async function HomePage() {
           <SearchBox placeholder={t(locale, "search")} center />
         </div>
         <HomeCarousel
-          slides={carousel.map((item) => {
-            const product = products.find((row) => row.href === item.href || `/product/${row.slug}` === item.href);
-            const fromLabel = Number(String(item.priceLabel || "").replace(/[^\d.]/g, ""));
-            return {
-              id: item.id,
-              href: item.href,
-              theme: item.theme,
-              title: locPosterTitle(item, locale),
-              image: item.image,
-              priceCny:
-                product?.price ??
-                (item.href === "/member"
-                  ? membership.campPrice
-                  : Number.isFinite(fromLabel) && fromLabel > 0
-                    ? fromLabel
-                    : undefined),
-            };
-          })}
+          slides={carousel.map((item) => ({
+            id: item.id,
+            href: item.href,
+            title: locPosterTitle(item, locale),
+            image: item.image as string,
+          }))}
         />
       </section>
 
@@ -87,7 +78,7 @@ export default async function HomePage() {
         <SectionTitle>{t(locale, "homeJoin")}</SectionTitle>
         <div id="join-opc" className="md:hidden">
           {joinProducts.map((product) => (
-            <ProductRow key={product.slug} product={product} />
+            <ProductRow key={product.slug} product={product} showOriginal={false} />
           ))}
         </div>
         <div className="hidden grid-cols-1 gap-4 sm:grid-cols-2 md:grid lg:grid-cols-3">

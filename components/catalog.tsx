@@ -11,7 +11,7 @@ import { useCurrency } from "@/components/currency-provider";
 import { useLocale } from "@/components/locale-provider";
 import { localized } from "@/lib/i18n";
 import { locProductSubtitle, locProductTitle } from "@/lib/localize";
-import { brand, type CoverTheme, type Product } from "@/lib/data";
+import { type CoverTheme, type Product } from "@/lib/data";
 
 export function NoticeBar({ href, text }: { href: string; text: string }) {
   return (
@@ -247,20 +247,19 @@ export function ProductCard({ product }: { product: Product }) {
   );
 }
 
-function useSlideLabel() {
-  const { t } = useLocale();
-  return (n: number) => t("carouselSlide", { n });
+function isExternalHref(href: string) {
+  return /^https?:\/\//i.test(href);
 }
 
 export function HomeCarousel({
   slides,
 }: {
-  slides: { id: string; href: string; theme?: CoverTheme; title: string; image?: string; priceCny?: number }[];
+  slides: { id: string; href: string; title: string; image: string }[];
 }) {
   const [index, setIndex] = React.useState(0);
-  const slideLabel = useSlideLabel();
-  const { locale, t } = useLocale();
-  const safeSlides = slides.length ? slides : [];
+  const touchX = React.useRef<number | null>(null);
+  const { t } = useLocale();
+  const safeSlides = slides.filter((item) => item.image);
 
   React.useEffect(() => {
     if (safeSlides.length < 2) return;
@@ -270,56 +269,94 @@ export function HomeCarousel({
     return () => window.clearInterval(timer);
   }, [safeSlides.length]);
 
-  const slide = safeSlides[index];
-  if (!slide) return null;
+  React.useEffect(() => {
+    if (index >= safeSlides.length) setIndex(0);
+  }, [index, safeSlides.length]);
+
+  if (!safeSlides.length) return null;
+
+  function go(next: number) {
+    const total = safeSlides.length;
+    setIndex(((next % total) + total) % total);
+  }
 
   return (
-    <div className="relative">
-      <div className="md:grid md:items-center md:gap-10 md:grid-cols-2">
-        <div className="hidden md:block">
-          <p className="text-[12px] tracking-[0.16em] text-[#999] uppercase">
-            {localized(locale, brand.society, brand.societyEn)}
-          </p>
-          <h1 className="mt-3 text-[28px] font-semibold">{slide.title}</h1>
-          <p className="mt-4 max-w-md text-[15px] leading-7 text-[#666]">
-            {localized(locale, brand.mottoWay, brand.mottoWayEn)}
-          </p>
-          <Link href={slide.href} prefetch className="front-btn-primary mt-6">
-            {t("buyNow")}
-          </Link>
+    <section
+      className="relative overflow-hidden bg-[#111]"
+      aria-roledescription="carousel"
+      aria-label={t("homeCarousel")}
+      onTouchStart={(event) => {
+        touchX.current = event.changedTouches[0]?.clientX ?? null;
+      }}
+      onTouchEnd={(event) => {
+        if (touchX.current == null || safeSlides.length < 2) return;
+        const dx = (event.changedTouches[0]?.clientX ?? touchX.current) - touchX.current;
+        touchX.current = null;
+        if (dx > 40) go(index - 1);
+        if (dx < -40) go(index + 1);
+      }}
+    >
+      <div
+        className="flex transition-transform duration-300 ease-[var(--ease-standard)]"
+        style={{ transform: `translateX(-${index * 100}%)` }}
+      >
+        {safeSlides.map((slide, i) => {
+          const className = "block w-full shrink-0";
+          const media = (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={slide.image}
+              alt={slide.title}
+              className="aspect-[16/9] w-full object-cover md:aspect-[21/9]"
+            />
+          );
+          if (isExternalHref(slide.href)) {
+            return (
+              <a
+                key={slide.id}
+                href={slide.href}
+                className={className}
+                target="_blank"
+                rel="noreferrer"
+                aria-hidden={i !== index}
+                tabIndex={i === index ? 0 : -1}
+              >
+                {media}
+              </a>
+            );
+          }
+          return (
+            <Link
+              key={slide.id}
+              href={slide.href || "/"}
+              prefetch
+              className={className}
+              aria-hidden={i !== index}
+              tabIndex={i === index ? 0 : -1}
+            >
+              {media}
+            </Link>
+          );
+        })}
+      </div>
+      {safeSlides.length > 1 ? (
+        <div className="absolute right-0 bottom-2 left-0 flex justify-center gap-1.5">
+          {safeSlides.map((item, i) => (
+            <button
+              key={item.id}
+              type="button"
+              aria-label={t("carouselSlide", { n: i + 1 })}
+              aria-current={i === index}
+              onClick={() => setIndex(i)}
+              className={cn(
+                "h-1.5 rounded-full transition-all",
+                i === index ? "w-4 bg-white" : "w-1.5 bg-white/50",
+              )}
+            />
+          ))}
         </div>
-        <Link href={slide.href} prefetch className="relative block overflow-hidden bg-black">
-          <CoverArt
-            theme={slide.theme}
-            image={slide.image}
-            priceCny={slide.priceCny}
-            className="aspect-[16/9] md:aspect-[5/4]"
-          />
-          <div className="absolute right-0 bottom-2 left-0 flex justify-center gap-1.5 md:hidden">
-            {slides.map((item, i) => (
-              <span
-                key={item.id}
-                className={cn("h-1 rounded-full", i === index ? "w-4 bg-white" : "w-1.5 bg-white/50")}
-              />
-            ))}
-          </div>
-        </Link>
-      </div>
-      <div className="mt-4 hidden justify-start gap-2 md:flex">
-        {slides.map((item, i) => (
-          <button
-            key={item.id}
-            type="button"
-            aria-label={slideLabel(i + 1)}
-            onClick={() => setIndex(i)}
-            className={cn(
-              "h-1.5 rounded-full transition-all",
-              i === index ? "w-7 bg-[#fa3534]" : "w-2 bg-[#ddd]",
-            )}
-          />
-        ))}
-      </div>
-    </div>
+      ) : null}
+    </section>
   );
 }
 

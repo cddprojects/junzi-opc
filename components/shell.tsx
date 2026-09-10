@@ -196,7 +196,7 @@ function MobileHeader() {
         <p className="min-w-0 flex-1 truncate text-center text-[16px] font-medium text-[#333]">
           {isHome ? brand.name : title}
         </p>
-        <div className="z-10 flex w-[118px] shrink-0 items-center justify-end">
+        <div className="z-10 flex w-[72px] shrink-0 items-center justify-end">
           <Link href="/search" className="flex size-9 items-center justify-center text-[#333]" aria-label={t("search")}>
             <Search className="size-5" />
           </Link>
@@ -208,7 +208,6 @@ function MobileHeader() {
               </span>
             )}
           </Link>
-          <LocaleSwitcher compact />
         </div>
       </div>
     </header>

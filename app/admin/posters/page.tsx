@@ -25,18 +25,29 @@ export default async function AdminPostersPage() {
         <table className="jx-table">
           <thead>
             <tr>
+              <th>图片</th>
               <th>标题</th>
               <th>位置</th>
               <th>排序</th>
+              <th>链接</th>
               <th></th>
             </tr>
           </thead>
           <tbody>
             {posters.map((poster) => (
               <tr key={poster.id}>
+                <td>
+                  {poster.image ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={poster.image} alt="" className="h-10 w-16 rounded object-cover" />
+                  ) : (
+                    <span className="text-[12px] text-[#999]">无图</span>
+                  )}
+                </td>
                 <td>{poster.title}</td>
                 <td>{PLACES[poster.placement]}</td>
                 <td>{poster.sort}</td>
+                <td className="max-w-[160px] truncate text-[12px]">{poster.href}</td>
                 <td>
                   <Link href={`/admin/posters/${poster.id}`} className="jx-link">
                     编辑
