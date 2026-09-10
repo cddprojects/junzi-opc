@@ -7,12 +7,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/components/auth-provider";
 import { useLocale } from "@/components/locale-provider";
+import { loginHref, safeReturnPath } from "@/lib/safe-path";
 import { translateApiError } from "@/lib/messages";
 
 export function AuthForm({ mode }: { mode: "login" | "register" }) {
   const router = useRouter();
   const params = useSearchParams();
-  const next = params.get("next") || "/mine";
+  const next = safeReturnPath(params.get("next"), "/mine");
   const refPrefill = params.get("ref") || "";
   const { refresh } = useAuth();
   const { locale, t } = useLocale();
@@ -108,7 +109,7 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
         ) : (
           <>
             {t("authHasAccount")}
-            <Link href={`/login?next=${encodeURIComponent(next)}`} className="ml-1 text-[#8a5a20]">
+            <Link href={loginHref(next, "/mine")} className="ml-1 text-[#8a5a20]">
               {t("authGoLogin")}
             </Link>
           </>

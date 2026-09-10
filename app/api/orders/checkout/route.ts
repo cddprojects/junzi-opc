@@ -54,17 +54,20 @@ export async function POST(request: Request) {
     currency?: string;
     payWith?: "wallet" | "billplz";
   } | null;
+  const items = body?.items || [];
+  const currency = body?.currency;
+  const payWith = body?.payWith;
 
   try {
-    if (body?.payWith === "wallet") {
-      const orders = await checkoutWithWallet(user.id, body?.items || [], body?.currency);
+    if (payWith === "wallet") {
+      const orders = await checkoutWithWallet(user.id, items, currency);
       return NextResponse.json({
         mode: "wallet",
         orders: orders.map(publicOrder),
       });
     }
     if (isBillplzConfigured()) {
-      const pending = await createPendingCheckout(user.id, body?.items || [], body?.currency);
+      const pending = await createPendingCheckout(user.id, items, currency);
       const origin = appBaseUrl(request);
       try {
         const bill = await createBillplzBill({
@@ -99,7 +102,7 @@ export async function POST(request: Request) {
     }
 
     if (allowDemoPay()) {
-      const orders = await checkoutOrders(user.id, body?.items || [], body?.currency, "demo");
+      const orders = await checkoutOrders(user.id, items, currency, "demo");
       return NextResponse.json({
         mode: "demo",
         orders: orders.map(publicOrder),

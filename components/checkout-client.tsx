@@ -12,6 +12,7 @@ import { useDemoStore } from "@/components/demo-store";
 import { useLocale } from "@/components/locale-provider";
 import { localized } from "@/lib/i18n";
 import { translateApiError } from "@/lib/messages";
+import { loginHref, safeReturnPath } from "@/lib/safe-path";
 import { formatMoneyAmount, fromCny } from "@/lib/currency";
 
 type PayConfig = { billplz: boolean; demo: boolean };
@@ -64,8 +65,14 @@ export function CheckoutClient({
   }, []);
 
   async function confirmPay(payWith?: "wallet") {
+    if (busy) return;
     if (!user) {
-      router.push(`/login?next=${encodeURIComponent("/checkout")}`);
+      router.push(
+        loginHref(
+          product ? `/product/${product.slug}` : member ? "/member" : "/checkout",
+          "/checkout",
+        ),
+      );
       return;
     }
     if (!items.length) {
@@ -143,13 +150,16 @@ export function CheckoutClient({
           {!loading && !user ? (
             <>
               <Link
-                href={`/login?next=${encodeURIComponent(product ? `/checkout?slug=${product.slug}` : member ? "/checkout?member=1" : "/checkout")}`}
+                href={loginHref(
+                  product ? `/product/${product.slug}` : member ? "/member" : "/checkout",
+                  "/checkout",
+                )}
                 className="block rounded-md bg-[#8a5a20] py-2.5 text-center text-[14px] text-white"
               >
                 {t("goLogin")}
               </Link>
               <Link
-                href={`/register?next=${encodeURIComponent(product ? `/checkout?slug=${product.slug}` : "/checkout")}`}
+                href={`/register?next=${encodeURIComponent(safeReturnPath(product ? `/product/${product.slug}` : "/checkout", "/checkout"))}`}
                 className="block rounded-md bg-[#f3ead8] py-2.5 text-center text-[14px] text-[#8a5a20]"
               >
                 {t("registerAccount")}

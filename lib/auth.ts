@@ -45,6 +45,8 @@ export function safeAdminNext(next?: string | null) {
   return next;
 }
 
+export { loginHref, safeReturnPath } from "@/lib/safe-path";
+
 function requestIsHttps(request?: Request) {
   if (!request) return false;
   const forwarded = request.headers.get("x-forwarded-proto")?.split(",")[0]?.trim().toLowerCase();

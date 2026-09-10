@@ -9,6 +9,7 @@ import { CourseDetailFields } from "@/components/admin/course-detail-fields";
 import { ImageListEditor } from "@/components/admin/image-list-editor";
 import { EnInput } from "@/components/admin/en-field";
 import { Button } from "@/components/ui/button";
+import { Disclosure } from "@/components/ui/disclosure";
 import { Input } from "@/components/ui/input";
 import { CURRENCY_CODES, CURRENCY_META, DEFAULT_SETTINGS, fromCny, toCny, type Currency } from "@/lib/currency";
 import type { StoreSettings } from "@/lib/currency";
@@ -208,10 +209,11 @@ export function ProductForm({ product }: { product?: Product }) {
         />
       </div>
 
-      <details className="rounded-lg border border-[#eadfca] bg-[#faf6ee] p-4">
-        <summary className="cursor-pointer text-[14px] font-medium text-[#5a3d14]">
-          高级 / 课节与大纲
-        </summary>
+      <Disclosure
+        title="高级 / 课节与大纲"
+        className="rounded-lg border border-[#eadfca] bg-[#faf6ee] p-4"
+        summaryClassName="text-[14px] font-medium text-[#5a3d14]"
+      >
         <p className="mt-2 text-[12px] leading-5 text-[#777]">
           {lessonCount > 0
             ? `已有课节 ${lessonCount} 节，点开可改视频和大纲。有详情图时，前台商品页优先展示图片，课节仍可在「线上录播课」观看。`
@@ -267,7 +269,7 @@ export function ProductForm({ product }: { product?: Product }) {
 
           <CourseDetailFields value={detail} onChange={setDetail} />
         </div>
-      </details>
+      </Disclosure>
 
       {error && <p className="text-[13px] text-[#fa3534]">{error}</p>}
       <div className="flex flex-wrap gap-3">

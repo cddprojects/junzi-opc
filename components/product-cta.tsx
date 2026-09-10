@@ -1,6 +1,7 @@
 "use client";
 
 import type { Product } from "@/lib/data";
+import { useAuth } from "@/components/auth-provider";
 import { useDemoStore } from "@/components/demo-store";
 import { BuyNowButton } from "@/components/buy-now-button";
 import { useT } from "@/components/locale-provider";
@@ -31,14 +32,16 @@ export function AddToCartButton({
   className?: string;
 }) {
   const { addToCart } = useDemoStore();
+  const { loading } = useAuth();
   const t = useT();
 
   return (
     <button
       type="button"
+      disabled={loading}
       onClick={() => addToCart(product)}
       className={cn(
-        "inline-flex h-11 flex-1 items-center justify-center gap-1.5 rounded-lg border border-[#8a5a20] bg-[#f7efe3] px-3 text-[14px] font-medium text-[#8a5a20] transition hover:bg-[#efe4d2] active:opacity-80",
+        "inline-flex h-11 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-[#8a5a20] bg-[#f7efe3] px-3 text-[14px] font-medium text-[#8a5a20] transition hover:bg-[#efe4d2] active:opacity-80 disabled:cursor-not-allowed disabled:opacity-60",
         className,
       )}
     >

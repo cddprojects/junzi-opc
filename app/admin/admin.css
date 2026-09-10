@@ -752,6 +752,7 @@
 
 .jx-btn,
 .jx-btn-ghost {
+  cursor: pointer;
   transition: background-color var(--motion-hover) var(--ease-standard), color var(--motion-hover) var(--ease-standard),
     border-color var(--motion-hover) var(--ease-standard);
 }
@@ -776,6 +777,7 @@
 }
 
 .jx-btn:disabled {
+  cursor: not-allowed;
   opacity: 0.55;
 }
 
@@ -793,6 +795,7 @@
 }
 
 .jx-link {
+  cursor: pointer;
   color: var(--gold) !important;
   font-size: 13px;
 }
@@ -1010,6 +1013,18 @@
   color: var(--text);
   font-family: var(--admin-sans);
   font-size: 14px;
+}
+
+.admin-app select,
+.admin-app input[type="checkbox"],
+.admin-app input[type="radio"],
+.admin-app input[type="file"] {
+  cursor: pointer;
+}
+
+.admin-app textarea,
+.admin-app input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="button"]):not([type="submit"]) {
+  cursor: text;
 }
 
 .admin-app input:not([type="checkbox"]):not([type="radio"]):focus,

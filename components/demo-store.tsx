@@ -14,6 +14,7 @@ import { useLocale } from "@/components/locale-provider";
 import { locProductShort } from "@/lib/localize";
 import { localized } from "@/lib/i18n";
 import { translateApiError } from "@/lib/messages";
+import { loginHref, safeReturnPath } from "@/lib/safe-path";
 import { fromCny, formatMoneyAmount } from "@/lib/currency";
 
 export type CartItem = { slug: string; qty: number; product: Product };
@@ -47,6 +48,7 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
   const [error, setError] = React.useState("");
   const [result, setResult] = React.useState<PayResult[] | null>(null);
   const [payConfig, setPayConfig] = React.useState<PayConfig | null>(null);
+  const payLock = React.useRef(false);
 
   const visible = payOpen;
   const chargeMyr = items.reduce(
@@ -82,17 +84,26 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
     document.documentElement.removeAttribute("inert");
   }, [visible]);
 
-  function goAuth(mode: "login" | "register") {
-    const next = pathname === "/" ? "/cart" : pathname;
-    closePay();
-    router.push(`/${mode}?next=${encodeURIComponent(next)}`);
-  }
+  const goAuth = React.useCallback(
+    (mode: "login" | "register", returnTo?: string) => {
+      const fallback = pathname && pathname !== "/" ? pathname : "/cart";
+      const next = safeReturnPath(returnTo || fallback, fallback);
+      closePay();
+      router.push(mode === "login" ? loginHref(next, fallback) : `/register?next=${encodeURIComponent(next)}`);
+    },
+    [pathname, router, closePay],
+  );
 
   const value = React.useMemo<Store>(
     () => ({
       cart,
       favorites,
       addToCart: (product) => {
+        if (loading) return;
+        if (!user) {
+          goAuth("login", `/product/${product.slug}`);
+          return;
+        }
         const existing = cart.find((item) => item.slug === product.slug);
         setCart(
           existing
@@ -112,6 +123,15 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
         toast(next.includes(slug) ? t("favorited") : t("unfavorited"));
       },
       openPay: (target) => {
+        if (loading) return;
+        if (!user) {
+          const productSlug =
+            target && typeof target === "object" && "href" in target && "slug" in target
+              ? String((target as Product).slug)
+              : "";
+          goAuth("login", productSlug ? `/product/${productSlug}` : pathname);
+          return;
+        }
         const nextItems = resolvePayItems(target, cart);
         setItems(nextItems);
         setResult(null);
@@ -123,11 +143,15 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
           .catch(() => setPayConfig({ billplz: false, demo: false }));
       },
     }),
-    [cart, favorites, locale, t],
+    [cart, favorites, locale, t, loading, user, pathname, goAuth],
   );
 
   async function confirmPay() {
-    if (!user) return;
+    if (payLock.current || busy) return;
+    if (!user) {
+      goAuth("login", pathname);
+      return;
+    }
     if (!items.length) {
       setError(t("pickCourse"));
       return;
@@ -136,6 +160,7 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
       setError(t("billplzNotConfigured"));
       return;
     }
+    payLock.current = true;
     setBusy(true);
     setError("");
     const res = await fetch("/api/orders/checkout", {
@@ -150,6 +175,7 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
       orders?: PayResult[];
     };
     if (!res.ok) {
+      payLock.current = false;
       setBusy(false);
       setError(translateApiError(locale, data.error, "checkoutFailed"));
       return;
@@ -158,6 +184,7 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
       window.location.assign(data.redirectUrl);
       return;
     }
+    payLock.current = false;
     setBusy(false);
     setResult(data.orders || []);
     setCart((current) => current.filter((row) => !items.some((item) => item.slug === row.slug)));
