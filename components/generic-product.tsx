@@ -40,7 +40,7 @@ export function GenericProductDetail({
             <span className="text-[12px] text-[#999]">已售 {product.sales} 件</span>
           </div>
           {product.originalPrice ? (
-            <p className="mt-1 text-[13px] text-[#999] line-through">
+            <p className="mt-1 text-[13px] text-[#666] line-through">
               <Money cny={product.originalPrice} />
             </p>
           ) : null}

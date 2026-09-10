@@ -89,7 +89,7 @@ export function ProductRow({
               <Money cny={product.price} />
             </p>
             {showOriginal && product.originalPrice ? (
-              <p className="mt-1 text-[11px] text-[#bbb] line-through">
+              <p className="mt-1 text-[11px] text-[#666] line-through">
                 {t("originalPrice")}
                 <Money cny={product.originalPrice} />
               </p>
@@ -235,7 +235,7 @@ export function ProductCard({ product }: { product: Product }) {
               <Money cny={product.price} />
             </p>
             {product.originalPrice ? (
-              <p className="text-[12px] text-[#bbb] line-through">
+              <p className="text-[12px] text-[#666] line-through">
                 {t("originalPrice")} <Money cny={product.originalPrice} />
               </p>
             ) : null}
@@ -461,7 +461,7 @@ export function PlusPrice({
         <Money cny={price} />
       </p>
       {originalPrice ? (
-        <p className="text-[13px] text-[var(--front-text-muted)] line-through">
+        <p className="text-[13px] text-[#666] line-through">
           <Money cny={originalPrice} />
         </p>
       ) : null}

@@ -365,6 +365,12 @@
   color: var(--front-accent);
 }
 
+.storefront .line-through,
+.storefront .line-through .opc-price,
+.storefront .line-through .front-price {
+  color: #666;
+}
+
 .storefront .front-tab {
   position: relative;
   padding: 10px 2px;

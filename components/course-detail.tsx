@@ -59,7 +59,7 @@ export function CourseDetailView({
                 <Money cny={product.price} />
               </p>
               {product.originalPrice ? (
-                <p className="text-[13px] leading-none text-[#bbb] line-through md:mt-1.5">
+                <p className="text-[13px] leading-none text-[#666] line-through md:mt-1.5">
                   <Money cny={product.originalPrice} />
                 </p>
               ) : null}

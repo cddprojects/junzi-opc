@@ -51,7 +51,7 @@ export function QihangDetail({ product, video }: { product: Product; video?: Cat
               <Money cny={product.price} />
             </span>
             {product.originalPrice ? (
-              <span className="text-[13px] text-[#999] line-through">
+              <span className="text-[13px] text-[#666] line-through">
                 <Money cny={product.originalPrice} />
               </span>
             ) : null}
