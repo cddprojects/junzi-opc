@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Megaphone, Plus, Search } from "lucide-react";
+import { ChevronRight, Megaphone, Plus, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { CoverArt, GuideBanner } from "@/components/covers";
 import { cn } from "@/lib/utils";
@@ -21,7 +21,7 @@ export function NoticeBar({ href, text }: { href: string; text: string }) {
     >
       <Megaphone className="size-3.5 shrink-0 text-[#d4a017]" />
       <span className="min-w-0 flex-1 truncate">{text}</span>
-      <span className="text-[#bbb]">&gt;</span>
+      <ChevronRight className="size-3.5 shrink-0 text-[#bbb]" />
     </Link>
   );
 }

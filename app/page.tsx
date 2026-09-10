@@ -43,14 +43,18 @@ export default async function HomePage() {
         <div className="md:hidden">
           <SearchBox placeholder={t(locale, "search")} center />
         </div>
-        <HomeCarousel
-          slides={carousel.map((item) => ({
-            id: item.id,
-            href: item.href,
-            title: locPosterTitle(item, locale),
-            image: item.image as string,
-          }))}
-        />
+        {carousel.length > 0 ? (
+          <div className="mt-2">
+            <HomeCarousel
+              slides={carousel.map((item) => ({
+                id: item.id,
+                href: item.href,
+                title: locPosterTitle(item, locale),
+                image: item.image as string,
+              }))}
+            />
+          </div>
+        ) : null}
       </section>
 
       <section className="mt-2 bg-white px-1 py-1 md:hidden">
