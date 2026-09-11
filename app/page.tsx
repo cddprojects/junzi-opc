@@ -57,7 +57,7 @@ export default async function HomePage() {
         ) : null}
       </section>
 
-      <section className="mt-2 bg-white px-1 py-1 md:hidden">
+      <section className="mt-2 bg-white px-1 py-1 md:mt-6 md:rounded-xl">
         <CategoryIcons items={homeCategories} />
       </section>
 

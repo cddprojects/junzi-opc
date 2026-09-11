@@ -253,6 +253,7 @@ export const zh = {
   saveFailed: "保存失败",
 
   memberPerk: "专属特权",
+  memberRecords: "开通记录",
   memberActiveUntil: "已开通至 {date}",
   memberInactive: "未开通",
   renew: "续期",
@@ -862,6 +863,7 @@ export const en: Record<MessageKey, string> = {
   saveFailed: "Could not save",
 
   memberPerk: "Member perks",
+  memberRecords: "Activation history",
   memberActiveUntil: "Active through {date}",
   memberInactive: "Not active",
   renew: "Renew",
