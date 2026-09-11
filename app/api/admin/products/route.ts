@@ -1,12 +1,15 @@
 import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { assertAdmin } from "@/lib/auth";
-import { getCatalog, readStore, slugify, writeStore } from "@/lib/store";
+import { jsonSaveError } from "@/lib/admin-save";
+import { getCatalog, readStore, saveProduct, slugify } from "@/lib/store";
 import { ensureProductDetail, outlineFromLessons } from "@/lib/course";
 import type { Product, ProductCategoryId } from "@/lib/data";
 
 function revalidatePublic() {
-  revalidatePath("/", "layout");
+  revalidatePath("/");
+  revalidatePath("/admin/products");
+  revalidatePath("/courses/recorded");
 }
 
 export async function GET() {
@@ -24,40 +27,44 @@ export async function POST(request: Request) {
   } catch {
     return NextResponse.json({ error: "未登录" }, { status: 401 });
   }
-  const body = (await request.json()) as Partial<Product>;
-  if (!body.title?.trim()) {
-    return NextResponse.json({ error: "请填写标题" }, { status: 400 });
+  try {
+    const body = (await request.json()) as Partial<Product>;
+    if (!body.title?.trim()) {
+      return NextResponse.json({ error: "请填写标题" }, { status: 400 });
+    }
+    const store = await readStore();
+    const slug = slugify(body.slug || body.title);
+    if (store.products.some((item) => item.slug === slug)) {
+      return NextResponse.json({ error: "该 slug 已存在" }, { status: 400 });
+    }
+    const product = await saveProduct(
+      ensureProductDetail({
+        slug,
+        title: body.title.trim(),
+        titleEn: body.titleEn?.trim() || undefined,
+        shortTitle: (body.shortTitle || body.title).trim(),
+        shortTitleEn: body.shortTitleEn?.trim() || undefined,
+        price: Number(body.price || 0),
+        originalPrice: body.originalPrice ? Number(body.originalPrice) : undefined,
+        sales: Number(body.sales || 0),
+        categoryId: (body.categoryId as ProductCategoryId) || "opc",
+        cover: body.cover || "qihang",
+        href: `/product/${slug}`,
+        subtitle: body.subtitle,
+        subtitleEn: body.subtitleEn,
+        giftNote: body.giftNote,
+        giftNoteEn: body.giftNoteEn,
+        description: body.description || body.detail?.body,
+        descriptionEn: body.descriptionEn || body.detail?.bodyEn,
+        outline: body.outline || outlineFromLessons(body.detail?.lessons || []),
+        coverImage: body.coverImage,
+        detailImages: body.detailImages,
+        detail: body.detail,
+      }),
+    );
+    revalidatePublic();
+    return NextResponse.json(product);
+  } catch (error) {
+    return jsonSaveError(error);
   }
-  const store = await readStore();
-  const slug = slugify(body.slug || body.title);
-  if (store.products.some((item) => item.slug === slug)) {
-    return NextResponse.json({ error: "该 slug 已存在" }, { status: 400 });
-  }
-  const product = ensureProductDetail({
-    slug,
-    title: body.title.trim(),
-    titleEn: body.titleEn?.trim() || undefined,
-    shortTitle: (body.shortTitle || body.title).trim(),
-    shortTitleEn: body.shortTitleEn?.trim() || undefined,
-    price: Number(body.price || 0),
-    originalPrice: body.originalPrice ? Number(body.originalPrice) : undefined,
-    sales: Number(body.sales || 0),
-    categoryId: (body.categoryId as ProductCategoryId) || "opc",
-    cover: body.cover || "qihang",
-    href: `/product/${slug}`,
-    subtitle: body.subtitle,
-    subtitleEn: body.subtitleEn,
-    giftNote: body.giftNote,
-    giftNoteEn: body.giftNoteEn,
-    description: body.description || body.detail?.body,
-    descriptionEn: body.descriptionEn || body.detail?.bodyEn,
-    outline: body.outline || outlineFromLessons(body.detail?.lessons || []),
-    coverImage: body.coverImage,
-    detailImages: body.detailImages,
-    detail: body.detail,
-  });
-  store.products.push(product);
-  await writeStore(store);
-  revalidatePublic();
-  return NextResponse.json(product);
 }

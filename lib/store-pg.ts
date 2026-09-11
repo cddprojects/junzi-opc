@@ -89,6 +89,182 @@ function mapPoster(row: Record<string, unknown>): Poster {
   };
 }
 
+function posterInsertRow(poster: Poster) {
+  return {
+    id: poster.id,
+    title: poster.title,
+    title_en: poster.titleEn || null,
+    href: poster.href,
+    sort: poster.sort,
+    placement: poster.placement,
+    image: poster.image || null,
+    subtitle: poster.subtitle || null,
+    subtitle_en: poster.subtitleEn || null,
+    kicker: poster.kicker || null,
+    kicker_en: poster.kickerEn || null,
+    price_label: poster.priceLabel || null,
+    price_label_en: poster.priceLabelEn || null,
+    theme: poster.theme || null,
+    product_slug: poster.productSlug || null,
+    detail_images: poster.detailImages?.length ? poster.detailImages : null,
+  };
+}
+
+function videoInsertRow(video: CatalogVideo) {
+  return {
+    id: video.id,
+    title: video.title,
+    title_en: video.titleEn || null,
+    poster: video.poster || null,
+    video_url: video.videoUrl || null,
+    duration: video.duration || null,
+    product_slug: video.productSlug || null,
+    overlay: video.overlay || null,
+    overlay_en: video.overlayEn || null,
+    placement: video.placement,
+  };
+}
+
+const SHORT_TX_MS = 15_000;
+
+function isPlacementCheckError(error: unknown) {
+  const message = error instanceof Error ? error.message : String(error);
+  return /posters_placement_check|violates check constraint/i.test(message);
+}
+
+async function widenPostersPlacementCheck(sql: Parameters<Parameters<typeof withStoreTx>[0]>[0]) {
+  await sql`alter table public.posters drop constraint if exists posters_placement_check`;
+  await sql`
+    alter table public.posters
+    add constraint posters_placement_check
+    check (placement in ('home-carousel', 'home-banner', 'workshop', 'events', 'member', 'about', 'home-ai', 'ai-tools'))
+  `;
+}
+
+export async function upsertPosterToPg(poster: Poster) {
+  const row = posterInsertRow(poster);
+  const write = async (sql: Parameters<Parameters<typeof withStoreTx>[0]>[0]) => {
+    await sql`
+      insert into posters ${sql(row)}
+      on conflict (id) do update set
+        title = excluded.title,
+        title_en = excluded.title_en,
+        href = excluded.href,
+        sort = excluded.sort,
+        placement = excluded.placement,
+        image = excluded.image,
+        subtitle = excluded.subtitle,
+        subtitle_en = excluded.subtitle_en,
+        kicker = excluded.kicker,
+        kicker_en = excluded.kicker_en,
+        price_label = excluded.price_label,
+        price_label_en = excluded.price_label_en,
+        theme = excluded.theme,
+        product_slug = excluded.product_slug,
+        detail_images = excluded.detail_images
+    `;
+  };
+  try {
+    await withStoreTx(write, SHORT_TX_MS);
+  } catch (error) {
+    if (!isPlacementCheckError(error)) throw error;
+    await withStoreTx(async (sql) => {
+      await widenPostersPlacementCheck(sql);
+      await write(sql);
+    }, SHORT_TX_MS);
+  }
+}
+
+export async function deletePosterFromPg(id: string) {
+  await withStoreTx(async (sql) => {
+    await sql`delete from posters where id = ${id}`;
+  }, SHORT_TX_MS);
+}
+
+export async function upsertProductToPg(product: Product) {
+  await withStoreTx(async (sql) => {
+    const row = {
+      slug: product.slug,
+      title: product.title,
+      title_en: product.titleEn || null,
+      short_title: product.shortTitle || product.title,
+      short_title_en: product.shortTitleEn || null,
+      price_cny: product.price,
+      original_price_cny: product.originalPrice ?? null,
+      sales: product.sales || 0,
+      category_id: product.categoryId,
+      cover: product.cover,
+      href: product.href,
+      subtitle: product.subtitle || null,
+      subtitle_en: product.subtitleEn || null,
+      gift_note: product.giftNote || null,
+      gift_note_en: product.giftNoteEn || null,
+      description: product.description || null,
+      description_en: product.descriptionEn || null,
+      outline: product.outline || null,
+      outline_en: product.outlineEn || null,
+      cover_image: product.coverImage || null,
+      detail_images: product.detailImages?.length ? product.detailImages : null,
+      detail: product.detail ? sql.json(product.detail) : null,
+    };
+    await sql`
+      insert into products ${sql(row)}
+      on conflict (slug) do update set
+        title = excluded.title,
+        title_en = excluded.title_en,
+        short_title = excluded.short_title,
+        short_title_en = excluded.short_title_en,
+        price_cny = excluded.price_cny,
+        original_price_cny = excluded.original_price_cny,
+        sales = excluded.sales,
+        category_id = excluded.category_id,
+        cover = excluded.cover,
+        href = excluded.href,
+        subtitle = excluded.subtitle,
+        subtitle_en = excluded.subtitle_en,
+        gift_note = excluded.gift_note,
+        gift_note_en = excluded.gift_note_en,
+        description = excluded.description,
+        description_en = excluded.description_en,
+        outline = excluded.outline,
+        outline_en = excluded.outline_en,
+        cover_image = excluded.cover_image,
+        detail_images = excluded.detail_images,
+        detail = excluded.detail
+    `;
+  }, SHORT_TX_MS);
+}
+
+export async function deleteProductFromPg(slug: string) {
+  await withStoreTx(async (sql) => {
+    await sql`delete from products where slug = ${slug}`;
+  }, SHORT_TX_MS);
+}
+
+export async function upsertVideoToPg(video: CatalogVideo) {
+  await withStoreTx(async (sql) => {
+    await sql`
+      insert into videos ${sql(videoInsertRow(video))}
+      on conflict (id) do update set
+        title = excluded.title,
+        title_en = excluded.title_en,
+        poster = excluded.poster,
+        video_url = excluded.video_url,
+        duration = excluded.duration,
+        product_slug = excluded.product_slug,
+        overlay = excluded.overlay,
+        overlay_en = excluded.overlay_en,
+        placement = excluded.placement
+    `;
+  }, SHORT_TX_MS);
+}
+
+export async function deleteVideoFromPg(id: string) {
+  await withStoreTx(async (sql) => {
+    await sql`delete from videos where id = ${id}`;
+  }, SHORT_TX_MS);
+}
+
 function mapVideo(row: Record<string, unknown>): CatalogVideo {
   return {
     id: String(row.id),
@@ -778,39 +954,12 @@ export async function persistAppStoreToPg(store: AppStore) {
     }
     const keepProducts = store.products.map((product) => product.slug);
 
-    const posterRows = store.posters.map((poster) => ({
-      id: poster.id,
-      title: poster.title,
-      title_en: poster.titleEn || null,
-      href: poster.href,
-      sort: poster.sort,
-      placement: poster.placement,
-      image: poster.image || null,
-      subtitle: poster.subtitle || null,
-      subtitle_en: poster.subtitleEn || null,
-      kicker: poster.kicker || null,
-      kicker_en: poster.kickerEn || null,
-      price_label: poster.priceLabel || null,
-      price_label_en: poster.priceLabelEn || null,
-      theme: poster.theme || null,
-      product_slug: poster.productSlug || null,
-      detail_images: poster.detailImages || null,
-    }));
+    await widenPostersPlacementCheck(sql);
+    const posterRows = store.posters.map(posterInsertRow);
     await sql`delete from posters`;
     if (posterRows.length) await sql`insert into posters ${sql(posterRows)}`;
 
-    const videoRows = store.videos.map((video) => ({
-      id: video.id,
-      title: video.title,
-      title_en: video.titleEn || null,
-      poster: video.poster || null,
-      video_url: video.videoUrl || null,
-      duration: video.duration || null,
-      product_slug: video.productSlug || null,
-      overlay: video.overlay || null,
-      overlay_en: video.overlayEn || null,
-      placement: video.placement,
-    }));
+    const videoRows = store.videos.map(videoInsertRow);
     await sql`delete from videos`;
     if (videoRows.length) await sql`insert into videos ${sql(videoRows)}`;
 

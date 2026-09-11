@@ -2,7 +2,8 @@ import { randomUUID } from "crypto";
 import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { assertAdmin } from "@/lib/auth";
-import { readStore, writeStore } from "@/lib/store";
+import { jsonSaveError } from "@/lib/admin-save";
+import { readStore, saveVideo } from "@/lib/store";
 import type { CatalogVideo } from "@/lib/data";
 
 export async function GET() {
@@ -20,23 +21,27 @@ export async function POST(request: Request) {
   } catch {
     return NextResponse.json({ error: "未登录" }, { status: 401 });
   }
-  const body = (await request.json()) as Partial<CatalogVideo>;
-  if (!body.title?.trim()) {
-    return NextResponse.json({ error: "请填写标题" }, { status: 400 });
+  try {
+    const body = (await request.json()) as Partial<CatalogVideo>;
+    if (!body.title?.trim()) {
+      return NextResponse.json({ error: "请填写标题" }, { status: 400 });
+    }
+    const video = await saveVideo({
+      id: randomUUID(),
+      title: body.title.trim(),
+      titleEn: body.titleEn,
+      poster: body.poster,
+      videoUrl: body.videoUrl,
+      duration: body.duration,
+      productSlug: body.productSlug,
+      overlay: body.overlay,
+      overlayEn: body.overlayEn,
+      placement: body.placement || "library",
+    });
+    revalidatePath("/");
+    revalidatePath("/admin/videos");
+    return NextResponse.json(video);
+  } catch (error) {
+    return jsonSaveError(error);
   }
-  const store = await readStore();
-  const video: CatalogVideo = {
-    id: randomUUID(),
-    title: body.title.trim(),
-    poster: body.poster,
-    videoUrl: body.videoUrl,
-    duration: body.duration,
-    productSlug: body.productSlug,
-    overlay: body.overlay,
-    placement: body.placement || "library",
-  };
-  store.videos.push(video);
-  await writeStore(store);
-  revalidatePath("/", "layout");
-  return NextResponse.json(video);
 }

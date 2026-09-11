@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import { revalidatePath } from "next/cache";
 import { assertAdmin } from "@/lib/auth";
+import { jsonSaveError, revalidatePosterPaths } from "@/lib/admin-save";
 import { releaseUnusedUploads } from "@/lib/media-refs";
 import { posterFieldsFromBody } from "@/lib/poster";
-import { readStore, writeStore } from "@/lib/store";
+import { readStore, removePoster, savePoster } from "@/lib/store";
 import type { Poster } from "@/lib/data";
 
 export async function PUT(
@@ -15,20 +15,28 @@ export async function PUT(
   } catch {
     return NextResponse.json({ error: "未登录" }, { status: 401 });
   }
-  const { id } = await params;
-  const body = (await request.json()) as Partial<Poster>;
-  const store = await readStore();
-  const index = store.posters.findIndex((item) => item.id === id);
-  if (index < 0) return NextResponse.json({ error: "海报不存在" }, { status: 404 });
-  const previous = store.posters[index];
-  store.posters[index] = {
-    id,
-    ...posterFieldsFromBody(body, previous),
-  };
-  await writeStore(store);
-  releaseUnusedUploads(store, [previous.image, ...(previous.detailImages || [])]);
-  revalidatePath("/", "layout");
-  return NextResponse.json(store.posters[index]);
+  try {
+    const { id } = await params;
+    if (!id) return NextResponse.json({ error: "海报缺少编号" }, { status: 400 });
+    const body = (await request.json()) as Partial<Poster>;
+    const store = await readStore();
+    const previous = store.posters.find((item) => item.id === id);
+    const saved = await savePoster({
+      id,
+      ...posterFieldsFromBody(body, previous),
+    });
+    const nextStore = {
+      ...store,
+      posters: previous
+        ? store.posters.map((item) => (item.id === id ? saved : item))
+        : [...store.posters, saved],
+    };
+    if (previous) releaseUnusedUploads(nextStore, [previous.image, ...(previous.detailImages || [])]);
+    revalidatePosterPaths(saved.placement);
+    return NextResponse.json(saved);
+  } catch (error) {
+    return jsonSaveError(error);
+  }
 }
 
 export async function DELETE(
@@ -40,12 +48,20 @@ export async function DELETE(
   } catch {
     return NextResponse.json({ error: "未登录" }, { status: 401 });
   }
-  const { id } = await params;
-  const store = await readStore();
-  const previous = store.posters.find((item) => item.id === id);
-  store.posters = store.posters.filter((item) => item.id !== id);
-  await writeStore(store);
-  if (previous) releaseUnusedUploads(store, [previous.image, ...(previous.detailImages || [])]);
-  revalidatePath("/", "layout");
-  return NextResponse.json({ ok: true });
+  try {
+    const { id } = await params;
+    const store = await readStore();
+    const previous = store.posters.find((item) => item.id === id);
+    await removePoster(id);
+    if (previous) {
+      releaseUnusedUploads(
+        { ...store, posters: store.posters.filter((item) => item.id !== id) },
+        [previous.image, ...(previous.detailImages || [])],
+      );
+      revalidatePosterPaths(previous.placement);
+    }
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    return jsonSaveError(error);
+  }
 }

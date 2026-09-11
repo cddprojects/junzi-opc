@@ -81,15 +81,29 @@ export async function sqlRows<T extends Record<string, unknown>>(
   });
 }
 
-export async function withStoreTx<T>(fn: (sql: postgres.TransactionSql) => Promise<T>) {
+export async function withStoreTx<T>(
+  fn: (sql: postgres.TransactionSql) => Promise<T>,
+  timeoutMs = 0,
+) {
   return enqueueSql(async () => {
     const started = Date.now();
     console.info("[store] query start", "tx");
+    let timer: ReturnType<typeof setTimeout> | undefined;
     try {
-      const result = await getSql().begin(async (tx) => {
+      const begin = getSql().begin(async (tx) => {
         await tx`select pg_advisory_xact_lock(${STORE_LOCK_KEY})`;
         return fn(tx);
       });
+      const result = timeoutMs
+        ? await Promise.race([
+            begin,
+            new Promise<never>((_, reject) => {
+              timer = setTimeout(() => {
+                reject(new Error(`[store] tx timeout after ${timeoutMs}ms`));
+              }, timeoutMs);
+            }),
+          ])
+        : await begin;
       if (!globalForSql.__junziSqlConnected) {
         globalForSql.__junziSqlConnected = true;
         console.info("[store] connect ok");
@@ -98,7 +112,15 @@ export async function withStoreTx<T>(fn: (sql: postgres.TransactionSql) => Promi
       return result;
     } catch (error) {
       console.error("[store] query fail", "tx", `${Date.now() - started}ms`, error);
+      if (error instanceof Error && error.message.includes("tx timeout")) {
+        const client = globalForSql.__junziSql;
+        globalForSql.__junziSql = undefined;
+        globalForSql.__junziSqlConnected = false;
+        void client?.end({ timeout: 1 }).catch(() => undefined);
+      }
       throw error;
+    } finally {
+      if (timer) clearTimeout(timer);
     }
   });
 }
