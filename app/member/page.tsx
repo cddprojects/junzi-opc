@@ -1,5 +1,5 @@
 import { ComingSoonPoster } from "@/components/covers";
-import { MemberPurchase } from "@/components/member-purchase";
+import { MemberPurchase, MemberTopChrome } from "@/components/member-purchase";
 import { normalizeDetailImages } from "@/lib/course";
 import { membership, postersByPlacement } from "@/lib/data";
 import { getRequestLocale } from "@/lib/i18n-server";
@@ -21,13 +21,14 @@ export default async function MemberPage() {
   const hasVisual = Boolean(hero?.image || details.length);
 
   return (
-    <div className="bg-[#f5f5f5] pb-4 md:bg-transparent">
+    <div className="bg-[#f5f5f5] pb-4 md:overflow-hidden md:rounded-2xl md:bg-transparent">
+      <MemberTopChrome />
       {hero?.image ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={hero.image} alt={heroTitle} className="block h-auto w-full md:rounded-t-xl" />
+        <img src={hero.image} alt={heroTitle} className="mt-3 block h-auto w-full" />
       ) : null}
       {details.length > 0 ? (
-        <section className="grid grid-cols-1 gap-0.5 bg-white px-[12px] pb-[2px]">
+        <section className="mt-3 grid grid-cols-1 gap-0.5 bg-white px-[12px] pb-[2px]">
           {details
             .filter((src) => src !== hero?.image)
             .map((src, index) => (
@@ -36,9 +37,13 @@ export default async function MemberPage() {
             ))}
         </section>
       ) : null}
-      {showPurchase ? <MemberPurchase /> : null}
+      {showPurchase ? (
+        <div className="mt-3">
+          <MemberPurchase />
+        </div>
+      ) : null}
       {!hasVisual && !showPurchase ? (
-        <div className="md:overflow-hidden md:rounded-2xl">
+        <div className="mt-3">
           <ComingSoonPoster title={heroTitle} />
         </div>
       ) : null}
