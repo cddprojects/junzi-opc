@@ -28,7 +28,7 @@ export default async function MemberPage() {
     <div className="bg-[#f5f5f5] pb-4">
       <MemberTopChrome />
       {gallery.length > 0 ? (
-        <section className="grid grid-cols-1 gap-0.5 px-[12px] pt-3 pb-[12px]">
+        <section className="grid grid-cols-1 gap-0.5 px-[12px] pt-3 pb-[12px] md:grid-cols-2">
           {gallery.map((src, index) => (
             // eslint-disable-next-line @next/next/no-img-element
             <img
