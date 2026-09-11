@@ -36,7 +36,7 @@ async function main() {
   await sql`
     alter table public.posters
     add constraint posters_placement_check
-    check (placement in ('home-carousel', 'home-banner', 'workshop', 'events', 'member', 'home-ai', 'ai-tools'))
+    check (placement in ('home-carousel', 'home-banner', 'workshop', 'events', 'member', 'about', 'home-ai', 'ai-tools'))
   `;
   await sql`alter table public.posters add column if not exists product_slug text`;
   await sql`alter table public.posters add column if not exists detail_images text[]`;
@@ -82,7 +82,7 @@ async function main() {
   const rows = await sql`
     select id, placement, image, href, kicker, product_slug, detail_images
     from public.posters
-    where placement in ('workshop', 'events', 'member', 'ai-tools', 'home-ai')
+    where placement in ('workshop', 'events', 'member', 'about', 'ai-tools', 'home-ai')
     order by placement
   `;
   console.log("slot rows", rows);

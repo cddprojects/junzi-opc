@@ -41,6 +41,7 @@ export const POSTER_PLACEMENTS = [
   "workshop",
   "events",
   "member",
+  "about",
   "ai-tools",
 ] as const;
 
@@ -52,6 +53,7 @@ export const POSTER_PLACEMENT_LABELS: Record<PosterPlacement, string> = {
   workshop: "线下工作坊",
   events: "活动报名",
   member: "会员中心",
+  about: "关于我们",
   "ai-tools": "AI工具小程序",
 };
 
@@ -134,6 +136,14 @@ export const DEFAULT_SLOT_POSTERS: Poster[] = [
     placement: "member",
     productSlug: "member",
     detailImages: ["/posters/member-detail-1.jpg"],
+  },
+  {
+    id: "about",
+    title: "关于我们",
+    titleEn: "About us",
+    href: "/about",
+    sort: 0,
+    placement: "about",
   },
 ];
 
