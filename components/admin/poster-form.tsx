@@ -20,9 +20,16 @@ import { EnInput } from "@/components/admin/en-field";
 
 const GENERIC_PLACEMENTS: PosterPlacement[] = ["home-carousel", "home-banner", "ai-tools"];
 
+function showsDetailImages(placement: PosterPlacement) {
+  return placement === "member" || placement === "about";
+}
+
 function placementHint(placement: PosterPlacement) {
   if (placement === "member") {
     return "上传海报和详情长图。关联「年度会员」才显示开通购买；不关联则前台只显示海报和图廊。";
+  }
+  if (placement === "about") {
+    return "上传海报和详情长图。前台「关于我们」按顺序铺图，手机一列、桌面两列。";
   }
   if (placement === "ai-tools") {
     return "无图则首页该块隐藏。图上按钮用「图上按钮文案」和上方链接。";
@@ -51,7 +58,7 @@ export function PosterForm({
   const [placement, setPlacement] = useState<PosterPlacement>(
     parsePosterPlacement(fixedPlacement || poster?.placement, "home-carousel"),
   );
-  const detailsOn = showDetailImages ?? placement === "member";
+  const detailsOn = showDetailImages ?? showsDetailImages(placement);
   const [image, setImage] = useState(poster?.image || "");
   const [detailImages, setDetailImages] = useState<string[]>(
     poster?.detailImages?.length ? [...poster.detailImages] : [],
@@ -163,24 +170,28 @@ export function PosterForm({
         </div>
       )}
       <p className="text-[12px] text-[#888]">{placementHint(placement)}</p>
-      <label className="block text-[13px]">
-        关联商品
-        <select
-          name="productSlug"
-          defaultValue={poster?.productSlug || ""}
-          className="mt-1 h-9 w-full rounded-md border border-input bg-white px-2"
-        >
-          <option value="">仅海报（不关联商品）</option>
-          <option value={membership.slug}>年度会员</option>
-          {products.map((product) => (
-            <option key={product.slug} value={product.slug}>
-              {product.title}
-            </option>
-          ))}
-        </select>
-      </label>
+      {placement === "about" ? (
+        <input type="hidden" name="productSlug" value="" />
+      ) : (
+        <label className="block text-[13px]">
+          关联商品
+          <select
+            name="productSlug"
+            defaultValue={poster?.productSlug || ""}
+            className="mt-1 h-9 w-full rounded-md border border-input bg-white px-2"
+          >
+            <option value="">仅海报（不关联商品）</option>
+            <option value={membership.slug}>年度会员</option>
+            {products.map((product) => (
+              <option key={product.slug} value={product.slug}>
+                {product.title}
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
       <UploadField label="海报图片" value={image} onChange={setImage} accept="image/*" />
-      {placement === "ai-tools" || (!locked && placement !== "member") ? (
+      {placement === "ai-tools" || (!locked && !showsDetailImages(placement)) ? (
         <div className="grid gap-3 md:grid-cols-2">
           <label className="block text-[13px]">
             {placement === "ai-tools" ? "图上按钮文案" : "角标"}

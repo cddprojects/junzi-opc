@@ -158,6 +158,9 @@ function DesktopFooter() {
       <div className="mt-6 flex items-center justify-center gap-6">
         <LocaleSwitcher />
         <CurrencySwitcher />
+        <Link href="/about" className="text-[var(--front-accent)]">
+          {t("aboutTitle")}
+        </Link>
         <Link href="/verify" className="text-[var(--front-accent)]">
           {t("verifyCode")}
         </Link>

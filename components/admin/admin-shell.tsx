@@ -23,6 +23,7 @@ import {
   ShoppingBag,
   SlidersHorizontal,
   Sparkles,
+  Info,
   Users,
   Video,
   Wallet,
@@ -51,6 +52,7 @@ const GROUPS: NavGroup[] = [
       { href: "/admin/workshop", key: "adminWorkshop", icon: Presentation },
       { href: "/admin/events", key: "adminEvents", icon: CalendarDays },
       { href: "/admin/member", key: "adminMemberCenter", icon: Sparkles },
+      { href: "/admin/about", key: "adminAbout", icon: Info },
       { href: "/admin/videos", key: "adminVideos", icon: Video },
     ],
   },
@@ -108,6 +110,7 @@ function titleKey(pathname: string): MessageKey {
   if (pathname.startsWith("/admin/workshop")) return "adminWorkshop";
   if (pathname.startsWith("/admin/events")) return "adminEvents";
   if (pathname.startsWith("/admin/member")) return "adminMemberCenter";
+  if (pathname.startsWith("/admin/about")) return "adminAbout";
   if (pathname.startsWith("/admin/videos")) return "adminVideos";
   if (pathname.startsWith("/admin/orders/") && pathname !== "/admin/orders") return "adminOrderDetail";
   if (pathname.startsWith("/admin/orders")) return "adminOrders";
