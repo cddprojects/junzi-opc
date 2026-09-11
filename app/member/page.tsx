@@ -19,34 +19,29 @@ export default async function MemberPage() {
   const details = slot.flatMap((item) => normalizeDetailImages(item.detailImages));
   const heroTitle = hero ? locPosterTitle(hero, locale) : t(locale, "navMember");
   const hasVisual = Boolean(hero?.image || details.length);
+  const gallery = [
+    ...(hero?.image ? [hero.image] : []),
+    ...details.filter((src) => src !== hero?.image),
+  ];
 
   return (
-    <div className="bg-[#f5f5f5] pb-4 md:overflow-hidden md:rounded-2xl md:bg-transparent">
+    <div className="bg-[#f5f5f5] pb-4">
       <MemberTopChrome />
-      {hero?.image ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={hero.image} alt={heroTitle} className="mt-3 block h-auto w-full" />
-      ) : null}
-      {details.length > 0 ? (
-        <section className="mt-3 grid grid-cols-1 gap-0.5 bg-white px-[12px] pb-[2px]">
-          {details
-            .filter((src) => src !== hero?.image)
-            .map((src, index) => (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img key={`${src}-${index}`} src={src} alt="" className="block h-auto w-full" />
-            ))}
+      {gallery.length > 0 ? (
+        <section className="grid grid-cols-1 gap-0.5 px-[12px] pt-3 pb-[12px]">
+          {gallery.map((src, index) => (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              key={`${src}-${index}`}
+              src={src}
+              alt={index === 0 ? heroTitle : ""}
+              className="block h-auto w-full"
+            />
+          ))}
         </section>
       ) : null}
-      {showPurchase ? (
-        <div className="mt-3">
-          <MemberPurchase />
-        </div>
-      ) : null}
-      {!hasVisual && !showPurchase ? (
-        <div className="mt-3">
-          <ComingSoonPoster title={heroTitle} />
-        </div>
-      ) : null}
+      {showPurchase ? <MemberPurchase /> : null}
+      {!hasVisual && !showPurchase ? <ComingSoonPoster title={heroTitle} /> : null}
     </div>
   );
 }

@@ -14,7 +14,7 @@ export function MemberTopChrome() {
 
   return (
     <div>
-      <div className="bg-[#2c2c2c] px-3 pt-4 pb-5 md:px-6">
+      <div className="px-3 pt-4 md:px-0">
         <div className="rounded-xl bg-[linear-gradient(135deg,#f0d48a,#d7b25a)] px-4 py-5 text-[#3a2c10]">
           <div className="flex items-start justify-between">
             <h2 className="text-[18px] font-semibold">{title}</h2>
@@ -38,7 +38,7 @@ export function MemberTopChrome() {
         </div>
       </div>
 
-      <div className="mx-3 mt-3 flex items-center justify-between rounded-md border border-[#e8d7b0] bg-[#f8f1de] px-3 py-3 md:mx-6">
+      <div className="mt-3 flex items-center justify-between bg-[#f8f1de] px-3 py-3">
         <span className="text-[14px]">{t("navMember")}</span>
         <span className="text-[#8a5a20]">
           <span className="text-[20px] font-semibold">{membership.priceLabel}</span>
@@ -55,7 +55,7 @@ export function MemberPurchase() {
   const { t } = useLocale();
 
   return (
-    <div className="bg-white px-3 py-4 md:rounded-b-xl md:px-6">
+    <div className="px-3 py-4 md:px-0">
       <button
         type="button"
         onClick={() => openPay(memberCheckoutItem())}
