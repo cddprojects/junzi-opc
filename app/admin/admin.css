@@ -1,5 +1,19 @@
 @import url("https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;600&display=swap");
 
+/* One document lock + one main-pane scroller. Stops html/body + .admin-main
+   nested bars and the empty white void below the form. */
+html:has(.admin-app),
+html:has(.admin-app) body {
+  height: 100%;
+  max-height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+html:has(.admin-app) body {
+  min-height: 0;
+}
+
 .admin-app {
   --ink: #1e2420;
   --ink-line: #3c443d;
@@ -17,12 +31,20 @@
   --paper-mute: #a9a392;
   --admin-sans: "Noto Sans SC", var(--font-noto-sans), -apple-system, sans-serif;
   --admin-serif: "Noto Serif SC", var(--font-noto-serif), serif;
-  min-height: 100dvh;
+  box-sizing: border-box;
+  height: 100dvh;
+  max-height: 100dvh;
+  min-height: 0;
+  overflow: hidden;
   background: var(--paper);
   color: var(--text);
   font-family: var(--admin-sans);
   font-size: 14px;
   line-height: 1.55;
+}
+
+.admin-app:not(:has(.admin-frame)) {
+  overflow-y: auto;
 }
 
 .admin-app .font-serif,
@@ -51,7 +73,9 @@
 
 .admin-frame {
   display: flex;
-  min-height: 100dvh;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .admin-side {
@@ -67,15 +91,6 @@
 }
 
 @media (min-width: 768px) {
-  .admin-app {
-    height: 100dvh;
-    overflow: hidden;
-  }
-
-  .admin-frame {
-    min-height: 100dvh;
-  }
-
   .admin-side {
     position: fixed;
     top: 0;
@@ -93,8 +108,8 @@
 
   .admin-main {
     margin-left: 230px;
-    height: 100dvh;
-    min-height: 100dvh;
+    height: 100%;
+    min-height: 0;
     overflow-x: hidden;
     overflow-y: auto;
     overscroll-behavior: contain;
@@ -659,13 +674,19 @@
 .admin-main {
   display: flex;
   min-width: 0;
+  min-height: 0;
   flex: 1;
   flex-direction: column;
+  height: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   background: var(--paper);
 }
 
 .admin-topbar {
   display: flex;
+  flex-shrink: 0;
   align-items: center;
   gap: 16px;
   min-height: 72px;
@@ -688,6 +709,8 @@
   box-sizing: border-box;
   width: 100%;
   max-width: 1280px;
+  min-height: 0;
+  flex: 0 0 auto;
   padding: 36px 28px 56px;
 }
 
@@ -697,6 +720,7 @@
 }
 
 .admin-mobile-bar {
+  flex-shrink: 0;
   align-items: center;
   justify-content: space-between;
   padding: 12px 16px;
