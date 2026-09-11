@@ -19,8 +19,16 @@ import { fromCny, formatMoneyAmount } from "@/lib/currency";
 import { PayBusyOverlay } from "@/components/pay-busy-overlay";
 import { PayLayer } from "@/components/pay-layer";
 import { canFollowPayRedirect, isAbortError } from "@/lib/pay-redirect";
+import {
+  mergeCarts,
+  readStoredCart,
+  readStoredFavorites,
+  type CartItem,
+  writeStoredCart,
+  writeStoredFavorites,
+} from "@/lib/cart-storage";
 
-export type CartItem = { slug: string; qty: number; product: Product };
+export type { CartItem };
 
 type PayResult = Pick<Order, "id" | "productTitle" | "verifyCode" | "productSlug">;
 
@@ -45,6 +53,8 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const [cart, setCart] = React.useState<CartItem[]>([]);
   const [favorites, setFavorites] = React.useState<string[]>([]);
+  const hydratedRef = React.useRef(false);
+  const lastUserIdRef = React.useRef<string | null | undefined>(undefined);
   const [payOpen, setPayOpen] = React.useState(false);
   const [items, setItems] = React.useState<CheckoutItem[]>([]);
   const [busy, setBusy] = React.useState(false);
@@ -107,6 +117,33 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
     document.documentElement.removeAttribute("inert");
   }, [visible]);
 
+  React.useEffect(() => {
+    if (loading) return;
+    const userId = user?.id ?? null;
+    if (hydratedRef.current && lastUserIdRef.current === userId) return;
+    const guestCart = readStoredCart(null);
+    const ownedCart = userId ? readStoredCart(userId) : [];
+    const nextCart = userId ? mergeCarts(ownedCart, guestCart) : guestCart;
+    if (userId && guestCart.length) {
+      writeStoredCart(userId, nextCart);
+      writeStoredCart(null, []);
+    }
+    setCart(nextCart);
+    setFavorites(readStoredFavorites(userId));
+    lastUserIdRef.current = userId;
+    hydratedRef.current = true;
+  }, [loading, user?.id]);
+
+  React.useEffect(() => {
+    if (!hydratedRef.current || loading) return;
+    writeStoredCart(user?.id ?? null, cart);
+  }, [cart, loading, user?.id]);
+
+  React.useEffect(() => {
+    if (!hydratedRef.current || loading) return;
+    writeStoredFavorites(user?.id ?? null, favorites);
+  }, [favorites, loading, user?.id]);
+
   const goAuth = React.useCallback(
     (mode: "login" | "register", returnTo?: string) => {
       const fallback = pathname && pathname !== "/" ? pathname : "/cart";
@@ -123,10 +160,6 @@ export function DemoStoreProvider({ children }: { children: React.ReactNode }) {
       favorites,
       addToCart: (product) => {
         if (loading) return;
-        if (!user) {
-          goAuth("login", `/product/${product.slug}`);
-          return;
-        }
         const existing = cart.find((item) => item.slug === product.slug);
         setCart(
           existing
