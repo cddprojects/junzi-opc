@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { COVER_THEMES, type CourseDetail, type Product, type ProductCategoryId } from "@/lib/data";
 import { emptyCourseDetail, normalizeDetailImages, outlineFromLessons } from "@/lib/course";
+import { adminSaveJson } from "@/components/admin/admin-save";
 import { UploadField } from "@/components/admin/upload-field";
 import { CourseDetailFields } from "@/components/admin/course-detail-fields";
 import { ImageListEditor } from "@/components/admin/image-list-editor";
@@ -78,19 +79,21 @@ export function ProductForm({ product }: { product?: Product }) {
       detail,
     };
     const url = product ? `/api/admin/products/${product.slug}` : "/api/admin/products";
-    const res = await fetch(url, {
-      method: product ? "PUT" : "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-    const data = (await res.json()) as { error?: string; slug?: string };
-    setBusy(false);
-    if (!res.ok) {
-      setError(data.error || "保存失败");
-      return;
+    try {
+      const result = await adminSaveJson<{ error?: string; slug?: string }>(
+        url,
+        product ? "PUT" : "POST",
+        payload,
+      );
+      if (!result.ok) {
+        setError(result.error);
+        return;
+      }
+      router.push("/admin/products");
+      router.refresh();
+    } finally {
+      setBusy(false);
     }
-    router.push("/admin/products");
-    router.refresh();
   }
 
   async function onDelete() {

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import type { CatalogVideo, Product } from "@/lib/data";
+import { adminSaveJson } from "@/components/admin/admin-save";
 import { UploadField } from "@/components/admin/upload-field";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,19 +33,17 @@ export function VideoForm({ video, products }: { video?: CatalogVideo; products:
       videoUrl,
     };
     const url = video ? `/api/admin/videos/${video.id}` : "/api/admin/videos";
-    const res = await fetch(url, {
-      method: video ? "PUT" : "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-    const data = (await res.json()) as { error?: string };
-    setBusy(false);
-    if (!res.ok) {
-      setError(data.error || "保存失败");
-      return;
+    try {
+      const result = await adminSaveJson(url, video ? "PUT" : "POST", payload);
+      if (!result.ok) {
+        setError(result.error);
+        return;
+      }
+      router.push("/admin/videos");
+      router.refresh();
+    } finally {
+      setBusy(false);
     }
-    router.push("/admin/videos");
-    router.refresh();
   }
 
   async function onDelete() {

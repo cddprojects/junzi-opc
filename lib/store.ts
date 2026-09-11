@@ -470,7 +470,9 @@ function persistableStore(store: AppStore): AppStore {
     ...store,
     version: STORE_VERSION,
     products: store.products.map(ensureProductDetail),
-    posters: ensureSlotPosters(store.posters ?? []),
+    // Do not seed missing slot posters here. Seeding `about` into every persist
+    // made production saves 500 when posters_placement_check lacked `about`.
+    posters: store.posters ?? [],
     users: (store.users ?? []).map((user) => ensureCustomerReferral(user, taken)),
     sessions: (store.sessions ?? []).map((session) => ({
       tokenHash: session.tokenHash,
@@ -536,6 +538,115 @@ export async function writeStore(store: AppStore) {
   ensureDirs();
   writeFileSync(STORE_PATH, JSON.stringify(next, null, 2), "utf8");
   rememberStore(next);
+}
+
+function patchCached<K extends "posters" | "products" | "videos">(
+  key: K,
+  nextItems: AppStore[K],
+) {
+  if (!storeCache) return;
+  rememberStore({ ...storeCache.store, [key]: nextItems });
+}
+
+export async function savePoster(poster: Poster) {
+  const next: Poster = {
+    ...poster,
+    id: poster.id,
+    title: poster.title.trim(),
+    placement: parsePosterPlacement(poster.placement),
+  };
+  if (!next.id) throw new Error("海报缺少编号");
+  if (usesSupabaseStore()) {
+    const { upsertPosterToPg } = await import("@/lib/store-pg");
+    await upsertPosterToPg(next);
+    const posters = [...((storeCache?.store.posters ?? []).filter((item) => item.id !== next.id)), next];
+    patchCached("posters", posters);
+    return next;
+  }
+  const store = await readStore();
+  const index = store.posters.findIndex((item) => item.id === next.id);
+  if (index < 0) store.posters.push(next);
+  else store.posters[index] = next;
+  await writeStore(store);
+  return next;
+}
+
+export async function removePoster(id: string) {
+  if (usesSupabaseStore()) {
+    const { deletePosterFromPg } = await import("@/lib/store-pg");
+    await deletePosterFromPg(id);
+    patchCached(
+      "posters",
+      (storeCache?.store.posters ?? []).filter((item) => item.id !== id),
+    );
+    return;
+  }
+  const store = await readStore();
+  store.posters = store.posters.filter((item) => item.id !== id);
+  await writeStore(store);
+}
+
+export async function saveProduct(product: Product) {
+  const next = ensureProductDetail(product);
+  if (usesSupabaseStore()) {
+    const { upsertProductToPg } = await import("@/lib/store-pg");
+    await upsertProductToPg(next);
+    const products = [...((storeCache?.store.products ?? []).filter((item) => item.slug !== next.slug)), next];
+    patchCached("products", products);
+    return next;
+  }
+  const store = await readStore();
+  const index = store.products.findIndex((item) => item.slug === next.slug);
+  if (index < 0) store.products.push(next);
+  else store.products[index] = next;
+  await writeStore(store);
+  return next;
+}
+
+export async function removeProduct(slug: string) {
+  if (usesSupabaseStore()) {
+    const { deleteProductFromPg } = await import("@/lib/store-pg");
+    await deleteProductFromPg(slug);
+    patchCached(
+      "products",
+      (storeCache?.store.products ?? []).filter((item) => item.slug !== slug),
+    );
+    return;
+  }
+  const store = await readStore();
+  store.products = store.products.filter((item) => item.slug !== slug);
+  await writeStore(store);
+}
+
+export async function saveVideo(video: CatalogVideo) {
+  if (usesSupabaseStore()) {
+    const { upsertVideoToPg } = await import("@/lib/store-pg");
+    await upsertVideoToPg(video);
+    const videos = [...((storeCache?.store.videos ?? []).filter((item) => item.id !== video.id)), video];
+    patchCached("videos", videos);
+    return video;
+  }
+  const store = await readStore();
+  const index = store.videos.findIndex((item) => item.id === video.id);
+  if (index < 0) store.videos.push(video);
+  else store.videos[index] = video;
+  await writeStore(store);
+  return video;
+}
+
+export async function removeVideo(id: string) {
+  if (usesSupabaseStore()) {
+    const { deleteVideoFromPg } = await import("@/lib/store-pg");
+    await deleteVideoFromPg(id);
+    patchCached(
+      "videos",
+      (storeCache?.store.videos ?? []).filter((item) => item.id !== id),
+    );
+    return;
+  }
+  const store = await readStore();
+  store.videos = store.videos.filter((item) => item.id !== id);
+  await writeStore(store);
 }
 
 function shapeCatalog(input: {
