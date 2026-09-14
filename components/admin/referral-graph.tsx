@@ -69,9 +69,14 @@ export function ReferralGraph({
   useEffect(() => {
     const el = viewportRef.current;
     if (!el) return;
+    let lastWidth = el.clientWidth;
     fitView();
     const observer = new ResizeObserver(() => {
-      if (!userMovedRef.current) fitView();
+      const width = el.clientWidth;
+      const jumped = Math.abs(width - lastWidth) > 80;
+      lastWidth = width;
+      if (jumped) userMovedRef.current = false;
+      if (!userMovedRef.current || jumped) fitView();
     });
     observer.observe(el);
     return () => observer.disconnect();
