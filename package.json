@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start --port 43180 --hostname 0.0.0.0",
     "lint": "eslint",
-    "verify": "npx tsx scripts/verify-referral.ts && npx tsx scripts/verify-wallet.ts && npx tsx scripts/verify-payments.ts",
+    "verify": "npx tsx scripts/verify-referral.ts && npx tsx scripts/verify-referral-graph.ts && npx tsx scripts/verify-wallet.ts && npx tsx scripts/verify-payments.ts",
     "import:supabase": "npx tsx scripts/import-supabase.ts",
     "seed:posters": "npx tsx scripts/seed-slot-posters.ts"
   },
