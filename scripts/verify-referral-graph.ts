@@ -47,6 +47,7 @@ assert.ok(byId.mai.y < byId.zhi.y, "newest downline stays above");
 assert.ok(byId.zhi.y < byId.zhong.y);
 assert.ok(byId.zhong.y < byId.ding.y);
 assert.ok(byId.ding.y < byId.yi.y, "root/upline stays at the bottom");
+assert.ok(byId.mai.y >= 20, "topmost node keeps padding so fit/zoom does not clip it");
 assert.ok(Math.abs(byId.mai.x - byId.yi.x) < 1, "a single chain stays vertically aligned");
 assert.equal(byId.yi.depth, 0);
 assert.equal(byId.mai.depth, 4);

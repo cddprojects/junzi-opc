@@ -1607,8 +1607,8 @@ html:has(.admin-app) body {
 .referral-graph-viewport {
   position: relative;
   min-width: 0;
-  height: min(68vh, 620px);
-  min-height: 360px;
+  height: min(72vh, 720px);
+  min-height: 400px;
   overflow: hidden;
   touch-action: none;
   overscroll-behavior: contain;

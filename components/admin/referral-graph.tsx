@@ -57,7 +57,8 @@ export function ReferralGraph({
     const vw = el.clientWidth;
     const vh = el.clientHeight;
     if (vw < 8 || vh < 8) return;
-    const scale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, Math.min(vw / nextLayout.width, vh / nextLayout.height, 1.15) * 0.92));
+    const fitted = Math.min(vw / nextLayout.width, vh / nextLayout.height) * 0.88;
+    const scale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, fitted));
     commitView({
       x: (vw - nextLayout.width * scale) / 2,
       y: (vh - nextLayout.height * scale) / 2,

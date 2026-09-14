@@ -124,7 +124,7 @@ export function layoutReferralGraph(
       status: box.input.status,
       depth: box.depth,
       x: box.cx,
-      y: (maxDepth - box.depth) * (GRAPH_NODE_HEIGHT + GRAPH_V_GAP),
+      y: GRAPH_PAD + (maxDepth - box.depth) * (GRAPH_NODE_HEIGHT + GRAPH_V_GAP),
       parentId: box.parentId,
       childIds: allChildren.map((child) => child.userId),
       visibleChildIds: box.children.map((child) => child.input.userId),
@@ -146,7 +146,7 @@ export function layoutReferralGraph(
     nodes,
     edges,
     width: Math.ceil(maxX + GRAPH_PAD),
-    height: Math.ceil(maxDepth * (GRAPH_NODE_HEIGHT + GRAPH_V_GAP) + GRAPH_NODE_HEIGHT + GRAPH_PAD),
+    height: Math.ceil(GRAPH_PAD * 2 + maxDepth * (GRAPH_NODE_HEIGHT + GRAPH_V_GAP) + GRAPH_NODE_HEIGHT),
   };
 }
 
