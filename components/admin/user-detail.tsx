@@ -9,7 +9,7 @@ import { formatMyrSen, formatTierRateLabel } from "@/lib/referral";
 import { normalizeWithdrawalStatus } from "@/lib/wallet";
 import type { getCustomerAdmin } from "@/lib/user-store";
 import { useLocale } from "@/components/locale-provider";
-import { DownlineTree } from "@/components/admin/downline-tree";
+import { ReferralGraph } from "@/components/admin/referral-graph";
 import { CommissionChain } from "@/components/admin/commission-chain";
 
 type AdminUser = NonNullable<Awaited<ReturnType<typeof getCustomerAdmin>>>;
@@ -277,7 +277,7 @@ export function AdminUserDetail({
       ) : null}
 
       {tab === "network" ? (
-        <div className="jx-panel space-y-4 p-5">
+        <div className="jx-panel space-y-4 overflow-hidden p-5">
           <p className="text-[12px] leading-5 text-[var(--mute)]">{t("adminPayDepthHint")}</p>
           <div>
             <p className="text-[13px] text-[var(--mute)]">{t("adminUpline")}</p>
@@ -307,7 +307,15 @@ export function AdminUserDetail({
           <div>
             <p className="text-[13px] text-[var(--mute)]">{t("adminDownlineTree")}</p>
             {user.downline?.length ? (
-              <DownlineTree nodes={user.downline} rates={user.plan?.tiers || []} />
+              <ReferralGraph
+                root={{
+                  userId: user.id,
+                  name: user.name,
+                  code: user.referralCode,
+                  status: user.status,
+                  children: user.downline,
+                }}
+              />
             ) : (
               <p className="mt-1 text-[13px]">{t("adminNoDownline")}</p>
             )}
