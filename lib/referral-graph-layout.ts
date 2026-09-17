@@ -1,8 +1,11 @@
-export const GRAPH_NODE_WIDTH = 176;
-export const GRAPH_NODE_HEIGHT = 72;
-export const GRAPH_H_GAP = 32;
-export const GRAPH_V_GAP = 96;
-export const GRAPH_PAD = 28;
+export const GRAPH_NODE_R = 16;
+export const GRAPH_NODE_SIZE = GRAPH_NODE_R * 2;
+export const GRAPH_LABEL_W = 96;
+export const GRAPH_LABEL_H = 34;
+export const GRAPH_COL_W = 118;
+export const GRAPH_ROW_H = 72;
+export const GRAPH_ROW_GAP = 18;
+export const GRAPH_PAD = 40;
 export const GRAPH_COLLAPSE_AFTER = 80;
 export const GRAPH_COLLAPSE_DEPTH = 2;
 
@@ -47,8 +50,8 @@ type MeasureBox = {
   depth: number;
   parentId?: string;
   children: MeasureBox[];
-  width: number;
-  cx: number;
+  height: number;
+  cy: number;
 };
 
 export function countReferralTeam(node: ReferralGraphInput): number {
@@ -75,27 +78,27 @@ export function suggestedCollapsedIds(root: ReferralGraphInput, limit = GRAPH_CO
 function measure(input: ReferralGraphInput, depth: number, parentId: string | undefined, collapsed: Set<string>): MeasureBox {
   const collapsedHere = collapsed.has(input.userId);
   const kids = collapsedHere ? [] : (input.children || []).map((child) => measure(child, depth + 1, input.userId, collapsed));
-  const kidsWidth = kids.length
-    ? kids.reduce((sum, child) => sum + child.width, 0) + GRAPH_H_GAP * (kids.length - 1)
+  const kidsHeight = kids.length
+    ? kids.reduce((sum, child) => sum + child.height, 0) + GRAPH_ROW_GAP * (kids.length - 1)
     : 0;
   return {
     input,
     depth,
     parentId,
     children: kids,
-    width: Math.max(GRAPH_NODE_WIDTH, kidsWidth),
-    cx: 0,
+    height: Math.max(GRAPH_ROW_H, kidsHeight),
+    cy: 0,
   };
 }
 
-function place(box: MeasureBox, left: number) {
-  box.cx = left + box.width / 2;
+function place(box: MeasureBox, top: number) {
+  box.cy = top + box.height / 2;
   if (!box.children.length) return;
-  const kidsWidth = box.children.reduce((sum, child) => sum + child.width, 0) + GRAPH_H_GAP * (box.children.length - 1);
-  let cursor = left + (box.width - kidsWidth) / 2;
+  const kidsHeight = box.children.reduce((sum, child) => sum + child.height, 0) + GRAPH_ROW_GAP * (box.children.length - 1);
+  let cursor = top + (box.height - kidsHeight) / 2;
   for (const child of box.children) {
     place(child, cursor);
-    cursor += child.width + GRAPH_H_GAP;
+    cursor += child.height + GRAPH_ROW_GAP;
   }
 }
 
@@ -114,7 +117,6 @@ export function layoutReferralGraph(
   }
   collect(tree);
 
-  const maxDepth = flat.reduce((max, box) => Math.max(max, box.depth), 0);
   const raw: ReferralGraphLaidNode[] = flat.map((box) => {
     const allChildren = box.input.children || [];
     return {
@@ -123,8 +125,8 @@ export function layoutReferralGraph(
       code: box.input.code || "",
       status: box.input.status,
       depth: box.depth,
-      x: box.cx,
-      y: GRAPH_PAD + (maxDepth - box.depth) * (GRAPH_NODE_HEIGHT + GRAPH_V_GAP),
+      x: GRAPH_PAD + GRAPH_NODE_R + box.depth * GRAPH_COL_W,
+      y: GRAPH_PAD + box.cy,
       parentId: box.parentId,
       childIds: allChildren.map((child) => child.userId),
       visibleChildIds: box.children.map((child) => child.input.userId),
@@ -134,19 +136,22 @@ export function layoutReferralGraph(
     };
   });
 
-  const minX = Math.min(...raw.map((node) => node.x - GRAPH_NODE_WIDTH / 2));
-  const shift = GRAPH_PAD - minX;
-  const nodes = raw.map((node) => ({ ...node, x: node.x + shift }));
-  const maxX = Math.max(...nodes.map((node) => node.x + GRAPH_NODE_WIDTH / 2));
+  const minX = Math.min(...raw.map((node) => node.x - GRAPH_LABEL_W / 2));
+  const minY = Math.min(...raw.map((node) => node.y - GRAPH_NODE_R));
+  const shiftX = GRAPH_PAD - minX;
+  const shiftY = GRAPH_PAD - minY;
+  const nodes = raw.map((node) => ({ ...node, x: node.x + shiftX, y: node.y + shiftY }));
+  const maxX = Math.max(...nodes.map((node) => node.x + GRAPH_LABEL_W / 2));
+  const maxY = Math.max(...nodes.map((node) => node.y + GRAPH_NODE_R + GRAPH_LABEL_H));
   const edges: ReferralGraphEdge[] = nodes.flatMap((node) =>
-    node.visibleChildIds.map((childId) => ({ from: childId, to: node.id })),
+    node.visibleChildIds.map((childId) => ({ from: node.id, to: childId })),
   );
 
   return {
     nodes,
     edges,
     width: Math.ceil(maxX + GRAPH_PAD),
-    height: Math.ceil(GRAPH_PAD * 2 + maxDepth * (GRAPH_NODE_HEIGHT + GRAPH_V_GAP) + GRAPH_NODE_HEIGHT),
+    height: Math.ceil(maxY + GRAPH_PAD),
   };
 }
 
@@ -155,27 +160,26 @@ export function layoutReferralForest(
   options?: { collapsedIds?: Iterable<string> },
 ): ReferralGraphLayout {
   if (roots.length === 0) {
-    return { nodes: [], edges: [], width: GRAPH_NODE_WIDTH + GRAPH_PAD * 2, height: GRAPH_NODE_HEIGHT + GRAPH_PAD * 2 };
+    return { nodes: [], edges: [], width: GRAPH_COL_W + GRAPH_PAD * 2, height: GRAPH_ROW_H + GRAPH_PAD * 2 };
   }
   if (roots.length === 1) return layoutReferralGraph(roots[0], options);
 
   const laid = roots.map((root) => layoutReferralGraph(root, options));
-  const maxHeight = Math.max(...laid.map((item) => item.height));
+  const maxWidth = Math.max(...laid.map((item) => item.width));
   let cursor = 0;
   const nodes: ReferralGraphLaidNode[] = [];
   const edges: ReferralGraphEdge[] = [];
   for (const item of laid) {
-    const lift = maxHeight - item.height;
     for (const node of item.nodes) {
-      nodes.push({ ...node, x: node.x + cursor, y: node.y + lift });
+      nodes.push({ ...node, y: node.y + cursor });
     }
     edges.push(...item.edges);
-    cursor += item.width + GRAPH_H_GAP;
+    cursor += item.height + GRAPH_ROW_GAP;
   }
   return {
     nodes,
     edges,
-    width: Math.ceil(cursor - GRAPH_H_GAP),
-    height: maxHeight,
+    width: maxWidth,
+    height: Math.ceil(cursor - GRAPH_ROW_GAP),
   };
 }
