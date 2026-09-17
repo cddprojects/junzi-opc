@@ -1,12 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { Maximize2, Minus, Plus, RotateCcw } from "lucide-react";
 import { useT } from "@/components/locale-provider";
 import {
-  GRAPH_NODE_HEIGHT,
-  GRAPH_NODE_WIDTH,
+  GRAPH_LABEL_W,
+  GRAPH_NODE_R,
   layoutReferralGraph,
   suggestedCollapsedIds,
   type ReferralGraphInput,
@@ -14,7 +14,7 @@ import {
 } from "@/lib/referral-graph-layout";
 
 const MIN_SCALE = 0.28;
-const MAX_SCALE = 2.4;
+const MAX_SCALE = 2.6;
 
 type View = { x: number; y: number; scale: number };
 type Point = { x: number; y: number };
@@ -27,8 +27,6 @@ export function ReferralGraph({
   className?: string;
 }) {
   const t = useT();
-  const rawId = useId();
-  const markerId = `referral-arrow-${rawId.replace(/:/g, "")}`;
   const viewportRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<View>({ x: 0, y: 0, scale: 1 });
   const pointersRef = useRef(new Map<number, Point>());
@@ -57,7 +55,7 @@ export function ReferralGraph({
     const vw = el.clientWidth;
     const vh = el.clientHeight;
     if (vw < 8 || vh < 8) return;
-    const fitted = Math.min(vw / nextLayout.width, vh / nextLayout.height) * 0.88;
+    const fitted = Math.min(vw / nextLayout.width, vh / nextLayout.height) * 0.9;
     const scale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, fitted));
     commitView({
       x: (vw - nextLayout.width * scale) / 2,
@@ -108,7 +106,7 @@ export function ReferralGraph({
       commitView({
         ...prev,
         x: el.clientWidth / 2 - node.x * prev.scale,
-        y: el.clientHeight / 2 - (node.y + GRAPH_NODE_HEIGHT / 2) * prev.scale,
+        y: el.clientHeight / 2 - node.y * prev.scale,
       });
     },
     [commitView],
@@ -268,28 +266,23 @@ export function ReferralGraph({
           }}
         >
           <svg className="referral-graph-edges" width={layout.width} height={layout.height} aria-hidden="true">
-            <defs>
-              <marker id={markerId} viewBox="0 0 12 12" refX="6" refY="6" markerWidth="8" markerHeight="8" orient="auto">
-                <path d="M 1 1 L 11 6 L 1 11 Z" fill="#b08a4e" />
-              </marker>
-            </defs>
             {layout.edges.map((edge) => {
               const from = byId.get(edge.from);
               const to = byId.get(edge.to);
               if (!from || !to) return null;
-              const x1 = from.x;
-              const y1 = from.y + GRAPH_NODE_HEIGHT;
-              const x2 = to.x;
+              const x1 = from.x + GRAPH_NODE_R;
+              const y1 = from.y;
+              const x2 = to.x - GRAPH_NODE_R;
               const y2 = to.y;
-              const mid = (y1 + y2) / 2;
+              const mid = (x1 + x2) / 2;
               return (
                 <path
                   key={`${edge.from}-${edge.to}`}
-                  d={`M ${x1} ${y1} C ${x1} ${mid}, ${x2} ${mid}, ${x2} ${y2}`}
+                  d={`M ${x1} ${y1} C ${mid} ${y1}, ${mid} ${y2}, ${x2} ${y2}`}
                   fill="none"
-                  stroke="#b08a4e"
-                  strokeWidth="1.5"
-                  markerEnd={`url(#${markerId})`}
+                  stroke="#c4b089"
+                  strokeWidth="1.15"
+                  strokeLinecap="round"
                 />
               );
             })}
@@ -297,7 +290,9 @@ export function ReferralGraph({
           {layout.nodes.map((node) => {
             const isRoot = node.id === root.userId;
             const selected = node.id === selectedId;
-            const meta = [
+            const title = [
+              node.name,
+              node.code,
               node.directCount ? t("adminGraphDirect", { n: node.directCount }) : "",
               node.teamCount ? t("adminGraphTeam", { n: node.teamCount }) : "",
               node.status === "disabled" ? t("adminReasonInactive") : "",
@@ -315,14 +310,15 @@ export function ReferralGraph({
                 ]
                   .filter(Boolean)
                   .join(" ")}
+                title={title}
                 style={{
-                  width: GRAPH_NODE_WIDTH,
-                  height: GRAPH_NODE_HEIGHT,
-                  left: node.x - GRAPH_NODE_WIDTH / 2,
-                  top: node.y,
+                  width: GRAPH_LABEL_W,
+                  left: node.x - GRAPH_LABEL_W / 2,
+                  top: node.y - GRAPH_NODE_R,
                 }}
                 onClick={(event) => selectNode(node, event)}
               >
+                <span className="referral-graph-dot">{initialOf(node.name)}</span>
                 <Link
                   href={`/admin/users/${node.id}`}
                   className="referral-graph-name"
@@ -332,7 +328,6 @@ export function ReferralGraph({
                   {node.name}
                 </Link>
                 <p className="referral-graph-code">{node.code || "—"}</p>
-                {meta ? <p className="referral-graph-meta">{meta}</p> : null}
                 {node.childIds.length > 0 ? (
                   <button
                     type="button"
@@ -354,6 +349,11 @@ export function ReferralGraph({
       </div>
     </div>
   );
+}
+
+function initialOf(name: string) {
+  const trimmed = name.trim();
+  return trimmed ? trimmed[0] : "·";
 }
 
 function zoomFromCenter(
