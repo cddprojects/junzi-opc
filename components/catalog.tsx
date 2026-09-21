@@ -97,7 +97,7 @@ export function ProductRow({
           </div>
           <div className="flex shrink-0 flex-col items-end justify-between gap-2 self-stretch">
             <span className="mp-plus" aria-hidden>
-              <Plus className="size-3.5" />
+              <Plus className="size-6" strokeWidth={2.3} />
             </span>
             <p className="text-[11px] text-[#bbb]">{t("salesCount", { n: product.sales })}</p>
           </div>
@@ -149,11 +149,15 @@ export function CategoryIcons({
   return (
     <div className="grid grid-cols-5 gap-1 px-2 py-3 md:gap-6 md:px-0">
       {items.map((item) => (
-        <Link key={item.id} href={item.href} className="flex flex-col items-center gap-1.5 text-center">
+        <Link
+          key={item.id}
+          href={item.href}
+          className="flex flex-col items-center gap-3 rounded-[14px] bg-white p-4 text-center font-medium"
+        >
           <span className="flex size-12 items-center justify-center overflow-hidden rounded-full bg-[#f4f4f4] md:size-[64px]">
             <CategoryGlyph id={item.id} />
           </span>
-          <span className="max-w-[4.6rem] text-[11px] leading-4 text-[#555] md:max-w-[7.5rem] md:text-[13px]">
+          <span className="max-w-[6.5rem] text-[16px] leading-5 font-medium text-[#555] md:max-w-[8.5rem]">
             {localized(locale, item.label, item.labelEn)}
           </span>
         </Link>
@@ -227,7 +231,10 @@ export function ProductCard({ product }: { product: Product }) {
         priceLabel={format(product.price)}
       />
       <div className="flex flex-1 flex-col p-4">
-        <p className="text-[15px] font-medium">{title}</p>
+        <div className="flex items-start justify-between gap-3">
+          <p className="min-w-0 text-[16px] font-medium">{title}</p>
+          <p className="shrink-0 text-[12px] text-[#8f713e]">{t("salesCount", { n: product.sales })}</p>
+        </div>
         {subtitle && <p className="mt-1 line-clamp-2 text-[13px] leading-5 text-[#888]">{subtitle}</p>}
         <div className="mt-auto flex items-end justify-between pt-4">
           <div>
@@ -239,10 +246,9 @@ export function ProductCard({ product }: { product: Product }) {
                 {t("originalPrice")} <Money cny={product.originalPrice} />
               </p>
             ) : null}
-            <p className="mt-1 text-[12px] text-[#bbb]">{t("salesCount", { n: product.sales })}</p>
           </div>
-          <span className="mp-plus size-8" aria-hidden>
-            <Plus className="size-4" />
+          <span className="mp-plus" aria-hidden>
+            <Plus className="size-6" strokeWidth={2.3} />
           </span>
         </div>
       </div>

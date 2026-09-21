@@ -104,7 +104,7 @@ function DesktopHeader() {
   return (
     <header className="sticky top-0 z-[var(--z-sticky)] hidden border-b border-[var(--front-border)] bg-white md:block">
       <div className="front-wrap flex h-[64px] flex-nowrap items-center gap-5 px-6">
-        <Link href="/" className="shrink-0 text-[18px] font-semibold tracking-wide whitespace-nowrap text-[var(--front-text)]">
+        <Link href="/" className="shrink-0 text-[18px] font-semibold tracking-wide whitespace-nowrap text-[#3b2204]">
           {brand.name}
         </Link>
         <nav className="flex shrink-0 flex-nowrap items-center gap-5 text-[14px] xl:gap-6">
