@@ -40,7 +40,7 @@ export default function MinePage() {
 
   return (
     <div className="overflow-hidden bg-[#f5f5f5] md:rounded-xl md:bg-white">
-      <div className="flex items-center gap-3 bg-[#1a1a1a] px-4 py-6 text-white md:px-8 md:py-8">
+      <div className="flex items-center gap-3 bg-[#1a1a1a] p-8 text-white">
         <div className="flex size-14 items-center justify-center rounded-full bg-[#333]">
           <svg viewBox="0 0 48 48" className="size-8 text-[#d8d8d8]" aria-hidden>
             <circle cx="24" cy="18" r="8" fill="currentColor" />
@@ -82,7 +82,7 @@ export default function MinePage() {
 
       {user ? <ReferralSummary /> : null}
 
-      <section className="mt-2 bg-white px-3 pt-4 pb-4 md:mt-0 md:px-8">
+      <section className="mt-2 bg-white p-8 md:mt-0">
         <h2 className="mb-4 text-[14px] font-medium text-[#333]">{t("minePersonal")}</h2>
         <div className="grid grid-cols-4">
           {mineBlocks.personal.map((item, index) => {
@@ -97,7 +97,7 @@ export default function MinePage() {
         </div>
       </section>
 
-      <section className="mt-2 bg-white px-3 pt-4 pb-8 md:mt-0 md:px-8 md:pb-10">
+      <section className="mt-2 bg-white p-8 md:mt-0">
         <h2 className="mb-4 text-[14px] font-medium text-[#333]">{t("mineServices")}</h2>
         <div className="grid grid-cols-5">
           {mineBlocks.services.map((item, index) => {
