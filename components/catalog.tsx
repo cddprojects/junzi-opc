@@ -70,7 +70,7 @@ export function ProductRow({
     <Link
       href={href}
       prefetch
-      className="relative flex cursor-pointer gap-3 bg-white px-3 py-2.5 active:opacity-70"
+      className="relative flex cursor-pointer gap-3 bg-white px-3 py-2.5 active:opacity-70 md:border-b md:border-[#eee]"
       aria-label={title}
     >
       <span className="block h-[76px] w-[76px] shrink-0 overflow-hidden rounded-md">
@@ -83,7 +83,7 @@ export function ProductRow({
       </span>
       <div className="flex min-w-0 flex-1 flex-col md:justify-between">
         <div className="flex items-start justify-between gap-4">
-          <p className="line-clamp-2 min-w-0 text-[14px] leading-5 font-medium text-[#333]">{title}</p>
+          <p className="line-clamp-2 min-w-0 text-[14px] leading-5 font-medium text-[#333] md:text-[16px]">{title}</p>
           <span className="mp-plus hidden shrink-0 md:flex" aria-hidden>
             <Plus className="size-6" strokeWidth={2.3} />
           </span>
