@@ -70,7 +70,7 @@ export function ProductRow({
     <Link
       href={href}
       prefetch
-      className="relative flex cursor-pointer gap-3 bg-white px-3 py-2.5 active:opacity-70 md:border-b md:border-[#eee]"
+      className="relative flex w-full cursor-pointer gap-3 bg-white px-3 py-2.5 active:opacity-70 md:border-b md:border-[#eee]"
       aria-label={title}
     >
       <span className="block h-[76px] w-[76px] shrink-0 overflow-hidden rounded-md">
@@ -81,11 +81,11 @@ export function ProductRow({
           className="h-full w-full"
         />
       </span>
-      <div className="grid min-w-0 flex-1 grid-cols-[minmax(0,1fr)_auto] grid-rows-[auto_auto_auto] gap-x-4 md:grid-rows-[auto_1fr]">
+      <div className="grid min-w-0 w-full flex-1 grid-cols-[minmax(0,1fr)_auto] grid-rows-[auto_auto_auto] gap-x-4 md:grid-rows-[auto_1fr]">
         <p className="col-span-2 row-start-1 line-clamp-2 text-[14px] leading-5 font-medium text-[#333] md:col-span-1 md:text-[16px]">
           {title}
         </p>
-        <span className="mp-plus col-start-2 row-start-2 mt-2 self-start md:row-start-1 md:mt-0" aria-hidden>
+        <span className="mp-plus col-start-2 row-start-2 mt-2 justify-self-end self-start md:row-start-1 md:mt-0" aria-hidden>
           <Plus className="size-3.5 md:size-6" strokeWidth={2.3} />
         </span>
         <div className="col-start-1 row-start-2 mt-2 min-w-0 md:row-start-2 md:mt-0 md:self-end">
@@ -99,7 +99,7 @@ export function ProductRow({
             </p>
           ) : null}
         </div>
-        <p className="col-start-2 row-start-3 self-end text-[11px] text-[#bbb] md:row-start-2">
+        <p className="col-start-2 row-start-3 justify-self-end self-end text-right text-[11px] text-[#bbb] md:row-start-2">
           {t("salesCount", { n: product.sales })}
         </p>
       </div>
