@@ -48,7 +48,7 @@ export function ReferralSummary() {
   if (loading) return null;
   if (!user) {
     return (
-      <section className="border-t border-[var(--front-border)] bg-[var(--front-surface)] px-4 py-5 md:px-10">
+      <section className="border-t border-[var(--front-border)] bg-[var(--front-surface)] p-8">
         <h2 className="font-serif text-[15px]">{t("referralTitle")}</h2>
         <p className="mt-1 text-[13px] text-[#777]">{t("referralWithdrawNeedLogin")}</p>
       </section>
@@ -57,7 +57,7 @@ export function ReferralSummary() {
   if (!data) return null;
 
   return (
-    <section className="border-t border-[var(--front-border)] bg-white px-4 py-5">
+    <section className="border-t border-[var(--front-border)] bg-white p-8">
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-[12px] text-[#777]">{t("referralCodeLabel")}</p>
