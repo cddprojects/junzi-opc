@@ -57,7 +57,7 @@ export function ReferralSummary() {
   if (!data) return null;
 
   return (
-    <section className="border-t border-[var(--front-border)] bg-[var(--front-surface-soft)] px-4 py-5 md:px-10">
+    <section className="border-t border-[var(--front-border)] bg-white px-4 py-5">
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-[12px] text-[#777]">{t("referralCodeLabel")}</p>
