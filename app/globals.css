@@ -551,8 +551,8 @@
 
 .mp-plus {
   display: flex;
-  width: 36px;
-  height: 36px;
+  width: 24px;
+  height: 24px;
   align-items: center;
   justify-content: center;
   border-radius: 999px;
@@ -560,10 +560,17 @@
   color: #fff;
 }
 
-.mp-plus svg {
-  width: 24px;
-  height: 24px;
-  stroke-width: 2.3;
+@media (min-width: 768px) {
+  .mp-plus {
+    width: 36px;
+    height: 36px;
+  }
+
+  .mp-plus svg {
+    width: 24px;
+    height: 24px;
+    stroke-width: 2.3;
+  }
 }
 
 /* Product summary: desktop DOM order = title first / price last.
@@ -613,7 +620,7 @@
 .storefront .mp-home-block {
   margin-top: 8px;
   background: #fff;
-  padding: 16px;
+  padding: 0;
 }
 
 .storefront .mp-section-title {

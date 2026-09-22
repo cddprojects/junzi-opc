@@ -97,7 +97,7 @@ export function ProductRow({
           </div>
           <div className="flex shrink-0 flex-col items-end justify-between gap-2 self-stretch">
             <span className="mp-plus" aria-hidden>
-              <Plus className="size-6" strokeWidth={2.3} />
+              <Plus className="size-3.5" />
             </span>
             <p className="text-[11px] text-[#bbb]">{t("salesCount", { n: product.sales })}</p>
           </div>
@@ -152,12 +152,12 @@ export function CategoryIcons({
         <Link
           key={item.id}
           href={item.href}
-          className="flex flex-col items-center gap-3 rounded-[14px] bg-white p-4 text-center font-medium"
+          className="flex flex-col items-center gap-1.5 text-center md:gap-3 md:rounded-[14px] md:bg-white md:p-4 md:font-medium"
         >
           <span className="flex size-12 items-center justify-center overflow-hidden rounded-full bg-[#f4f4f4] md:size-[64px]">
             <CategoryGlyph id={item.id} />
           </span>
-          <span className="max-w-[6.5rem] text-[16px] leading-5 font-medium text-[#555] md:max-w-[8.5rem]">
+          <span className="max-w-[4.6rem] text-[11px] leading-4 text-[#555] md:max-w-[8.5rem] md:text-[16px] md:leading-5 md:font-medium">
             {localized(locale, item.label, item.labelEn)}
           </span>
         </Link>
@@ -232,7 +232,7 @@ export function ProductCard({ product }: { product: Product }) {
       />
       <div className="flex flex-1 flex-col p-4">
         <div className="flex items-start justify-between gap-3">
-          <p className="min-w-0 text-[16px] font-medium">{title}</p>
+          <p className="min-w-0 text-[15px] font-medium md:text-[16px]">{title}</p>
           <p className="shrink-0 text-[12px] text-[#8f713e]">{t("salesCount", { n: product.sales })}</p>
         </div>
         {subtitle && <p className="mt-1 line-clamp-2 text-[13px] leading-5 text-[#888]">{subtitle}</p>}
@@ -248,7 +248,7 @@ export function ProductCard({ product }: { product: Product }) {
             ) : null}
           </div>
           <span className="mp-plus" aria-hidden>
-            <Plus className="size-6" strokeWidth={2.3} />
+            <Plus className="size-4 md:size-6" strokeWidth={2.3} />
           </span>
         </div>
       </div>
