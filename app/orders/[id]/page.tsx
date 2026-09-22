@@ -12,6 +12,7 @@ import { displayOrderNo, formatOrderTime } from "@/lib/orders-ui";
 import { getRequestLocale } from "@/lib/i18n-server";
 import { t } from "@/lib/messages";
 import { locProductTitle } from "@/lib/localize";
+import { PendingPayActions } from "@/components/pending-pay-actions";
 
 export const dynamic = "force-dynamic";
 
@@ -87,14 +88,7 @@ export default async function OrderDetailPage({
             <div>
               <p className="text-[#888]">{t(locale, "kamiLabel")}</p>
               <p className="mt-1 text-[13px] text-[#666]">{t(locale, "kamiPending")}</p>
-              {order.billplzUrl ? (
-                <a
-                  href={order.billplzUrl}
-                  className="mt-3 inline-block rounded-md bg-[#fa3534] px-4 py-2 text-[13px] text-white"
-                >
-                  {t(locale, "resumePay")}
-                </a>
-              ) : null}
+              <PendingPayActions orderId={order.id} billplzUrl={order.billplzUrl} />
             </div>
           )}
         </section>
