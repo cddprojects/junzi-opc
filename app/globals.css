@@ -651,6 +651,10 @@
     border-radius: 12px;
   }
 
+  .storefront .mp-section-title {
+    padding: 0 0 16px;
+  }
+
   .storefront .mp-full-bleed {
     border-radius: 8px;
   }
