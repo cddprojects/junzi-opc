@@ -249,6 +249,12 @@
   margin-inline: auto;
 }
 
+@media (max-width: 767.98px) {
+  .storefront .front-wrap > div > section {
+    background-color: #fff;
+  }
+}
+
 .storefront .front-section {
   padding: 12px 12px 4px;
 }
@@ -643,6 +649,10 @@
     margin-top: 24px;
     padding: 16px;
     border-radius: 12px;
+  }
+
+  .storefront .mp-section-title {
+    padding: 0 0 16px;
   }
 
   .storefront .mp-full-bleed {

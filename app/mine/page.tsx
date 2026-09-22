@@ -16,8 +16,6 @@ import { mineBlocks } from "@/lib/data";
 import { useAuth } from "@/components/auth-provider";
 import { useT } from "@/components/locale-provider";
 import { ReferralSummary } from "@/components/referral-center";
-import { LocaleSwitcher } from "@/components/locale-switcher";
-import { CurrencySwitcher } from "@/components/currency-switcher";
 import type { MessageKey } from "@/lib/messages";
 
 const MINE_LABELS: Record<string, MessageKey> = {
@@ -113,10 +111,6 @@ export default function MinePage() {
               </Link>
             );
           })}
-        </div>
-        <div className="mt-6 flex items-center justify-center gap-4">
-          <LocaleSwitcher />
-          <CurrencySwitcher />
         </div>
         {user && (
           <button
