@@ -38,7 +38,7 @@ export function CategoriesClient({ products }: { products: Product[] }) {
         </div>
       </div>
       <div className="flex min-h-0 flex-1">
-        <nav className="w-[88px] shrink-0 bg-[#f7f7f7] md:w-[120px]">
+        <nav className="w-[100px] shrink-0 bg-[#f7f7f7]">
           {productCategories.map((category) => {
             const selected = category.id === active;
             return (
