@@ -249,6 +249,12 @@
   margin-inline: auto;
 }
 
+@media (max-width: 767.98px) {
+  .storefront .front-wrap > div > section {
+    background-color: #fff;
+  }
+}
+
 .storefront .front-section {
   padding: 12px 12px 4px;
 }
