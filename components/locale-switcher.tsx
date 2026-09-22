@@ -10,7 +10,7 @@ export function LocaleSwitcher({ compact, header }: { compact?: boolean; header?
     <label
       className={cn(
         "inline-flex items-center text-[var(--front-text-soft)]",
-        header ? "mp-header-ctrl mp-header-ctrl--locale" : compact ? "gap-2 text-[12px]" : "mb-[10px] gap-2 text-[13px]",
+        header ? "mp-header-ctrl mp-header-ctrl--locale" : compact ? "gap-2 text-[12px]" : "gap-2 text-[13px]",
       )}
     >
       {!compact && !header && <span className="text-[var(--front-text-muted)]">{t("language")}</span>}

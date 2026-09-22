@@ -27,6 +27,7 @@ import {
 import { computeLegacyOrderNo } from "@/lib/order-no";
 import { paymentKindForPayMethod, type Payment } from "@/lib/payments";
 import { requireVerifySecret, usesSupabaseStore } from "@/lib/runtime-store";
+import { cancelPendingOrderInStore } from "@/lib/cancel-pending-order";
 import { hashSessionToken } from "@/lib/session-token";
 import { ensureCustomerReferral, getSettings, getStoreProduct, getStoreProductsBySlugs, readStore, writeStore } from "@/lib/store";
 import { fromCny, parseCurrency } from "@/lib/currency";
@@ -698,6 +699,19 @@ export async function deleteCheckout(checkoutId: string) {
     if (bill && bill.status === "created") bill.status = "failed";
   }
   await writeStore(store);
+}
+
+export async function cancelPendingOrderForUser(userId: string, orderId: string) {
+  if (usesSupabaseStore()) {
+    const { cancelPendingOrderForUserInPg } = await import("@/lib/store-pg");
+    await cancelPendingOrderForUserInPg(userId, orderId);
+    return { ok: true as const };
+  }
+
+  const store = await readStore();
+  cancelPendingOrderInStore(store, userId, orderId);
+  await writeStore(store);
+  return { ok: true as const };
 }
 
 export async function fulfillOrdersByBillId(billId: string, paidAt?: string) {

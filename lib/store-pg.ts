@@ -842,6 +842,78 @@ export async function cancelPendingCheckoutInPg(checkoutId: string) {
   });
 }
 
+export async function cancelPendingOrderForUserInPg(userId: string, orderId: string) {
+  await withStoreTx(async (sql) => {
+    const orders = await sql`
+      select id, user_id, status, checkout_id, payment_id
+      from orders
+      where id = ${orderId} and user_id = ${userId}
+      limit 1
+    `;
+    const order = orders[0] as
+      | {
+          id: string;
+          user_id: string;
+          status: string;
+          checkout_id: string | null;
+          payment_id: string | null;
+        }
+      | undefined;
+    if (!order) throw new Error("订单不存在");
+    if (order.status !== "pending") throw new Error("订单已支付，不能取消");
+
+    const checkoutId = order.checkout_id || null;
+    const related = checkoutId
+      ? ((await sql`
+          select id, user_id, status
+          from orders
+          where checkout_id = ${checkoutId}
+        `) as { id: string; user_id: string; status: string }[])
+      : [order];
+    if (related.some((row) => row.user_id !== userId)) throw new Error("无法取消该订单");
+    if (related.some((row) => row.status !== "pending")) throw new Error("订单已支付，不能取消");
+
+    const payments = checkoutId
+      ? await sql`
+          select id, status, user_id
+          from payments
+          where checkout_id = ${checkoutId}
+          limit 1
+        `
+      : order.payment_id
+        ? await sql`
+            select id, status, user_id
+            from payments
+            where id = ${order.payment_id}
+            limit 1
+          `
+        : [];
+    const payment = payments[0] as { id: string; status: string; user_id: string } | undefined;
+    if (payment && payment.user_id !== userId) throw new Error("无法取消该订单");
+    if (payment?.status === "paid") throw new Error("订单已支付，不能取消");
+
+    if (payment && payment.status === "pending") {
+      const now = new Date().toISOString();
+      await sql`
+        update payments
+        set status = ${"cancelled"}, cancelled_at = ${now}
+        where id = ${payment.id} and status = ${"pending"}
+      `;
+      await sql`
+        update billplz_bills
+        set status = ${"failed"}
+        where payment_id = ${payment.id} and status = ${"created"}
+      `;
+    }
+
+    if (checkoutId) {
+      await sql`delete from orders where checkout_id = ${checkoutId}`;
+    } else {
+      await sql`delete from orders where id = ${order.id} and user_id = ${userId} and status = ${"pending"}`;
+    }
+  });
+}
+
 export async function deletePendingTopUpInPg(topUpId: string) {
   await withStoreTx(async (sql) => {
     await sql`delete from top_ups where id = ${topUpId} and status <> ${"credited"}`;
