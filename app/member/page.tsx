@@ -1,5 +1,5 @@
 import { ComingSoonPoster } from "@/components/covers";
-import { MemberPurchase, MemberTopChrome } from "@/components/member-purchase";
+import { MemberTopChrome } from "@/components/member-purchase";
 import { normalizeDetailImages } from "@/lib/course";
 import { membership, postersByPlacement } from "@/lib/data";
 import { getRequestLocale } from "@/lib/i18n-server";
@@ -26,7 +26,7 @@ export default async function MemberPage() {
 
   return (
     <div className="bg-[#f5f5f5] pb-4">
-      <MemberTopChrome />
+      <MemberTopChrome showPurchase={showPurchase} />
       {gallery.length > 0 ? (
         <section className="grid grid-cols-1 gap-0.5 px-[12px] pt-3 pb-[12px] md:grid-cols-2">
           {gallery.map((src, index) => (
@@ -40,7 +40,6 @@ export default async function MemberPage() {
           ))}
         </section>
       ) : null}
-      {showPurchase ? <MemberPurchase /> : null}
       {!hasVisual && !showPurchase ? <ComingSoonPoster title={heroTitle} /> : null}
     </div>
   );
