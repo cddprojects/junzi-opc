@@ -321,6 +321,7 @@ export const zh = {
   referralTeamL2: "二级",
   referralTeamL3: "三级",
   referralTeamPeople: "{n} 人",
+  referralTeamTotal: "团队总人数",
   referralOrder: "订单",
   referralBuyer: "下单学员",
   referralWithdraw: "申请提现",
@@ -508,6 +509,7 @@ export const zh = {
   profilePlaceholderBody: "登录后可在「修改资料」中更新昵称、邮箱或手机号。",
 
   feedbackTitle: "用户反馈",
+  feedbackLead: "告诉我们你的想法，帮助我们做得更好。",
   feedbackHint: "内容不会发送到原小程序或任何服务器。",
   feedbackPlaceholder: "一句话说明你的建议",
   feedbackSubmit: "提交（演示）",
@@ -948,6 +950,7 @@ export const en: Record<MessageKey, string> = {
   referralTeamL2: "Level 2",
   referralTeamL3: "Level 3",
   referralTeamPeople: "{n} people",
+  referralTeamTotal: "Team total",
   referralOrder: "Order",
   referralBuyer: "Buyer",
   referralWithdraw: "Request withdrawal",
@@ -1136,6 +1139,7 @@ export const en: Record<MessageKey, string> = {
   profilePlaceholderBody: "After login you can update your display name, email, or mobile on Edit profile.",
 
   feedbackTitle: "Feedback",
+  feedbackLead: "Tell us what you think so we can improve.",
   feedbackHint: "Nothing is sent to the original mini program or any server.",
   feedbackPlaceholder: "One sentence about your suggestion",
   feedbackSubmit: "Submit (demo)",

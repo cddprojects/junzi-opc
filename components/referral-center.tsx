@@ -124,8 +124,8 @@ export function ReferralCenter() {
   }
   if (!user) {
     return (
-      <div className="rounded-2xl bg-white px-5 py-8">
-        <h1 className="font-serif text-[24px]">{t("agentTitle")}</h1>
+      <div className="rounded-md border border-[var(--front-border)] bg-white px-5 py-8">
+        <h1 className="font-serif text-[22px] font-semibold">{t("agentTitle")}</h1>
         <p className="mt-2 text-[13px] text-[#666]">{t("referralWithdrawNeedLogin")}</p>
         <Link href="/login?next=/agent" className="mt-4 inline-block text-[14px] text-[#8a5a20]">
           {t("login")}
@@ -137,141 +137,155 @@ export function ReferralCenter() {
     return <p className="px-4 py-8 text-[13px] text-[#888]">{error || t("loading")}</p>;
   }
 
+  const teamTotal = (data.team?.[1] ?? 0) + (data.team?.[2] ?? 0) + (data.team?.[3] ?? 0);
+  const dateLocale = locale === "en" ? "en-MY" : "zh-CN";
+
   return (
-    <div className="space-y-4 pb-6">
-      <section className="rounded-2xl bg-white px-4 py-5 md:px-6">
-        <h1 className="font-serif text-[24px]">{t("agentTitle")}</h1>
-        <p className="mt-2 text-[13px] leading-6 text-[#666]">{t("agentBody")}</p>
-        <p className="mt-4 text-[12px] text-[#777]">{t("referralCodeLabel")}</p>
-        <p className="font-serif text-[28px] tracking-wide text-[#3a2c10]">{data.referralCode}</p>
-        <CopyShare code={data.referralCode} />
-        <p className="mt-3 text-[13px]">
-          <Link href="/wallet" className="text-[#8a5a20] underline">
-            {t("pageWallet")}
-          </Link>
-        </p>
-        <div className="mt-4 grid grid-cols-2 gap-3">
-          <div className="rounded-xl bg-[#faf6ee] px-3 py-3">
-            <p className="text-[12px] text-[#777]">{t("referralBalance")}</p>
-            <p className="opc-price mt-1 text-[22px] text-[#8a5a20]">{formatMyrSen(data.availableSen)}</p>
-          </div>
-          <div className="rounded-xl bg-[#faf6ee] px-3 py-3">
-            <p className="text-[12px] text-[#777]">{t("referralPending")}</p>
-            <p className="opc-price mt-1 text-[22px] text-[#3a2c10]">{formatMyrSen(data.pendingSen)}</p>
-          </div>
+    <div className="pb-6 md:-mx-6">
+      <section className="flex flex-col gap-6 border-b border-[var(--front-border)] bg-white px-[22px] py-[26px] md:flex-row md:items-center md:justify-between md:px-10 md:py-[34px]">
+        <div>
+          <h1 className="font-serif text-[22px] font-semibold text-[#333]">{t("agentTitle")}</h1>
+          <p className="mt-1.5 max-w-[440px] text-[13px] leading-[1.6] text-[#777]">{t("agentBody")}</p>
         </div>
-        <div className="mt-4">
-          <p className="text-[12px] text-[#777]">{t("referralTiers")}</p>
-          <div className="mt-2 flex flex-wrap gap-2">
-            {data.tiers.map((tier) => (
-              <span key={tier.tier} className="rounded-full bg-[#f3ead8] px-3 py-1 text-[12px] text-[#8a5a20]">
-                {t("referralTierN", { n: tier.tier })} · {formatTierRateLabel(tier)}
-              </span>
-            ))}
+        <div className="flex w-full flex-wrap items-center justify-between gap-5 md:w-auto md:justify-end md:gap-[22px]">
+          <div>
+            <p className="mb-1 text-[11.5px] text-[#777]">{t("referralCodeLabel")}</p>
+            <p className="font-serif text-[19px] font-bold tracking-wide text-[#3a2c10] md:text-[22px]">{data.referralCode}</p>
           </div>
-        </div>
-        <div className="mt-4">
-          <p className="text-[12px] text-[#777]">{t("referralTeam")}</p>
-          <div className="mt-2 grid grid-cols-3 gap-2">
-            {([1, 2, 3] as const).map((depth) => (
-              <div key={depth} className="rounded-xl bg-[#faf6ee] px-3 py-3 text-center">
-                <p className="text-[12px] text-[#777]">
-                  {depth === 1 ? t("referralTeamL1") : depth === 2 ? t("referralTeamL2") : t("referralTeamL3")}
-                </p>
-                <p className="mt-1 font-serif text-[20px] text-[#3a2c10]">
-                  {t("referralTeamPeople", { n: data.team?.[depth] ?? 0 })}
-                </p>
-              </div>
-            ))}
-          </div>
+          <CopyShare code={data.referralCode} variant="hero" />
         </div>
       </section>
 
-      <section className="rounded-2xl bg-white px-4 py-5 md:px-6">
-        <h2 className="font-serif text-[18px]">{t("referralWithdraw")}</h2>
-        <p className="mt-1 text-[13px] text-[#777]">{t("referralWithdrawHint")}</p>
-        {error ? <p className="mt-2 text-[13px] text-[#fa3534]">{error}</p> : null}
-        <form onSubmit={withdraw} className="mt-3 flex flex-wrap items-end gap-2">
-          <label className="text-[13px]">
-            MYR
-            <input
-              name="amountMyr"
-              type="number"
-              min="0.01"
-              step="0.01"
-              max={senToMyr(data.availableSen)}
-              required
-              className="mt-1 h-10 w-36 rounded-md border border-[#eadfca] px-3"
-            />
-          </label>
-          <button
-            type="submit"
-            disabled={busy || data.availableSen < 1}
-            className="h-10 rounded-md bg-[#8a5a20] px-4 text-[14px] text-white disabled:opacity-50"
-          >
-            {busy ? t("pleaseWait") : t("referralWithdrawSubmit")}
-          </button>
-        </form>
-        {data.withdrawals.length > 0 ? (
-          <ul className="mt-4 space-y-2 text-[13px]">
-            {data.withdrawals.map((row) => (
-              <li key={row.id} className="flex justify-between gap-3 border-t border-[#f3eee4] pt-2">
-                <span>
-                  {formatMyrSen(row.amountSen)} ·{" "}
-                  {withdrawalLabel(normalizeWithdrawalStatus(row.status), t)}
-                </span>
-                <span className="text-[#999]">{new Date(row.createdAt).toLocaleDateString(locale === "en" ? "en-MY" : "zh-CN")}</span>
-              </li>
-            ))}
-          </ul>
-        ) : null}
-      </section>
+      <div className="mx-auto flex max-w-[1040px] flex-col gap-6 px-4 py-[22px] md:px-6 md:py-7">
+        <div className="grid grid-cols-1 divide-y divide-[var(--front-border)] overflow-hidden rounded-lg border border-[var(--front-border)] bg-[var(--front-border)] md:grid-cols-3 md:gap-px md:divide-y-0">
+          <StatCell label={t("referralBalance")} value={formatMyrSen(data.availableSen)} money />
+          <StatCell label={t("referralPending")} value={formatMyrSen(data.pendingSen)} money />
+          <StatCell label={t("referralTeamTotal")} value={t("referralTeamPeople", { n: teamTotal })} />
+        </div>
 
-      <section className="rounded-2xl bg-white px-4 py-5 md:px-6">
-        <h2 className="font-serif text-[18px]">{t("referralHistory")}</h2>
-        {data.earnings.length === 0 ? (
-          <p className="mt-2 text-[13px] text-[#777]">{t("referralHistoryEmpty")}</p>
-        ) : (
-          <ul className="mt-3 space-y-3">
-            {data.earnings.map((row) => (
-              <li key={row.id} className="flex items-start justify-between gap-3 border-b border-[#f3eee4] pb-3 last:border-0">
-                <div>
-                  <p className="font-serif text-[15px] text-[#3a2c10]">
-                    {t("referralTierN", { n: row.tier || 1 })} · {formatTierRateLabel(row)}
-                  </p>
-                  <p className="mt-1 text-[13px] text-[#555]">
-                    {row.buyerName || "—"}
-                    {row.orderTitle ? ` · ${row.orderTitle}` : ""}
-                  </p>
-                  <p className="mt-0.5 text-[12px] text-[#999]">
-                    {row.baseSen ? formatMyrSen(row.baseSen) : ""}
-                    {row.orderId ? `${row.baseSen ? " · " : ""}${t("referralOrder")} ${row.orderId.slice(-6)}` : ""}
-                  </p>
+        <div className="grid grid-cols-1 items-start gap-5 md:grid-cols-2">
+          <section className="rounded-lg border border-[var(--front-border)] bg-white px-4 py-[18px] md:px-6 md:py-[22px]">
+            <h2 className="mb-4 font-serif text-[16px] font-semibold text-[#333]">{t("referralTeam")}</h2>
+            <div className="flex flex-col gap-3">
+              {([1, 2, 3] as const).map((depth) => (
+                <div key={depth} className="flex items-center justify-between rounded-md bg-[#faf6ee] px-3.5 py-3">
+                  <span className="text-[13.5px] text-[#333]">
+                    {depth === 1 ? t("referralTeamL1") : depth === 2 ? t("referralTeamL2") : t("referralTeamL3")}
+                  </span>
+                  <span className="font-serif text-[16px] font-semibold text-[#3a2c10]">
+                    {t("referralTeamPeople", { n: data.team?.[depth] ?? 0 })}
+                  </span>
                 </div>
-                <p className="opc-price text-[16px] text-[#8a5a20]">{formatMyrSen(row.amountSen)}</p>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+              ))}
+            </div>
+          </section>
 
-      <section className="rounded-2xl bg-white px-4 py-5 md:px-6">
-        <h2 className="font-serif text-[18px]">{t("referralDownline")}</h2>
-        {data.downline.length === 0 ? (
-          <p className="mt-2 text-[13px] text-[#777]">{t("referralDownlineEmpty")}</p>
-        ) : (
-          <ul className="mt-3 space-y-2 text-[14px]">
-            {data.downline.map((row) => (
-              <li key={row.id} className="flex justify-between gap-3">
-                <span>{row.name}</span>
-                <span className="text-[12px] text-[#999]">
-                  {new Date(row.createdAt).toLocaleDateString(locale === "en" ? "en-MY" : "zh-CN")}
+          <section className="rounded-lg border border-[var(--front-border)] bg-white px-4 py-[18px] md:px-6 md:py-[22px]">
+            <h2 className="mb-4 font-serif text-[16px] font-semibold text-[#333]">{t("referralTiers")}</h2>
+            <div className="mb-[18px] flex flex-wrap gap-2">
+              {data.tiers.map((tier) => (
+                <span key={tier.tier} className="rounded-full bg-[#f3ead8] px-3.5 py-1 text-[12.5px] text-[#8a5a20]">
+                  {t("referralTierN", { n: tier.tier })} · {formatTierRateLabel(tier)}
                 </span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+              ))}
+            </div>
+            <h2 className="mb-3 font-serif text-[14px] font-semibold text-[#333]">{t("referralWithdraw")}</h2>
+            {error ? <p className="mb-2 text-[13px] text-[#fa3534]">{error}</p> : null}
+            <form onSubmit={withdraw} className="flex gap-2">
+              <input
+                name="amountMyr"
+                type="number"
+                min="0.01"
+                step="0.01"
+                max={senToMyr(data.availableSen)}
+                required
+                placeholder="MYR"
+                className="h-10 min-w-0 flex-1 rounded border border-[var(--front-border)] bg-white px-3 text-[13.5px] text-[#333]"
+              />
+              <button
+                type="submit"
+                disabled={busy || data.availableSen < 1}
+                className="h-10 shrink-0 rounded bg-[#8a5a20] px-[18px] text-[13px] whitespace-nowrap text-white disabled:opacity-50"
+              >
+                {busy ? t("pleaseWait") : t("referralWithdrawSubmit")}
+              </button>
+            </form>
+            {data.withdrawals.length > 0 ? (
+              <ul className="mt-4 space-y-2 text-[12.5px] text-[#777]">
+                {data.withdrawals.map((row) => (
+                  <li key={row.id} className="flex justify-between gap-3">
+                    <span>
+                      {formatMyrSen(row.amountSen)} · {withdrawalLabel(normalizeWithdrawalStatus(row.status), t)}
+                    </span>
+                    <span>{new Date(row.createdAt).toLocaleDateString(dateLocale)}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+          </section>
+        </div>
+
+        <div className="grid grid-cols-1 items-start gap-5 md:grid-cols-2">
+          <section className="rounded-lg border border-[var(--front-border)] bg-white px-4 py-[18px] md:px-6 md:py-[22px]">
+            <h2 className="mb-4 font-serif text-[16px] font-semibold text-[#333]">{t("referralHistory")}</h2>
+            {data.earnings.length === 0 ? (
+              <p className="text-[13px] text-[#777]">{t("referralHistoryEmpty")}</p>
+            ) : (
+              <ol className="relative ml-1 border-l border-[var(--front-border)] pl-[18px]">
+                {data.earnings.map((row) => (
+                  <li key={row.id} className="relative pb-5 last:pb-0">
+                    <span className="absolute top-1 -left-[22px] size-[7px] rounded-full bg-[var(--front-accent)]" />
+                    <p className="mb-0.5 text-[13.5px] text-[#333]">
+                      {t("referralTierN", { n: row.tier || 1 })} · {formatTierRateLabel(row)}
+                    </p>
+                    <p className="mb-0.5 text-[12px] text-[#777]">
+                      {row.buyerName || "—"}
+                      {row.orderTitle ? ` · ${row.orderTitle}` : ""}
+                    </p>
+                    <p className="mb-0.5 text-[12px] text-[#777]">
+                      {row.baseSen ? formatMyrSen(row.baseSen) : ""}
+                      {row.orderId ? `${row.baseSen ? " · " : ""}${t("referralOrder")} ${row.orderId.slice(-6)}` : ""}
+                    </p>
+                    <p className="opc-price font-serif text-[14.5px] font-semibold">{formatMyrSen(row.amountSen)}</p>
+                  </li>
+                ))}
+              </ol>
+            )}
+          </section>
+
+          <section className="rounded-lg border border-[var(--front-border)] bg-white px-4 py-[18px] md:px-6 md:py-[22px]">
+            <h2 className="mb-4 font-serif text-[16px] font-semibold text-[#333]">{t("referralDownline")}</h2>
+            {data.downline.length === 0 ? (
+              <p className="text-[13px] text-[#777]">{t("referralDownlineEmpty")}</p>
+            ) : (
+              <ul>
+                {data.downline.map((row) => (
+                  <li
+                    key={row.id}
+                    className="flex justify-between gap-3 border-b border-[var(--front-border)] py-2.5 text-[13.5px] last:border-b-0"
+                  >
+                    <span>{row.name}</span>
+                    <span className="text-[12.5px] text-[#777]">
+                      {new Date(row.createdAt).toLocaleDateString(dateLocale)}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function StatCell({ label, value, money }: { label: string; value: string; money?: boolean }) {
+  return (
+    <div className="bg-white px-[22px] py-5">
+      <p className="mb-1.5 text-[12px] text-[#777]">{label}</p>
+      <p className={money ? "opc-price font-serif text-[20px] font-semibold" : "font-serif text-[20px] font-semibold text-[#3a2c10]"}>
+        {value}
+      </p>
     </div>
   );
 }
@@ -286,9 +300,10 @@ function withdrawalLabel(
   return t("adminWdPending");
 }
 
-function CopyShare({ code, stretch }: { code: string; stretch?: boolean }) {
+function CopyShare({ code, stretch, variant }: { code: string; stretch?: boolean; variant?: "default" | "stretch" | "hero" }) {
   const { t } = useLocale();
   const link = shareUrl(code);
+  const mode = variant || (stretch ? "stretch" : "default");
 
   async function copy() {
     await navigator.clipboard.writeText(code);
@@ -309,28 +324,31 @@ function CopyShare({ code, stretch }: { code: string; stretch?: boolean }) {
     toast.success(t("referralCopiedLink"));
   }
 
+  const wrap =
+    mode === "hero"
+      ? "flex gap-2 max-[420px]:w-full max-[420px]:flex-col"
+      : mode === "stretch"
+        ? "flex w-full gap-2"
+        : "mt-3 flex flex-wrap gap-2";
+  const ghost =
+    mode === "hero"
+      ? "rounded bg-[#f3ead8] px-4 py-[9px] text-[12.5px] text-[#8a5a20] max-[420px]:w-full max-[420px]:text-center"
+      : mode === "stretch"
+        ? "flex-1 rounded-md bg-[#f3ead8] px-3 py-1.5 text-[12.5px] text-[#8a5a20]"
+        : "rounded-md bg-[#f3ead8] px-3 py-1.5 text-[13px] text-[#8a5a20]";
+  const solid =
+    mode === "hero"
+      ? "rounded bg-[#8a5a20] px-4 py-[9px] text-[12.5px] text-white max-[420px]:w-full max-[420px]:text-center"
+      : mode === "stretch"
+        ? "flex-1 rounded-md bg-[#8a5a20] px-3 py-1.5 text-[12.5px] text-white"
+        : "rounded-md bg-[#8a5a20] px-3 py-1.5 text-[13px] text-white";
+
   return (
-    <div className={stretch ? "flex w-full gap-2" : "mt-3 flex flex-wrap gap-2"}>
-      <button
-        type="button"
-        onClick={copy}
-        className={
-          stretch
-            ? "flex-1 rounded-md bg-[#f3ead8] px-3 py-1.5 text-[12.5px] text-[#8a5a20]"
-            : "rounded-md bg-[#f3ead8] px-3 py-1.5 text-[13px] text-[#8a5a20]"
-        }
-      >
+    <div className={wrap}>
+      <button type="button" onClick={copy} className={ghost}>
         {t("copy")}
       </button>
-      <button
-        type="button"
-        onClick={share}
-        className={
-          stretch
-            ? "flex-1 rounded-md bg-[#8a5a20] px-3 py-1.5 text-[12.5px] text-white"
-            : "rounded-md bg-[#8a5a20] px-3 py-1.5 text-[13px] text-white"
-        }
-      >
+      <button type="button" onClick={share} className={solid}>
         {t("referralShare")}
       </button>
       {link ? <span className="sr-only">{link}</span> : null}
