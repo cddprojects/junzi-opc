@@ -7,7 +7,7 @@ import { asFiniteNumber, asIso, asOptionalNumber, requireIso, sqlRows, withStore
 import { hydrateOrderFromPayment, hydrateTopUpFromPayment } from "@/lib/migrate-payments";
 import type { BillplzBill, Payment } from "@/lib/payments";
 import { DEFAULT_REFERRAL_PLAN, type CommissionEntry, type ReferralPlan, type Withdrawal } from "@/lib/referral";
-import type { AppStore } from "@/lib/store";
+import type { AppStore, FeedbackEntry } from "@/lib/store";
 import type { TopUpRecord, WalletTransaction } from "@/lib/wallet";
 import { normalizeWithdrawalStatus } from "@/lib/wallet";
 
@@ -490,6 +490,7 @@ export async function loadAppStoreFromPg(): Promise<AppStore> {
     withdrawals: withdrawals.map(mapWithdrawal),
     walletTransactions: walletTx.map(mapWalletTx),
     topUps: mappedTopUps,
+    feedback: [],
   };
 }
 
@@ -1236,5 +1237,46 @@ export async function persistAppStoreToPg(store: AppStore) {
     const keepUsers = ids(store.users);
     if (keepUsers.length) await sql`delete from users where id <> all(${keepUsers})`;
     else await sql`delete from users`;
+  });
+}
+
+function mapFeedback(row: Record<string, unknown>): FeedbackEntry {
+  return {
+    id: String(row.id),
+    body: String(row.body),
+    createdAt: requireIso(row.created_at),
+  };
+}
+
+export async function insertFeedbackInPg(entry: FeedbackEntry) {
+  await withStoreTx(async (sql) => {
+    await sql`
+      create table if not exists public.feedback (
+        id text primary key,
+        body text not null,
+        created_at timestamptz not null default now()
+      )
+    `;
+    await sql`
+      insert into feedback ${sql({
+        id: entry.id,
+        body: entry.body,
+        created_at: entry.createdAt,
+      })}
+    `;
+  });
+}
+
+export async function loadFeedbackFromPg(): Promise<FeedbackEntry[]> {
+  return withStoreTx(async (sql) => {
+    await sql`
+      create table if not exists public.feedback (
+        id text primary key,
+        body text not null,
+        created_at timestamptz not null default now()
+      )
+    `;
+    const rows = await sql`select id, body, created_at from feedback order by created_at desc`;
+    return rows.map((row) => mapFeedback(row as Record<string, unknown>));
   });
 }

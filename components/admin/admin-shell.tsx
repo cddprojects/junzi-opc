@@ -15,6 +15,7 @@ import {
   LayoutDashboard,
   LogOut,
   Menu,
+  MessageSquare,
   Network,
   Package,
   PanelLeftClose,
@@ -82,6 +83,7 @@ const GROUPS: NavGroup[] = [
     links: [
       { href: "/admin/currency", key: "adminCurrency", icon: CircleDollarSign },
       { href: "/admin/billplz", key: "adminBillplz", icon: CreditCard },
+      { href: "/admin/feedback", key: "adminFeedback", icon: MessageSquare },
     ],
   },
 ];
@@ -123,6 +125,7 @@ function titleKey(pathname: string): MessageKey {
   if (pathname.startsWith("/admin/finance")) return "adminFinanceOverview";
   if (pathname.startsWith("/admin/currency")) return "adminCurrency";
   if (pathname.startsWith("/admin/billplz")) return "adminBillplz";
+  if (pathname.startsWith("/admin/feedback")) return "adminFeedback";
   return "adminOverview";
 }
 
