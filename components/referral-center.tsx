@@ -286,7 +286,7 @@ function withdrawalLabel(
   return t("adminWdPending");
 }
 
-function CopyShare({ code }: { code: string }) {
+function CopyShare({ code, stretch }: { code: string; stretch?: boolean }) {
   const { t } = useLocale();
   const link = shareUrl(code);
 
@@ -310,14 +310,66 @@ function CopyShare({ code }: { code: string }) {
   }
 
   return (
-    <div className="mt-3 flex flex-wrap gap-2">
-      <button type="button" onClick={copy} className="rounded-md bg-[#f3ead8] px-3 py-1.5 text-[13px] text-[#8a5a20]">
+    <div className={stretch ? "flex gap-2" : "mt-3 flex flex-wrap gap-2"}>
+      <button
+        type="button"
+        onClick={copy}
+        className={
+          stretch
+            ? "flex-1 rounded-md bg-[#f3ead8] px-3 py-1.5 text-[12.5px] text-[#8a5a20]"
+            : "rounded-md bg-[#f3ead8] px-3 py-1.5 text-[13px] text-[#8a5a20]"
+        }
+      >
         {t("copy")}
       </button>
-      <button type="button" onClick={share} className="rounded-md bg-[#8a5a20] px-3 py-1.5 text-[13px] text-white">
+      <button
+        type="button"
+        onClick={share}
+        className={
+          stretch
+            ? "flex-1 rounded-md bg-[#8a5a20] px-3 py-1.5 text-[12.5px] text-white"
+            : "rounded-md bg-[#8a5a20] px-3 py-1.5 text-[13px] text-white"
+        }
+      >
         {t("referralShare")}
       </button>
       {link ? <span className="sr-only">{link}</span> : null}
     </div>
+  );
+}
+
+export function ReferralSidebarCards() {
+  const { user, loading } = useAuth();
+  const { t } = useLocale();
+  const [data, setData] = useState<Dashboard | null>(null);
+
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    fetch("/api/referral/me")
+      .then((res) => res.json())
+      .then((row: Dashboard) => {
+        if (!cancelled && row?.referralCode) setData(row);
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
+
+  if (loading || !user || !data) return null;
+
+  return (
+    <>
+      <section className="rounded-md border border-[var(--front-border)] bg-white px-5 py-[18px]">
+        <p className="mb-2 text-[12px] text-[#777]">{t("referralCodeLabel")}</p>
+        <p className="mb-3 font-serif text-[19px] font-semibold tracking-wide text-[#3a2c10]">{data.referralCode}</p>
+        <CopyShare code={data.referralCode} stretch />
+      </section>
+      <section className="rounded-md border border-[var(--front-border)] bg-white px-5 py-[18px]">
+        <p className="mb-2 text-[12px] text-[#777]">{t("referralBalance")}</p>
+        <p className="opc-price font-serif text-[24px] font-bold text-[#8a5a20]">{formatMyrSen(data.availableSen)}</p>
+      </section>
+    </>
   );
 }
