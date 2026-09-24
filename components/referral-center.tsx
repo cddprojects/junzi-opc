@@ -310,7 +310,7 @@ function CopyShare({ code, stretch }: { code: string; stretch?: boolean }) {
   }
 
   return (
-    <div className={stretch ? "flex gap-2" : "mt-3 flex flex-wrap gap-2"}>
+    <div className={stretch ? "flex w-full gap-2" : "mt-3 flex flex-wrap gap-2"}>
       <button
         type="button"
         onClick={copy}
