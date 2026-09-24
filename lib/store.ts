@@ -51,6 +51,12 @@ import {
 } from "@/lib/wallet";
 import { randomBytes } from "crypto";
 
+export type FeedbackEntry = {
+  id: string;
+  body: string;
+  createdAt: string;
+};
+
 export type AppStore = {
   version: number;
   products: Product[];
@@ -68,12 +74,14 @@ export type AppStore = {
   withdrawals: Withdrawal[];
   walletTransactions: WalletTransaction[];
   topUps: TopUpRecord[];
+  feedback: FeedbackEntry[];
 };
 
 const DATA_DIR = path.join(process.cwd(), "data");
 const STORE_PATH = path.join(DATA_DIR, "store.json");
 export const UPLOAD_DIR = path.join(DATA_DIR, "uploads");
-const STORE_VERSION = 15;
+const STORE_VERSION = 16;
+const MAX_FEEDBACK_CHARS = 2000;
 
 let storeCache: { mtimeMs: number; store: AppStore } | null = null;
 
@@ -171,6 +179,7 @@ function seedStore(): AppStore {
     withdrawals: [],
     walletTransactions: [],
     topUps: [],
+    feedback: [],
   };
 }
 
@@ -384,6 +393,7 @@ function migrateStore(parsed: AppStore): AppStore {
       migrateWithdrawals(parsed.withdrawals ?? []),
     ),
     topUps: parsed.topUps ?? [],
+    feedback: parsed.feedback ?? [],
   };
   return ensurePayments(next);
 }
@@ -489,6 +499,7 @@ function persistableStore(store: AppStore): AppStore {
     withdrawals: migrateWithdrawals(store.withdrawals ?? []),
     walletTransactions: store.walletTransactions ?? [],
     topUps: store.topUps ?? [],
+    feedback: store.feedback ?? [],
   });
 }
 
@@ -752,6 +763,37 @@ export async function getStoreProductsBySlugs(slugs: string[]) {
       .filter((item): item is Product => Boolean(item))
       .map((item) => [item.slug, shapeProduct(item)]),
   );
+}
+
+export async function submitFeedback(body: string): Promise<FeedbackEntry> {
+  const trimmed = body.trim();
+  if (!trimmed) throw new Error("请填写反馈内容");
+  if (trimmed.length > MAX_FEEDBACK_CHARS) throw new Error("反馈内容过长");
+  const entry: FeedbackEntry = {
+    id: `fb_${randomBytes(8).toString("hex")}`,
+    body: trimmed,
+    createdAt: new Date().toISOString(),
+  };
+  if (usesSupabaseStore()) {
+    const { insertFeedbackInPg } = await import("@/lib/store-pg");
+    await insertFeedbackInPg(entry);
+    if (storeCache) {
+      rememberStore({ ...storeCache.store, feedback: [entry, ...(storeCache.store.feedback ?? [])] });
+    }
+    return entry;
+  }
+  const store = await readStore();
+  await writeStore({ ...store, feedback: [entry, ...(store.feedback ?? [])] });
+  return entry;
+}
+
+export async function listFeedback(): Promise<FeedbackEntry[]> {
+  if (usesSupabaseStore()) {
+    const { loadFeedbackFromPg } = await import("@/lib/store-pg");
+    return loadFeedbackFromPg();
+  }
+  const store = await readStore();
+  return [...(store.feedback ?? [])].sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
 }
 
 export async function searchStoreProducts(query: string) {
