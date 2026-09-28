@@ -130,7 +130,8 @@ export function WalletPage() {
     event.preventDefault();
     setBusy("wd");
     setError("");
-    const form = new FormData(event.currentTarget);
+    const formEl = event.currentTarget;
+    const form = new FormData(formEl);
     const bank = String(form.get("bank") || "").trim();
     const holder = String(form.get("holder") || "").trim();
     const account = String(form.get("account") || "").trim();
@@ -162,7 +163,7 @@ export function WalletPage() {
       setError(translateApiError(locale, row.error, "errorGeneric"));
       return;
     }
-    (event.currentTarget as HTMLFormElement).reset();
+    formEl.reset();
     setData((current) => {
       if (!current) return current;
       return {
