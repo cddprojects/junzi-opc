@@ -44,12 +44,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="storefront min-h-dvh bg-[var(--front-bg)] text-[var(--front-text)]">
       <DesktopHeader />
-      <div className="md:hidden">
-        <MobileHeader />
-      </div>
+      <MobileHeader />
       <main
         className={cn(
-          "front-wrap w-full md:px-6 md:pt-4 md:pb-20",
+          "front-wrap w-full pt-[calc(2.75rem+1px)] md:px-6 md:pt-4 md:pb-20",
           isProduct
             ? "pb-[calc(68px+env(safe-area-inset-bottom))] md:pb-20"
             : "pb-[calc(52px+env(safe-area-inset-bottom))] md:pb-20",
@@ -184,7 +182,7 @@ function MobileHeader() {
   const showBack = !isHome && pathname !== "/mine" && !showHome;
 
   return (
-    <header className="sticky top-0 z-[var(--z-sticky)] border-b border-[#f0f0f0] bg-white">
+    <header className="fixed inset-x-0 top-0 z-[var(--z-sticky)] border-b border-[#f0f0f0] bg-white md:hidden">
       <div className="flex h-11 items-center gap-1 px-1.5">
         {showHome ? (
           <Link href="/" className="flex size-9 shrink-0 items-center justify-center text-[#333]" aria-label={t("navHome")}>
