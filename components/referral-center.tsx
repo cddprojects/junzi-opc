@@ -206,8 +206,8 @@ export function ReferralCenter() {
             <h2 className="mb-3 font-serif text-[14px] font-semibold text-[#333]">{t("referralWithdraw")}</h2>
             <p className="mb-3 text-[12px] leading-[1.5] text-[#777]">{t("referralWithdrawHint")}</p>
             {error ? <p className="mb-2 text-[13px] text-[#fa3534]">{error}</p> : null}
-            <form onSubmit={withdraw} className="space-y-3">
-              <div className="grid grid-cols-1 gap-3">
+            <form onSubmit={withdraw}>
+              <div className="mb-3.5 grid grid-cols-1 gap-3 md:grid-cols-2">
                 <label className="text-[12px] text-[#777]">
                   MYR
                   <input
@@ -248,7 +248,7 @@ export function ReferralCenter() {
               <button
                 type="submit"
                 disabled={busy || data.availableSen < 1}
-                className="h-10 rounded bg-[#8a5a20] px-[18px] text-[13px] whitespace-nowrap text-white disabled:opacity-50"
+                className="w-full rounded bg-[#8a5a20] py-3 text-[13.5px] text-white disabled:opacity-50"
               >
                 {busy ? t("pleaseWait") : t("referralWithdrawSubmit")}
               </button>
