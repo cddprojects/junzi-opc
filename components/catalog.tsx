@@ -73,7 +73,7 @@ export function ProductRow({
       className="relative flex w-full cursor-pointer gap-3 bg-white px-3 py-2.5 active:opacity-70 md:border-b md:border-[#eee]"
       aria-label={title}
     >
-      <span className="block h-[76px] w-[76px] shrink-0 overflow-hidden rounded-md">
+      <span className="block h-[120px] w-[120px] shrink-0 overflow-hidden rounded-md">
         <CoverArt
           theme={product.cover}
           image={product.coverImage}
@@ -81,21 +81,21 @@ export function ProductRow({
           className="h-full w-full"
         />
       </span>
-      <div className="grid min-h-[76px] min-w-0 w-full flex-1 grid-cols-[minmax(0,1fr)_auto] grid-rows-[auto_minmax(0,1fr)_auto_auto_auto] gap-x-4 self-stretch">
+      <div className="grid min-h-[120px] min-w-0 w-full flex-1 grid-cols-[minmax(0,1fr)_auto] grid-rows-[auto_minmax(0,1fr)_auto_auto] gap-x-4 self-stretch">
         <p className="col-span-2 row-start-1 self-start line-clamp-2 text-[14px] leading-5 font-medium text-[#333] md:col-span-1 md:text-[16px]">
           {title}
         </p>
-        <span className="mp-plus col-start-2 row-start-3 mb-2 justify-self-end self-end md:row-start-1 md:mb-0 md:self-start" aria-hidden>
+        <span className="mp-plus col-start-2 row-start-2 mb-1 justify-self-end self-end md:row-start-1 md:mb-0 md:self-start" aria-hidden>
           <Plus className="size-3.5 md:size-6" strokeWidth={2.3} />
         </span>
-        <p className="col-start-1 row-start-4 self-end text-[16px] leading-none font-semibold text-[#fa3534]">
+        <p className="col-start-1 row-start-3 self-end text-[16px] leading-none font-semibold text-[#fa3534]">
           <Money cny={product.price} />
         </p>
-        <p className="col-start-2 row-start-4 justify-self-end self-end text-right text-[11px] leading-none text-[#bbb]">
+        <p className="col-start-2 row-start-3 justify-self-end self-end text-right text-[11px] leading-none text-[#bbb]">
           {t("salesCount", { n: product.sales })}
         </p>
         {showOriginal && product.originalPrice ? (
-          <p className="col-start-1 row-start-5 mt-1 text-[11px] text-[#666] line-through">
+          <p className="col-start-1 row-start-4 mt-1 text-[11px] text-[#666] line-through">
             {t("originalPrice")}
             <Money cny={product.originalPrice} />
           </p>
