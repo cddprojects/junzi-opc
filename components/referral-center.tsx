@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { formatMyrSen, formatTierRateLabel, senToMyr, type CommissionEntry, type ReferralTierPlan, type Withdrawal } from "@/lib/referral";
-import { normalizeWithdrawalStatus } from "@/lib/wallet";
+import { withdrawalStatusMessageKey } from "@/lib/wallet";
 import { useAuth } from "@/components/auth-provider";
 import { useLocale } from "@/components/locale-provider";
 import { translateApiError } from "@/lib/messages";
@@ -257,7 +257,7 @@ export function ReferralCenter() {
                 {data.withdrawals.map((row) => (
                   <li key={row.id} className="flex justify-between gap-3">
                     <span>
-                      {formatMyrSen(row.amountSen)} · {withdrawalLabel(normalizeWithdrawalStatus(row.status), t)}
+                      {formatMyrSen(row.amountSen)} · {t(withdrawalStatusMessageKey(row.status))}
                     </span>
                     <span>{new Date(row.createdAt).toLocaleDateString(dateLocale)}</span>
                   </li>
@@ -330,16 +330,6 @@ function StatCell({ label, value, money }: { label: string; value: string; money
       </p>
     </div>
   );
-}
-
-function withdrawalLabel(
-  status: "pending" | "approved" | "paid" | "rejected",
-  t: (key: "adminWdPending" | "adminWdApproved" | "adminWdPaid" | "adminWdRejected") => string,
-) {
-  if (status === "paid") return t("adminWdPaid");
-  if (status === "approved") return t("adminWdApproved");
-  if (status === "rejected") return t("adminWdRejected");
-  return t("adminWdPending");
 }
 
 function CopyShare({ code, stretch, variant }: { code: string; stretch?: boolean; variant?: "default" | "stretch" | "hero" }) {

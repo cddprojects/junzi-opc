@@ -87,6 +87,47 @@ export function isWithdrawalHeld(status?: string | null): boolean {
   return canonical === "pending" || canonical === "approved";
 }
 
+/** Same labels the agent page uses: zh 待审核/已通过/已打款/已拒绝, en Pending/Approved/Paid/Rejected. */
+export function withdrawalStatusMessageKey(
+  status?: string | null,
+): "adminWdPending" | "adminWdApproved" | "adminWdPaid" | "adminWdRejected" {
+  const canonical = normalizeWithdrawalStatus(status);
+  if (canonical === "paid") return "adminWdPaid";
+  if (canonical === "approved") return "adminWdApproved";
+  if (canonical === "rejected") return "adminWdRejected";
+  return "adminWdPending";
+}
+
+const WALLET_TX_KIND_KEY = {
+  topup_credit: "walletTxTopup",
+  commission_earn: "walletTxCommission",
+  withdrawal_hold: "walletTxHold",
+  withdrawal_release: "walletTxRelease",
+  withdrawal_paid: "walletTxPaid",
+  admin_adjust: "walletTxAdjust",
+  purchase_debit: "walletTxPurchase",
+} as const;
+
+export function walletTxMessageKey(kind?: string | null): (typeof WALLET_TX_KIND_KEY)[WalletTxKind] | "walletTxOther" {
+  if (kind && kind in WALLET_TX_KIND_KEY) return WALLET_TX_KIND_KEY[kind as WalletTxKind];
+  return "walletTxOther";
+}
+
+const INTERNAL_WALLET_NOTES = new Set([
+  "hold_pending",
+  "release_rejected",
+  "payout_paid",
+  "billplz_topup",
+  "wallet_purchase_topup_only",
+]);
+
+/** Hide machine notes. Keep a human reason, such as an admin adjustment note. */
+export function walletTxNoteForDisplay(note?: string | null): string {
+  const text = String(note || "").trim();
+  if (!text || INTERNAL_WALLET_NOTES.has(text) || text.startsWith("order:")) return "";
+  return text;
+}
+
 export function computeWalletBuckets(
   user: Pick<Customer, "id" | "topUpBalanceSen" | "commissionBalanceSen">,
   withdrawals: { userId: string; amountSen: number; status?: string }[],

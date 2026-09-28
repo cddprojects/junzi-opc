@@ -2,8 +2,14 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { formatMyrSen, senToMyr, TOPUP_PRESETS_SEN } from "@/lib/wallet";
-import { normalizeWithdrawalStatus } from "@/lib/wallet";
+import {
+  formatMyrSen,
+  senToMyr,
+  TOPUP_PRESETS_SEN,
+  walletTxMessageKey,
+  walletTxNoteForDisplay,
+  withdrawalStatusMessageKey,
+} from "@/lib/wallet";
 import { useAuth } from "@/components/auth-provider";
 import { useLocale } from "@/components/locale-provider";
 import { PayBusyOverlay } from "@/components/pay-busy-overlay";
@@ -32,7 +38,7 @@ export function WalletPage() {
   const mountedRef = useRef(true);
 
   function load() {
-    return fetch("/api/wallet/me")
+    return fetch("/api/wallet/me", { cache: "no-store" })
       .then((res) => res.json())
       .then((row: WalletData & { error?: string }) => {
         if (row.error) throw new Error(row.error);
@@ -143,14 +149,35 @@ export function WalletPage() {
         account,
       }),
     });
-    const row = (await res.json()) as { error?: string };
+    const row = (await res.json()) as {
+      error?: string;
+      withdrawals?: WalletData["withdrawals"];
+      wallet?: Pick<
+        WalletData,
+        "topUpBalanceSen" | "commissionBalanceSen" | "pendingWithdrawalSen" | "availableToWithdrawSen" | "totalSen"
+      >;
+    };
     setBusy("");
     if (!res.ok) {
       setError(translateApiError(locale, row.error, "errorGeneric"));
       return;
     }
     (event.currentTarget as HTMLFormElement).reset();
-    await load();
+    setData((current) => {
+      if (!current) return current;
+      return {
+        ...current,
+        ...(row.wallet ?? {}),
+        withdrawals: row.withdrawals ?? current.withdrawals,
+      };
+    });
+    try {
+      await load();
+    } catch (err) {
+      if (!row.withdrawals) {
+        setError(translateApiError(locale, err instanceof Error ? err.message : "", "errorGeneric"));
+      }
+    }
   }
 
   if (loading) return <p className="px-4 py-8 text-[13px] text-[#888]">{t("loading")}</p>;
@@ -291,7 +318,7 @@ export function WalletPage() {
                 {data.withdrawals.map((row) => (
                   <div key={row.id} className="flex justify-between gap-3">
                     <span>
-                      {formatMyrSen(row.amountSen)} · {normalizeWithdrawalStatus(row.status)}
+                      {formatMyrSen(row.amountSen)} · {t(withdrawalStatusMessageKey(row.status))}
                     </span>
                     <span>{new Date(row.createdAt).toLocaleDateString(dateLocale)}</span>
                   </div>
@@ -307,16 +334,19 @@ export function WalletPage() {
             <p className="text-[13px] text-[#777]">{t("walletTxEmpty")}</p>
           ) : (
             <ol className="relative ml-1 border-l border-[var(--front-border)] pl-[18px]">
-              {data.transactions.map((row) => (
-                <li key={row.id} className="relative flex items-start justify-between gap-2.5 pb-[18px] last:pb-0">
-                  <span className="absolute top-1 -left-[22px] size-[7px] rounded-full bg-[var(--front-accent)]" />
-                  <span className="text-[13.5px] text-[#333]">
-                    {row.kind}
-                    {row.note ? ` · ${row.note}` : ""}
-                  </span>
-                  <span className="opc-price shrink-0 font-serif text-[14px] font-semibold">{formatMyrSen(row.amountSen)}</span>
-                </li>
-              ))}
+              {data.transactions.map((row) => {
+                const note = walletTxNoteForDisplay(row.note);
+                return (
+                  <li key={row.id} className="relative flex items-start justify-between gap-2.5 pb-[18px] last:pb-0">
+                    <span className="absolute top-1 -left-[22px] size-[7px] rounded-full bg-[var(--front-accent)]" />
+                    <span className="text-[13.5px] text-[#333]">
+                      {t(walletTxMessageKey(row.kind))}
+                      {note ? ` · ${note}` : ""}
+                    </span>
+                    <span className="opc-price shrink-0 font-serif text-[14px] font-semibold">{formatMyrSen(row.amountSen)}</span>
+                  </li>
+                );
+              })}
             </ol>
           )}
         </section>

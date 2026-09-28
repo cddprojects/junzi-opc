@@ -10,6 +10,9 @@ import {
   applyRequestWithdrawal,
   assertTopUpAmountMatch,
   requireWithdrawalPayout,
+  walletTxMessageKey,
+  walletTxNoteForDisplay,
+  withdrawalStatusMessageKey,
   canDebitTopUpOnly,
   computeWalletBuckets,
   type MutableFinance,
@@ -62,6 +65,17 @@ applyRejectWithdrawal(s, { id: hold2.id, newId });
 assert.equal(s.withdrawals[1]?.status, "rejected");
 assert.equal(buyer.commissionBalanceSen, 600);
 assert.equal(computeWalletBuckets(buyer, s.withdrawals).availableToWithdrawSen, 600);
+
+assert.equal(withdrawalStatusMessageKey("pending"), "adminWdPending");
+assert.equal(withdrawalStatusMessageKey("requested"), "adminWdPending");
+assert.equal(withdrawalStatusMessageKey("approved"), "adminWdApproved");
+assert.equal(withdrawalStatusMessageKey("paid"), "adminWdPaid");
+assert.equal(withdrawalStatusMessageKey("settled"), "adminWdPaid");
+assert.equal(withdrawalStatusMessageKey("rejected"), "adminWdRejected");
+assert.equal(walletTxMessageKey("withdrawal_hold"), "walletTxHold");
+assert.equal(walletTxMessageKey("commission_earn"), "walletTxCommission");
+assert.equal(walletTxNoteForDisplay("hold_pending"), "");
+assert.equal(walletTxNoteForDisplay("手工补差"), "手工补差");
 
 assert.throws(() => requireWithdrawalPayout({}), /请填写银行、户名和账号/);
 assert.throws(() => requireWithdrawalPayout({ bank: "  ", holder: "Lee", account: "123" }), /请填写银行、户名和账号/);
