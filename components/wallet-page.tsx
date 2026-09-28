@@ -125,14 +125,22 @@ export function WalletPage() {
     setBusy("wd");
     setError("");
     const form = new FormData(event.currentTarget);
+    const bank = String(form.get("bank") || "").trim();
+    const holder = String(form.get("holder") || "").trim();
+    const account = String(form.get("account") || "").trim();
+    if (!bank || !holder || !account) {
+      setBusy("");
+      setError(t("referralPayoutRequired"));
+      return;
+    }
     const res = await fetch("/api/referral/withdraw", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         amountMyr: Number(form.get("amountMyr") || 0),
-        bank: String(form.get("bank") || ""),
-        holder: String(form.get("holder") || ""),
-        account: String(form.get("account") || ""),
+        bank,
+        holder,
+        account,
       }),
     });
     const row = (await res.json()) as { error?: string };
@@ -249,6 +257,7 @@ export function WalletPage() {
                   {t("adminPayoutBank")}
                   <input
                     name="bank"
+                    required
                     className="mt-1.5 h-10 w-full rounded border border-[var(--front-border)] bg-white px-3 text-[13.5px] text-[#333]"
                   />
                 </label>
@@ -256,6 +265,7 @@ export function WalletPage() {
                   {t("adminPayoutHolder")}
                   <input
                     name="holder"
+                    required
                     className="mt-1.5 h-10 w-full rounded border border-[var(--front-border)] bg-white px-3 text-[13.5px] text-[#333]"
                   />
                 </label>
@@ -263,6 +273,7 @@ export function WalletPage() {
                   {t("adminPayoutAccount")}
                   <input
                     name="account"
+                    required
                     className="mt-1.5 h-10 w-full rounded border border-[var(--front-border)] bg-white px-3 text-[13.5px] text-[#333]"
                   />
                 </label>

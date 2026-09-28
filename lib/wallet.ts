@@ -111,6 +111,21 @@ export function canRequestWithdrawal(availableToWithdrawSen: number, amountSen: 
   return amount >= 1 && amount <= asNonNegSen(availableToWithdrawSen);
 }
 
+/** Bank, account name, and account number are all required. Whitespace-only values are rejected. */
+export function requireWithdrawalPayout(input: {
+  bank?: string | null;
+  holder?: string | null;
+  account?: string | null;
+}): WithdrawalPayout {
+  const bank = String(input.bank ?? "").trim();
+  const holder = String(input.holder ?? "").trim();
+  const account = String(input.account ?? "").trim();
+  if (!bank || !holder || !account) {
+    throw new Error("请填写银行、户名和账号");
+  }
+  return { bank, holder, account };
+}
+
 export function canDebitTopUpOnly(topUpBalanceSen: number, amountSen: number): boolean {
   const amount = asSen(amountSen);
   return amount >= 1 && amount <= asNonNegSen(topUpBalanceSen);

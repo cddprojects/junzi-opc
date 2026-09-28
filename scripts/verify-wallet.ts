@@ -9,6 +9,7 @@ import {
   applyRejectWithdrawal,
   applyRequestWithdrawal,
   assertTopUpAmountMatch,
+  requireWithdrawalPayout,
   canDebitTopUpOnly,
   computeWalletBuckets,
   type MutableFinance,
@@ -60,6 +61,17 @@ const hold2 = applyRequestWithdrawal(s, { userId: "ub", amountSen: 200, newId })
 applyRejectWithdrawal(s, { id: hold2.id, newId });
 assert.equal(s.withdrawals[1]?.status, "rejected");
 assert.equal(buyer.commissionBalanceSen, 600);
+assert.equal(computeWalletBuckets(buyer, s.withdrawals).availableToWithdrawSen, 600);
+
+assert.throws(() => requireWithdrawalPayout({}), /请填写银行、户名和账号/);
+assert.throws(() => requireWithdrawalPayout({ bank: "  ", holder: "Lee", account: "123" }), /请填写银行、户名和账号/);
+const payout = requireWithdrawalPayout({ bank: " Maybank ", holder: " Lee ", account: " 123 " });
+assert.deepEqual(payout, { bank: "Maybank", holder: "Lee", account: "123" });
+const hold3 = applyRequestWithdrawal(s, { userId: "ub", amountSen: 100, payout, newId });
+assert.equal(hold3.payout?.bank, "Maybank");
+assert.equal(hold3.payout?.holder, "Lee");
+assert.equal(hold3.payout?.account, "123");
+applyRejectWithdrawal(s, { id: hold3.id, newId });
 assert.equal(computeWalletBuckets(buyer, s.withdrawals).availableToWithdrawSen, 600);
 
 const topUser = user({ id: "ut", name: "Top", topUpBalanceSen: 0 });

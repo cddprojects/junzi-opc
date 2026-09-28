@@ -103,10 +103,23 @@ export function ReferralCenter() {
     setBusy(true);
     setError("");
     const form = new FormData(event.currentTarget);
+    const bank = String(form.get("bank") || "").trim();
+    const holder = String(form.get("holder") || "").trim();
+    const account = String(form.get("account") || "").trim();
+    if (!bank || !holder || !account) {
+      setBusy(false);
+      setError(t("referralPayoutRequired"));
+      return;
+    }
     const res = await fetch("/api/referral/withdraw", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ amountMyr: Number(form.get("amountMyr") || 0) }),
+      body: JSON.stringify({
+        amountMyr: Number(form.get("amountMyr") || 0),
+        bank,
+        holder,
+        account,
+      }),
     });
     const row = (await res.json()) as Dashboard & { error?: string };
     setBusy(false);
@@ -190,22 +203,51 @@ export function ReferralCenter() {
               ))}
             </div>
             <h2 className="mb-3 font-serif text-[14px] font-semibold text-[#333]">{t("referralWithdraw")}</h2>
+            <p className="mb-3 text-[12px] leading-[1.5] text-[#777]">{t("referralWithdrawHint")}</p>
             {error ? <p className="mb-2 text-[13px] text-[#fa3534]">{error}</p> : null}
-            <form onSubmit={withdraw} className="flex gap-2">
-              <input
-                name="amountMyr"
-                type="number"
-                min="0.01"
-                step="0.01"
-                max={senToMyr(data.availableSen)}
-                required
-                placeholder="MYR"
-                className="h-10 min-w-0 flex-1 rounded border border-[var(--front-border)] bg-white px-3 text-[13.5px] text-[#333]"
-              />
+            <form onSubmit={withdraw} className="space-y-3">
+              <div className="grid grid-cols-1 gap-3">
+                <label className="text-[12px] text-[#777]">
+                  MYR
+                  <input
+                    name="amountMyr"
+                    type="number"
+                    min="0.01"
+                    step="0.01"
+                    max={senToMyr(data.availableSen)}
+                    required
+                    className="mt-1.5 h-10 w-full rounded border border-[var(--front-border)] bg-white px-3 text-[13.5px] text-[#333]"
+                  />
+                </label>
+                <label className="text-[12px] text-[#777]">
+                  {t("adminPayoutBank")}
+                  <input
+                    name="bank"
+                    required
+                    className="mt-1.5 h-10 w-full rounded border border-[var(--front-border)] bg-white px-3 text-[13.5px] text-[#333]"
+                  />
+                </label>
+                <label className="text-[12px] text-[#777]">
+                  {t("adminPayoutHolder")}
+                  <input
+                    name="holder"
+                    required
+                    className="mt-1.5 h-10 w-full rounded border border-[var(--front-border)] bg-white px-3 text-[13.5px] text-[#333]"
+                  />
+                </label>
+                <label className="text-[12px] text-[#777]">
+                  {t("adminPayoutAccount")}
+                  <input
+                    name="account"
+                    required
+                    className="mt-1.5 h-10 w-full rounded border border-[var(--front-border)] bg-white px-3 text-[13.5px] text-[#333]"
+                  />
+                </label>
+              </div>
               <button
                 type="submit"
                 disabled={busy || data.availableSen < 1}
-                className="h-10 shrink-0 rounded bg-[#8a5a20] px-[18px] text-[13px] whitespace-nowrap text-white disabled:opacity-50"
+                className="h-10 rounded bg-[#8a5a20] px-[18px] text-[13px] whitespace-nowrap text-white disabled:opacity-50"
               >
                 {busy ? t("pleaseWait") : t("referralWithdrawSubmit")}
               </button>

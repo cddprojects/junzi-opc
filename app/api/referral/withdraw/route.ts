@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/user-auth";
 import { getReferralDashboard, requestWithdrawal } from "@/lib/user-store";
 import { myrToSen } from "@/lib/referral";
+import { requireWithdrawalPayout } from "@/lib/wallet";
 
 export async function POST(request: Request) {
   const user = await getCurrentUser();
@@ -15,11 +16,12 @@ export async function POST(request: Request) {
   } | null;
   const amountSen =
     body?.amountSen != null ? Math.round(Number(body.amountSen)) : myrToSen(Number(body?.amountMyr || 0));
-  const payout =
-    body?.bank || body?.holder || body?.account
-      ? { bank: String(body.bank || "").trim(), holder: String(body.holder || "").trim(), account: String(body.account || "").trim() }
-      : undefined;
   try {
+    const payout = requireWithdrawalPayout({
+      bank: body?.bank,
+      holder: body?.holder,
+      account: body?.account,
+    });
     await requestWithdrawal(user.id, amountSen, payout);
     return NextResponse.json(await getReferralDashboard(user.id));
   } catch (error) {
