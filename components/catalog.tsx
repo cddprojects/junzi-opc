@@ -65,6 +65,8 @@ export function ProductRow({
   const { locale, t } = useLocale();
   const title = locProductTitle(product, locale);
   const href = `/product/${product.slug}`;
+  const originalPrice = showOriginal ? product.originalPrice : undefined;
+  const showStrike = originalPrice != null && originalPrice > 0;
 
   return (
     <Link
@@ -85,21 +87,32 @@ export function ProductRow({
         <p className="col-span-2 row-start-1 self-start line-clamp-2 text-[14px] leading-5 font-medium text-[#333] md:col-span-1 md:text-[16px]">
           {title}
         </p>
-        <span className="mp-plus col-start-2 row-start-2 mb-1 justify-self-end self-end md:row-start-1 md:mb-0 md:self-start" aria-hidden>
+        <span
+          className={cn(
+            "mp-plus col-start-2 mb-1 justify-self-end self-end md:row-start-1 md:mb-0 md:self-start",
+            showStrike ? "row-start-3" : "row-start-2",
+          )}
+          aria-hidden
+        >
           <Plus className="size-3.5 md:size-6" strokeWidth={2.3} />
         </span>
-        <p className="col-start-1 row-start-3 self-end text-[16px] leading-none font-semibold text-[#fa3534]">
+        <p className="col-start-1 row-start-3 self-baseline text-[16px] leading-none font-semibold text-[#fa3534]">
           <Money cny={product.price} />
         </p>
-        <p className="col-start-2 row-start-3 justify-self-end self-end text-right text-[11px] leading-none text-[#bbb]">
-          {t("salesCount", { n: product.sales })}
-        </p>
-        {showOriginal && product.originalPrice ? (
-          <p className="col-start-1 row-start-4 mt-1 text-[11px] text-[#666] line-through">
+        {showStrike ? (
+          <p className="col-start-1 row-start-4 mt-1 self-baseline text-[11px] leading-none text-[#666] line-through">
             {t("originalPrice")}
-            <Money cny={product.originalPrice} />
+            <Money cny={originalPrice} />
           </p>
         ) : null}
+        <p
+          className={cn(
+            "col-start-2 justify-self-end self-baseline text-right text-[11px] leading-none text-[#bbb]",
+            showStrike ? "row-start-4" : "row-start-3",
+          )}
+        >
+          {t("salesCount", { n: product.sales })}
+        </p>
       </div>
     </Link>
   );
