@@ -205,7 +205,7 @@ export function WalletPage() {
       <section className="border-b border-[var(--front-border)] bg-white px-[22px] py-[26px] md:px-10 md:py-[34px]">
         <h1 className="font-serif text-[22px] font-semibold text-[#333]">{t("walletTitle")}</h1>
         <p className="mt-2 mb-[22px] max-w-[520px] text-[13px] leading-[1.6] text-[#777]">{t("walletIntro")}</p>
-        <div className="grid grid-cols-2 gap-x-4 gap-y-6 text-center md:flex md:flex-wrap md:gap-0 md:text-left">
+        <div className="grid grid-cols-2 gap-x-10 gap-y-10 text-center md:flex md:flex-wrap md:gap-0 md:text-left">
           <HeroStat label={t("adminWalletTotal")} value={formatMyrSen(data.totalSen)} big />
           <HeroStat label={t("adminWalletTopUp")} value={formatMyrSen(data.topUpBalanceSen)} />
           <HeroStat label={t("adminWalletCommission")} value={formatMyrSen(data.commissionBalanceSen)} />
