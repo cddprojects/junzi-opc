@@ -206,9 +206,6 @@ function MobileHeader() {
         <div className="flex shrink-0 items-center gap-1">
           <LocaleSwitcher compact header />
           <CurrencySwitcher compact header />
-          <Link href="/search" className="flex size-9 items-center justify-center text-[#333]" aria-label={t("search")}>
-            <Search className="size-5" />
-          </Link>
           <Link href="/cart" className="relative flex size-9 items-center justify-center text-[#333]" aria-label={t("cart")}>
             <ShoppingCart className="size-5" />
             {count > 0 && (

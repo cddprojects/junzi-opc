@@ -81,27 +81,25 @@ export function ProductRow({
           className="h-full w-full"
         />
       </span>
-      <div className="grid min-w-0 w-full flex-1 grid-cols-[minmax(0,1fr)_auto] grid-rows-[auto_auto_auto] gap-x-4 md:grid-rows-[auto_1fr]">
-        <p className="col-span-2 row-start-1 line-clamp-2 text-[14px] leading-5 font-medium text-[#333] md:col-span-1 md:text-[16px]">
+      <div className="grid min-h-[76px] min-w-0 w-full flex-1 grid-cols-[minmax(0,1fr)_auto] grid-rows-[auto_minmax(0,1fr)_auto_auto_auto] gap-x-4 self-stretch">
+        <p className="col-span-2 row-start-1 self-start line-clamp-2 text-[14px] leading-5 font-medium text-[#333] md:col-span-1 md:text-[16px]">
           {title}
         </p>
-        <span className="mp-plus col-start-2 row-start-2 mt-2 justify-self-end self-start md:row-start-1 md:mt-0" aria-hidden>
+        <span className="mp-plus col-start-2 row-start-3 mb-2 justify-self-end self-end md:row-start-1 md:mb-0 md:self-start" aria-hidden>
           <Plus className="size-3.5 md:size-6" strokeWidth={2.3} />
         </span>
-        <div className="col-start-1 row-start-2 mt-2 min-w-0 md:row-start-2 md:mt-0 md:self-end">
-          <p className="text-[16px] leading-none font-semibold text-[#fa3534]">
-            <Money cny={product.price} />
-          </p>
-          {showOriginal && product.originalPrice ? (
-            <p className="mt-1 text-[11px] text-[#666] line-through">
-              {t("originalPrice")}
-              <Money cny={product.originalPrice} />
-            </p>
-          ) : null}
-        </div>
-        <p className="col-start-2 row-start-3 justify-self-end self-end text-right text-[11px] text-[#bbb] md:row-start-2">
+        <p className="col-start-1 row-start-4 self-end text-[16px] leading-none font-semibold text-[#fa3534]">
+          <Money cny={product.price} />
+        </p>
+        <p className="col-start-2 row-start-4 justify-self-end self-end text-right text-[11px] leading-none text-[#bbb]">
           {t("salesCount", { n: product.sales })}
         </p>
+        {showOriginal && product.originalPrice ? (
+          <p className="col-start-1 row-start-5 mt-1 text-[11px] text-[#666] line-through">
+            {t("originalPrice")}
+            <Money cny={product.originalPrice} />
+          </p>
+        ) : null}
       </div>
     </Link>
   );
