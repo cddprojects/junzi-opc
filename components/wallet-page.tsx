@@ -205,7 +205,7 @@ export function WalletPage() {
       <section className="border-b border-[var(--front-border)] bg-white px-[22px] py-[26px] md:px-10 md:py-[34px]">
         <h1 className="font-serif text-[22px] font-semibold text-[#333]">{t("walletTitle")}</h1>
         <p className="mt-2 mb-[22px] max-w-[520px] text-[13px] leading-[1.6] text-[#777]">{t("walletIntro")}</p>
-        <div className="flex flex-wrap">
+        <div className="grid grid-cols-2 gap-x-4 gap-y-6 text-center md:flex md:flex-wrap md:gap-0 md:text-left">
           <HeroStat label={t("adminWalletTotal")} value={formatMyrSen(data.totalSen)} big />
           <HeroStat label={t("adminWalletTopUp")} value={formatMyrSen(data.topUpBalanceSen)} />
           <HeroStat label={t("adminWalletCommission")} value={formatMyrSen(data.commissionBalanceSen)} />
@@ -358,7 +358,7 @@ export function WalletPage() {
 
 function HeroStat({ label, value, big }: { label: string; value: string; big?: boolean }) {
   return (
-    <div className="min-w-[40%] flex-1 border-[var(--front-border)] px-3.5 first:border-l-0 first:pl-0 md:min-w-0 md:flex-none md:border-l md:px-8 md:first:border-l-0 md:first:pl-0">
+    <div className="min-w-0 px-1 md:min-w-0 md:flex-none md:border-l md:border-[var(--front-border)] md:px-8 md:first:border-l-0 md:first:pl-0">
       <p className="mb-1 text-[11.5px] text-[#777]">{label}</p>
       <p className={big ? "opc-price font-serif text-[20px] font-bold md:text-[24px]" : "font-serif text-[20px] font-bold text-[#333] md:text-[24px]"}>
         {value}
